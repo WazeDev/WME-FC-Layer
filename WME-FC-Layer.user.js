@@ -5,7 +5,7 @@
 // @description  Adds a Functional Class layer for states that publish ArcGIS FC data.
 // @author       MapOMatic
 // @include      /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/.*$/
-// @license      MIT/BSD/X11
+// @license      GNU GPL v3.0
 // @require      https://cdn.jsdelivr.net/bluebird/latest/bluebird.min.js
 // @grant        GM_xmlhttpRequest
 // @connect      maryland.gov
@@ -375,7 +375,7 @@
                     return null;
                 }
             },
-            getFeatureHwySys(feature, layer) {
+            getFeatureHwySys: function (feature, layer) {
                 var attr = feature.attributes;
                 var prefix = attr.TRAF_RT_NO_PREFIX;
                 var suffix = attr.TRAF_RT_NO_SUF;
