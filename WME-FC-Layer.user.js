@@ -8,7 +8,7 @@
 // // ==UserScript==
 // @name         WME FC Layer (beta)
 // @namespace    https://greasyfork.org/users/45389
-// @version      0.2.b19
+// @version      0.2.b20
 // @description  Adds a Functional Class layer for states that publish ArcGIS FC data.
 // @author       MapOMatic
 // @include      /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/.*$/
@@ -47,15 +47,10 @@
         'What\'s New',
         '------------------------------',
         '- Modified how FC is retrieved from state servers to address issue where not all segments were loaded in certain states when zoomed out.',
-        '- Added support for KY.',
+        '- Added support for KY, IL, NY, ID, UT, OK',
         '- Added support for Shelby county TN.',
-        '- Added support for IL.',
-        '- Added support for NY.',
-        '- Added support for ID.',
         '- Fixed a bug that was causing some street highlights to show up when zoomed out.',
         '- Fixed drawing so overlaid segment highlights don\'t appear darker.',
-        '- Added support for UT (updated to exclude "proposed" FC, and override US/state FC as needed).',
-        '- Updated IL to override FC if needed for US, state, and county routes.',
         '- Updated to new PA server.'
     ].join('\n');
     var _mapLayer = null;
@@ -493,6 +488,34 @@
                 return _stateSettings.global.getRoadTypeFromFC(fc, layer);
             }
         },
+        OK: {
+            baseUrl: 'http://services6.arcgis.com/RBtoEUQ2lmN0K3GY/arcgis/rest/services/Roadways/FeatureServer/',
+            defaultColors: {Fw:'#ff00c5',Ew:'#4f33df',MH:'#149ece',mH:'#4ce600',PS:'#cfae0e',St:'#eeeeee'},
+            zoomSettings: { maxOffset: [30,15,8,4,2,1,1,1,1,1], excludeRoadTypes: [['St'],['St'],['St'],['St'],[],[],[],[],[],[],[]] },
+
+            fcMapLayers: [
+                { layerID:0, fcPropName:'NFC', idPropName:'OBJECTID', outFields:['*'], //'NFC','OBJECTID','ROUTE_CLAS'],
+                 maxRecordCount:1000, supportsPagination:false, roadTypeMap:{Fw:[1],Ew:[2],MH:[3],mH:[4],PS:[5,6],St:[7]} }
+            ],
+            isPermitted: function() { return true; },
+            getWhereClause: function(context) {
+                if(context.mapContext.zoom < 4) {
+                    var clause = '(' + context.layer.fcPropName + " < 7 OR ROUTE_CLAS IN ('U','S','I'))";
+                    return clause;
+                } else {
+                    return null;
+                }
+            },
+            getFeatureRoadType: function(feature, layer) {
+                var fc = feature.attributes[layer.fcPropName];
+                var prefix = feature.attributes.ROUTE_CLAS;
+                var isUS = prefix === 'U';
+                var isState = prefix === 'S';
+                if (isUS && fc > 3) { fc = 3; }
+                if (isState && fc > 4) { fc = 4; }
+                return _stateSettings.global.getRoadTypeFromFC(fc, layer);
+            }
+        },
         PA: {
             baseUrl: 'http://services1.arcgis.com/jOy9iZUXBy03ojXb/arcgis/rest/services/RMS_SEG_ADMIN_Join/FeatureServer/',
             supportsPagination: false,
@@ -868,13 +891,13 @@
             });
         });
     }
-function wait(ms){
-   var start = new Date().getTime();
-   var end = start;
-   while(end < start + ms) {
-     end = new Date().getTime();
-  }
-}
+    function wait(ms){
+        var start = new Date().getTime();
+        var end = start;
+        while(end < start + ms) {
+            end = new Date().getTime();
+        }
+    }
     function getUrl(context, queryType, queryParams) {
         var extent = context.mapContext.extent,
             zoom = context.mapContext.zoom,
@@ -948,7 +971,7 @@ function wait(ms){
                 var ids = $.parseJSON(res.responseText);
                 if(!ids.objectIds) ids.objectIds = [];
                 sortArray(ids.objectIds);
-                                log(context.layer.layerID);
+                log(context.layer.layerID);
                 log(ids,2);
                 return ids;
             }).then(function(res) {
@@ -1139,14 +1162,14 @@ function wait(ms){
         // Hack to fix layer zIndex.  Some other code is changing it sometimes but I have not been able to figure out why.
         // It may be that the FC layer is added to the map before some Waze code loads the base layers and forces other layers higher. (?)
 
-        var checkLayerZIndex = function(layerZIndex) {
-            if (_mapLayer.getZIndex() !== layerZIndex)  {
-                log("ADJUSTED FC LAYER Z-INDEX",1);
-                _mapLayer.setZIndex(layerZIndex);
+        var checkLayerZIndex = function() {
+            if (_mapLayer.getZIndex() != _mapLayerZIndex)  {
+                log("ADJUSTED FC LAYER Z-INDEX " + _mapLayerZIndex + ', ' + _mapLayer.getZIndex(),1);
+                _mapLayer.setZIndex(_mapLayerZIndex);
             }
         };
 
-        setInterval(function(){checkLayerZIndex(_mapLayerZIndex);}, 200);
+        setInterval(function(){checkLayerZIndex();}, 200);
 
         Waze.map.events.register("moveend",Waze.map,function(e){
             fetchAllFC();
