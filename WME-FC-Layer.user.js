@@ -8,7 +8,7 @@
 // // ==UserScript==
 // @name         WME FC Layer (beta)
 // @namespace    https://greasyfork.org/users/45389
-// @version      0.2.b20
+// @version      0.2.b21
 // @description  Adds a Functional Class layer for states that publish ArcGIS FC data.
 // @author       MapOMatic
 // @include      /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/.*$/
@@ -47,7 +47,7 @@
         'What\'s New',
         '------------------------------',
         '- Modified how FC is retrieved from state servers to address issue where not all segments were loaded in certain states when zoomed out.',
-        '- Added support for KY, IL, NY, ID, UT, OK',
+        '- Added support for KY, IL, NY, ID, UT, OK, TX',
         '- Added support for Shelby county TN.',
         '- Fixed a bug that was causing some street highlights to show up when zoomed out.',
         '- Fixed drawing so overlaid segment highlights don\'t appear darker.',
@@ -624,6 +624,54 @@
                     return layer.getFeatureRoadType(feature);
                 } else {
                     var fc = feature.attributes[layer.fcPropName];
+                    return _stateSettings.global.getRoadTypeFromFC(fc, layer);
+                }
+            }
+        },
+        TX: {
+            baseUrl: 'https://services.arcgis.com/KTcxiTD9dsQw4r7Z/ArcGIS/rest/services/TxDOT_Functional_Classification/FeatureServer/',
+            defaultColors: {Fw:'#ff00c5',Ew:'#4f33df',MH:'#149ece',mH:'#4ce600',PS:'#cfae0e',St:'#eeeeee'},
+            zoomSettings: { maxOffset:[30,15,8,4,2,1,1,1,1,1] },
+            fcMapLayers: [
+                { layerID:0, fcPropName:'F_SYSTEM', idPropName:'OBJECTID_1', outFields:['OBJECTID_1','F_SYSTEM', 'RIA_RTE_ID'], maxRecordCount:1000, supportsPagination:false, roadTypeMap:{Fw:[1],Ew:[2],MH:[3],mH:[4],PS:[5,6],St:[7]} }
+            ],
+            getWhereClause: function(context) {
+                var where = " F_SYSTEM IS NOT NULL AND PROPOSED <> 'Y' AND RIA_RTE_ID IS NOT NULL";
+                if(context.mapContext.zoom < 4) {
+                    where += ' AND ' + context.layer.fcPropName + " <> 7";
+                }
+                return where;
+            },
+            getFeatureRoadType: function(feature, layer) {
+                // On-System:
+                // IH=Interstate BF=Business FM
+                // US=US Highway FM=Farm to Mkt
+                // UA=US Alt. RM=Ranch to Mkt
+                // UP=US Spur RR=Ranch Road
+                // SH=State Highway PR=Park Road
+                // SA=State Alt. RE=Rec Road
+                // SL=State Loop RP=Rec Rd Spur
+                // SS=State Spur FS=FM Spur
+                // BI=Business IH RS=RM Spur
+                // BU=Business US RU=RR Spur
+                // BS=Business State PA=Principal Arterial
+                // Off-System:
+                // TL=Off-System Tollroad CR=County Road
+                // FC=Func. Classified St. LS=Local Street
+                if (layer.getFeatureRoadType) {
+                    return layer.getFeatureRoadType(feature);
+                } else {
+                    var fc = feature.attributes[layer.fcPropName];
+                    var type = feature.attributes.RIA_RTE_ID.substring(0,2).toUpperCase();
+                    if (type === 'IH' && fc > 1) {
+                        fc = 1;
+                    } else if ((type === 'US' || type === 'BI' || type === 'UA') && fc > 3) {
+                        fc = 3;
+                    } else if ((type === 'UP' || type === 'BU' || type === 'SH' || type === 'SA') && fc > 4) {
+                        fc = 4;
+                    } else if ((type === 'SL' || type === 'SS' || type === 'BS') && fc > 6) {
+                        fc = 6;
+                    }
                     return _stateSettings.global.getRoadTypeFromFC(fc, layer);
                 }
             }
