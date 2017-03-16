@@ -8,7 +8,7 @@
 // // ==UserScript==
 // @name         WME FC Layer (beta)
 // @namespace    https://greasyfork.org/users/45389
-// @version      0.2.b21
+// @version      0.2.b22
 // @description  Adds a Functional Class layer for states that publish ArcGIS FC data.
 // @author       MapOMatic
 // @include      /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/.*$/
@@ -47,7 +47,7 @@
         'What\'s New',
         '------------------------------',
         '- Modified how FC is retrieved from state servers to address issue where not all segments were loaded in certain states when zoomed out.',
-        '- Added support for KY, IL, NY, ID, UT, OK, TX',
+        '- Added support for KY, IL, NY, ID, UT, OK, TX, FL',
         '- Added support for Shelby county TN.',
         '- Fixed a bug that was causing some street highlights to show up when zoomed out.',
         '- Fixed drawing so overlaid segment highlights don\'t appear darker.',
@@ -111,6 +111,27 @@
             fcMapLayers: [
                 { layerID:48, fcPropName:'FUNCTIONALCLASS', idPropName:'OBJECTID', outFields:['OBJECTID', 'FUNCTIONALCLASS'], maxRecordCount:1000, supportsPagination:false,
                  roadTypeMap:{Fw:['Interstate'],Ew:['Other Freeway and Expressway'],MH:['Principal Arterial'],mH:['Minor Arterial'],PS:['Collector']} }
+            ],
+            getFeatureRoadType: function(feature, layer) {
+                if (layer.getFeatureRoadType) {
+                    return layer.getFeatureRoadType(feature);
+                } else {
+                    return _stateSettings.global.getFeatureRoadType(feature, layer);
+                }
+            },
+            getWhereClause: function(context) {
+                return null;
+            }
+        },
+        FL: {
+            baseUrl: 'https://services1.arcgis.com/O1JpcwDW8sjYuddV/ArcGIS/rest/services/Functional_Classification/FeatureServer/',
+            supportsPagination: false,
+            defaultColors: {Fw:'#ff00c5',Ew:'#149ece',MH:'#149ece',mH:'#4ce600',PS:'#cfae0e',St:'#eeeeee'},
+            zoomSettings: { maxOffset: [30,15,8,4,2,1,1,1,1,1], excludeRoadTypes: [[],[],[],[],[],[],[],[],[],[],[]] },
+            fetchAllFC: false,
+            fcMapLayers: [
+                { layerID:0, fcPropName:'FUNCLASS', idPropName:'OBJECTID', outFields:['OBJECTID', 'FUNCLASS'], maxRecordCount:1000, supportsPagination:false,
+                 roadTypeMap:{Fw:['01','11'],Ew:['02','12'],MH:['04','14'],mH:['06','16'],PS:['07','08','17','18']} }
             ],
             getFeatureRoadType: function(feature, layer) {
                 if (layer.getFeatureRoadType) {
