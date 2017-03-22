@@ -8,7 +8,7 @@
 // // ==UserScript==
 // @name         WME FC Layer (beta)
 // @namespace    https://greasyfork.org/users/45389
-// @version      0.2.b22
+// @version      0.2.b23
 // @description  Adds a Functional Class layer for states that publish ArcGIS FC data.
 // @author       MapOMatic
 // @include      /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/.*$/
@@ -513,12 +513,10 @@
             baseUrl: 'http://services6.arcgis.com/RBtoEUQ2lmN0K3GY/arcgis/rest/services/Roadways/FeatureServer/',
             defaultColors: {Fw:'#ff00c5',Ew:'#4f33df',MH:'#149ece',mH:'#4ce600',PS:'#cfae0e',St:'#eeeeee'},
             zoomSettings: { maxOffset: [30,15,8,4,2,1,1,1,1,1], excludeRoadTypes: [['St'],['St'],['St'],['St'],[],[],[],[],[],[],[]] },
-
             fcMapLayers: [
-                { layerID:0, fcPropName:'NFC', idPropName:'OBJECTID', outFields:['*'], //'NFC','OBJECTID','ROUTE_CLAS'],
+                { layerID:0, fcPropName:'NFC', idPropName:'OBJECTID', outFields:['F_PRIMARY_','NFC','OBJECTID','ROUTE_CLAS'],
                  maxRecordCount:1000, supportsPagination:false, roadTypeMap:{Fw:[1],Ew:[2],MH:[3],mH:[4],PS:[5,6],St:[7]} }
             ],
-            isPermitted: function() { return true; },
             getWhereClause: function(context) {
                 if(context.mapContext.zoom < 4) {
                     var clause = '(' + context.layer.fcPropName + " < 7 OR ROUTE_CLAS IN ('U','S','I'))";
@@ -529,11 +527,15 @@
             },
             getFeatureRoadType: function(feature, layer) {
                 var fc = feature.attributes[layer.fcPropName];
-                var prefix = feature.attributes.ROUTE_CLAS;
+                var route = (feature.attributes.F_PRIMARY_ || '').trim();
+                var isBusinessOrSpur = /BUS$|SPR$/i.test(route);
+                var prefix = isBusinessOrSpur ? route.substring(0,1) : feature.attributes.ROUTE_CLAS;
+                var isInterstate = prefix === 'I';
                 var isUS = prefix === 'U';
                 var isState = prefix === 'S';
-                if (isUS && fc > 3) { fc = 3; }
-                if (isState && fc > 4) { fc = 4; }
+                if (((isUS && !isBusinessOrSpur) || (isInterstate && isBusinessOrSpur)) && fc > 3) { fc = 3; }
+                if (((isUS && isBusinessOrSpur) || (isState && !isBusinessOrSpur)) && fc > 4) { fc = 4; }
+                if (isState && isBusinessOrSpur && fc > 5) { fc = 5; }
                 return _stateSettings.global.getRoadTypeFromFC(fc, layer);
             }
         },
