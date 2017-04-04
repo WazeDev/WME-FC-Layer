@@ -8,7 +8,7 @@
 // // ==UserScript==
 // @name         WME FC Layer (beta)
 // @namespace    https://greasyfork.org/users/45389
-// @version      0.2.b23
+// @version      0.2.b24
 // @description  Adds a Functional Class layer for states that publish ArcGIS FC data.
 // @author       MapOMatic
 // @include      /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/.*$/
@@ -31,6 +31,7 @@
 // @connect      ny.gov
 // @connect      utah.gov
 // @connect      idaho.gov
+// @connect      wv.gov
 // ==/UserScript==
 
 (function() {
@@ -47,7 +48,7 @@
         'What\'s New',
         '------------------------------',
         '- Modified how FC is retrieved from state servers to address issue where not all segments were loaded in certain states when zoomed out.',
-        '- Added support for KY, IL, NY, ID, UT, OK, TX, FL',
+        '- Added support for KY, IL, NY, ID, UT, OK, TX, FL, WV',
         '- Added support for Shelby county TN.',
         '- Fixed a bug that was causing some street highlights to show up when zoomed out.',
         '- Fixed drawing so overlaid segment highlights don\'t appear darker.',
@@ -764,6 +765,59 @@
                     return _stateSettings.global.getRoadTypeFromFC(fc, layer);
                 }
             }
+        },
+        WV: {
+            baseUrl: 'http://gis.transportation.wv.gov/arcgis/rest/services/Roads_And_Highways/Publication_LRS/MapServer/',
+            defaultColors: {Fw:'#ff00c5',Ew:'#ff00c5',MH:'#149ece',mH:'#4ce600',PS:'#cfae0e',St:'#eeeeee'},
+            zoomSettings: { maxOffset: [30,15,8,4,2,1,1,1,1,1], excludeRoadTypes: [['St'],['St'],['St'],['St'],[],[],[],[],[],[],[]] },
+            fcMapLayers: [
+                { layerID:35, fcPropName:'NAT_FUNCTIONAL_CLASS', idPropName:'OBJECTID', outFields:['OBJECTID','NAT_FUNCTIONAL_CLASS','ROUTE_ID'], maxRecordCount:1000, supportsPagination:true, roadTypeMap:{Fw:[1],Ew:[2],MH:[3],mH:[4],PS:[5,6],St:[7]} }
+           ],
+            getWhereClause: function(context) {
+                if(context.mapContext.zoom < 4) {
+                    return context.layer.fcPropName + ' NOT IN(9,19)';
+                } else {
+                    return null;
+                }
+            },
+            getFeatureRoadType: function(feature, layer) {
+                if (layer.getFeatureRoadType) {
+                    return layer.getFeatureRoadType(feature);
+                } else {
+                    debugger;
+                    var fcCode = feature.attributes[layer.fcPropName];
+                    var fc = fcCode;
+                    if (fcCode===11) fc = 1;
+                    else if (fcCode===4 || fcCode===12) fc = 2;
+                    else if (fcCode===2 || fcCode===14) fc = 3;
+                    else if (fcCode===6 || fcCode===16) fc = 4;
+                    else if (fcCode===7 || fcCode===17 || fcCode===8 || fcCode===18) fc = 5;
+                    else fc = 7;
+                    var id = feature.attributes.ROUTE_ID;
+                    var prefix = id.substr(2,1);
+                    var isInterstate = false;
+                    var isUS = false;
+                    var isState = false;
+                    switch (prefix) {
+                        case '1':
+                            isInterstate = true;
+                            break;
+                        case '2':
+                            isUS = true;
+                            break;
+                        case '3':
+                            isState = true;
+                            break;
+                    }
+                    if (fc > 1 && isInterstate)
+                        fc = 1;
+                    else if (fc > 3 && isUS)
+                        fc = 3;
+                    else if (fc > 4 && isState)
+                        fc = 4;
+                    return _stateSettings.global.getRoadTypeFromFC(fc, layer);
+                }
+            }
         }
     };
 
@@ -1221,7 +1275,7 @@
 
         _mapLayer.setOpacity(0.5);
 
-        I18n.translations.en.layers.name.__FCLayer = "FC Layer";
+        I18n.translations[W.location.locale].layers.name.__FCLayer = "FC Layer";
 
         _mapLayer.displayInLayerSwitcher = true;
         _mapLayer.events.register('visibilitychanged',null,onLayerVisibilityChanged);
