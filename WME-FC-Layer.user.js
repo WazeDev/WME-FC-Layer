@@ -8,7 +8,7 @@
 // // ==UserScript==
 // @name         WME FC Layer (beta)
 // @namespace    https://greasyfork.org/users/45389
-// @version      0.2.b24
+// @version      0.2.b25
 // @description  Adds a Functional Class layer for states that publish ArcGIS FC data.
 // @author       MapOMatic
 // @include      /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/.*$/
@@ -228,7 +228,7 @@
             defaultColors: {Fw:'#ff00c5',Ew:'#149ece',MH:'#149ece',mH:'#4ce600',PS:'#cfae0e',St:'#eeeeee'},
             zoomSettings: { maxOffset: [30,15,8,4,2,1,1,1,1,1], excludeRoadTypes: [['St'],['St'],['St'],['St'],[],[],[],[],[],[],[]], hideRoadTypes: [['St'],['St'],['St'],['St'],[],[],[],[],[],[],[]] },
             fcMapLayers: [
-                { layerID:10, idPropName:'OBJECTID', fcPropName:'FUNCTIONAL_CLASS', outFields:['FUNCTIONAL_CLASS','OBJECTID'],
+                { layerID:10, idPropName:'OBJECTID', fcPropName:'FUNCTIONAL_CLASS', outFields:['FUNCTIONAL_CLASS','OBJECTID','TO_DATE'],
                  roadTypeMap:{Fw:[1],Ew:[2],MH:[3],mH:[4],PS:[5,6],St:[7]}, maxRecordCount:100000, supportsPagination:false }
             ],
             isPermitted: function() { return true; },
@@ -1275,7 +1275,7 @@
 
         _mapLayer.setOpacity(0.5);
 
-        I18n.translations[W.location.locale].layers.name.__FCLayer = "FC Layer";
+        I18n.translations[I18n.locale].layers.name.__FCLayer = "FC Layer";
 
         _mapLayer.displayInLayerSwitcher = true;
         _mapLayer.events.register('visibilitychanged',null,onLayerVisibilityChanged);
