@@ -8,11 +8,11 @@
 // // ==UserScript==
 // @name         WME FC Layer
 // @namespace    https://greasyfork.org/users/45389
-// @version      0.2.25
+// @version      0.2.26
 // @description  Adds a Functional Class layer for states that publish ArcGIS FC data.
 // @author       MapOMatic
-// @include      /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/.*$/
-// @license      GNU GPL v3.0
+// @include      /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
+// @license      GNU GPLv3
 // @require      https://cdn.jsdelivr.net/bluebird/latest/bluebird.min.js
 // @grant        GM_xmlhttpRequest
 // @connect      maryland.gov
