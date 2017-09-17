@@ -8,7 +8,7 @@
 // // ==UserScript==
 // @name         WME FC Layer
 // @namespace    https://greasyfork.org/users/45389
-// @version      0.2.26
+// @version      0.3.01
 // @description  Adds a Functional Class layer for states that publish ArcGIS FC data.
 // @author       MapOMatic
 // @include      /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
@@ -32,6 +32,7 @@
 // @connect      utah.gov
 // @connect      idaho.gov
 // @connect      wv.gov
+// @connect      ga.gov
 // ==/UserScript==
 
 (function() {
@@ -133,6 +134,27 @@
             fcMapLayers: [
                 { layerID:0, fcPropName:'FUNCLASS', idPropName:'OBJECTID', outFields:['OBJECTID', 'FUNCLASS'], maxRecordCount:1000, supportsPagination:false,
                  roadTypeMap:{Fw:['01','11'],Ew:['02','12'],MH:['04','14'],mH:['06','16'],PS:['07','08','17','18']} }
+            ],
+            getFeatureRoadType: function(feature, layer) {
+                if (layer.getFeatureRoadType) {
+                    return layer.getFeatureRoadType(feature);
+                } else {
+                    return _stateSettings.global.getFeatureRoadType(feature, layer);
+                }
+            },
+            getWhereClause: function(context) {
+                return null;
+            }
+        },
+        GA: {
+            baseUrl: 'https://egis.dot.ga.gov/arcgis/rest/services/FUNCTIONAL_CLASS/MapServer/',
+            supportsPagination: false,
+            defaultColors: {Fw:'#ff00c5',Ew:'#149ece',MH:'#149ece',mH:'#4ce600',PS:'#cfae0e',St:'#eeeeee'},
+            zoomSettings: { maxOffset: [30,15,8,4,2,1,1,1,1,1], excludeRoadTypes: [[],[],[],[],[],[],[],[],[],[],[]] },
+            fetchAllFC: false,
+            fcMapLayers: [
+                { layerID:0, fcPropName:'F_SYS_CODE', idPropName:'OBJECTID', outFields:['OBJECTID', 'F_SYS_CODE'], maxRecordCount:1000, supportsPagination:false,
+                 roadTypeMap:{Fw:['1'],Ew:['2'],MH:['3'],mH:['4'],PS:['5','6']} }
             ],
             getFeatureRoadType: function(feature, layer) {
                 if (layer.getFeatureRoadType) {
@@ -481,7 +503,7 @@
             }
         },
         OH: {
-            baseUrl: 'http://odotgis.dot.state.oh.us/arcgis/rest/services/TIMS/Roadway_Information/MapServer/',
+            baseUrl: 'https://gis.dot.state.oh.us/arcgis/rest/services/TIMS/Roadway_Information/MapServer/',
             defaultColors: {Fw:'#ff00c5',Ew:'#4f33df',MH:'#149ece',mH:'#4ce600',PS:'#cfae0e',St:'#eeeeee'},
             zoomSettings: { maxOffset: [30,15,8,4,2,1,1,1,1,1], excludeRoadTypes: [['St'],['St'],['St'],['St'],[],[],[],[],[],[],[]] },
 
@@ -772,7 +794,7 @@
             zoomSettings: { maxOffset: [30,15,8,4,2,1,1,1,1,1], excludeRoadTypes: [['St'],['St'],['St'],['St'],[],[],[],[],[],[],[]] },
             fcMapLayers: [
                 { layerID:35, fcPropName:'NAT_FUNCTIONAL_CLASS', idPropName:'OBJECTID', outFields:['OBJECTID','NAT_FUNCTIONAL_CLASS','ROUTE_ID'], maxRecordCount:1000, supportsPagination:true, roadTypeMap:{Fw:[1],Ew:[2],MH:[3],mH:[4],PS:[5,6],St:[7]} }
-           ],
+            ],
             getWhereClause: function(context) {
                 if(context.mapContext.zoom < 4) {
                     return context.layer.fcPropName + ' NOT IN(9,19)';
@@ -784,7 +806,6 @@
                 if (layer.getFeatureRoadType) {
                     return layer.getFeatureRoadType(feature);
                 } else {
-                    debugger;
                     var fcCode = feature.attributes[layer.fcPropName];
                     var fc = fcCode;
                     if (fcCode===11) fc = 1;
@@ -896,6 +917,7 @@
     function saveSettingsToStorage() {
         if (localStorage) {
             _settings.lastVersion = _scriptVersion;
+            _settings.layerVisible = _mapLayer.visibility;
             localStorage.setItem(_settingsStoreName, JSON.stringify(_settings));
             log('Settings saved', 1);
         }
@@ -908,84 +930,6 @@
     function sortArray(array) {
         array.sort(function(a, b){if (a < b)return -1;if (a > b)return 1;else return 0;});
     }
-
-    function addRow($table, feature) {
-        var $row = $('<tr> class="clickable"').append(
-            $('<td>').text(feature.attributes.state),
-            $('<td>').text('test')
-        )
-        .click(function () {
-            // var $row = $(this);
-            // var id = $row.data('reportId');
-            // var marker = getReport(id).marker;
-            // //var $imageDiv = report.imageDiv;
-            // //if (!marker.onScreen()) {
-            // W.map.moveTo(marker.lonlat);
-            //}
-            //toggleReportPopover($imageDiv);
-
-        }); //.data('reportId', report.id);
-        //report.dataRow = $row;
-        $table.append($row);
-        //$row.report = report;
-    }
-
-
-    // function onClickColumnHeader(obj) {
-    //     var prop;
-    //     // switch (/nc-dot-table-(.*)-header/.exec(obj.id)[1]) {
-    //     //     case 'roadname':
-    //     //         prop = 'attributes.RoadName';
-    //     //         break;
-    //     //     case 'start':
-    //     //         prop = 'attributes.StartTime';
-    //     //         break;
-    //     //     case 'desc':
-    //     //         prop = 'attributes.Expr1';
-    //     //         break;
-    //     //     case 'end':
-    //     //         prop = 'attributes.EndTime';
-    //     //         break;
-    //     //     case 'archive':
-    //     //         prop = 'archived';
-    //     //         break;
-    //     //     default:
-    //     //         return;
-    //     // }
-    //     var idx = _columnSortOrder.indexOf(prop);
-    //     if (idx > -1) {
-    //         _columnSortOrder.splice(idx, 1);
-    //         _columnSortOrder.reverse();
-    //         _columnSortOrder.push(prop);
-    //         _columnSortOrder.reverse();
-    //         buildTable();
-    //     }
-    // }
-
-    //     function buildTable() {
-    //         log('Building table', 1);
-    //         var $table = $('<table>',{class:'fcl-table'});
-    //         var $th = $('<thead>').appendTo($table);
-    //         $th.append(
-    //             $('<tr>').append(
-    //                 $('<th>', {id:'fcl-table-state-header',title:'Sort by state'}).text('St'),
-    //                 $('<th>', {id:'fcl-table-roadname-header',title:'Sort by road name'}).text('Road')
-    //             )
-    //         );
-    //         _mapLayer.features.forEach(function(feature) {
-    //             addRow($table, feature);
-    //         });
-    //         // _reports.sort(dynamicSortMultiple(_columnSortOrder));
-    //         // _reports.forEach(function(report) {
-    //         //     addRow($table, report);
-    //         // });
-    //         $('.fcl-table').remove();
-    //         console.log($table);
-    //         $('#fcl-table-container').append($table);
-    //         $('.fcl-table th').click(function() {onClickColumnHeader(this);});
-
-    //         //updateReportsVisibility();
-    //     }
 
     function getVisibleStateAbbrs() {
         var visibleStates = [];
@@ -1167,6 +1111,8 @@
     var _lastContext = null;
     var _fcCallCount = 0;
     function fetchAllFC() {
+        if (!_mapLayer.visibility) return;
+
         if (_lastPromise) { _lastPromise.cancel(); }
         $('#fc-loading-indicator').text('Loading FC...');
 
@@ -1225,9 +1171,16 @@
         _lastPromise = map;
     }
 
+    function onLayerCheckboxChanged(checked) {
+        _mapLayer.setVisibility(checked);
+    }
+
     function onLayerVisibilityChanged(evt) {
         _settings.layerVisible = _mapLayer.visibility;
         saveSettingsToStorage();
+        if (_mapLayer.visibility) {
+            fetchAllFC();
+        }
     }
 
     function onModeChanged(model, modeId, context) {
@@ -1283,7 +1236,7 @@
 
         Waze.map.addLayer(_mapLayer);
         _mapLayer.setZIndex(_mapLayerZIndex);
-
+        AddLayerCheckbox('Display', 'FC Layer', _settings.layerVisible, onLayerCheckboxChanged);
         // Hack to fix layer zIndex.  Some other code is changing it sometimes but I have not been able to figure out why.
         // It may be that the FC layer is added to the map before some Waze code loads the base layers and forces other layers higher. (?)
 
@@ -1423,4 +1376,72 @@
 
     log('Bootstrap...', 0);
     bootstrap();
+
+    // ****************************************************************************************
+    // Copied from WazeWrap (can't currently reference WazeWrap due to sandboxing issues)
+    // ****************************************************************************************
+    function AddLayerCheckbox(group, checkboxText, checked, callback){
+        group = group.toLowerCase();
+        var normalizedText = checkboxText.toLowerCase().replace(/\s/g, '_');
+        var checkboxID = "layer-switcher-item_" + normalizedText;
+        var groupPrefix = 'layer-switcher-group_';
+        var groupClass = groupPrefix + group.toLowerCase();
+        sessionStorage[normalizedText] = checked;
+
+        var CreateParentGroup = function(groupChecked){
+            var groupList = $('.layer-switcher').find('.list-unstyled.togglers');
+            var checkboxText = group.charAt(0).toUpperCase() + group.substr(1);
+            var newLI = $('<li class="group">');
+            newLI.html([
+                '<div class="controls-container toggler">',
+                '<input class="' + groupClass + '" id="' + groupClass + '" type="checkbox" ' + (groupChecked ? 'checked' : '') +'>',
+                '<label for="' + groupClass + '">',
+                '<span class="label-text">'+ checkboxText + '</span>',
+                '</label></div>',
+                '<ul class="children"></ul>'
+            ].join(' '));
+
+            groupList.append(newLI);
+            $('#' + groupClass).change(function(){sessionStorage[groupClass] = this.checked;});
+        };
+
+        if(group !== "issues" && group !== "places" && group !== "road" && group !== "display") //"non-standard" group, check its existence
+            if($('.'+groupClass).length === 0){ //Group doesn't exist yet, create it
+                var isParentChecked = (typeof sessionStorage[groupClass] == "undefined" ? true : sessionStorage[groupClass]=='true');
+                CreateParentGroup(isParentChecked);  //create the group
+                sessionStorage[groupClass] = isParentChecked;
+
+                Waze.app.modeController.model.bind('change:mode', function(model, modeId, context){ //make it reappear after changing modes
+                    CreateParentGroup((sessionStorage[groupClass]=='true'));
+                });
+            }
+
+        var buildLayerItem = function(isChecked){
+            var groupChildren = $("."+groupClass).parent().parent().find('.children').not('.extended');
+            var $li = $('<li>');
+            $li.html([
+                '<div class="controls-container toggler">',
+                '<input type="checkbox" id="' + checkboxID + '"  class="' + checkboxID + ' toggle">',
+                '<label for="' + checkboxID + '"><span class="label-text">' + checkboxText + '</span></label>',
+                '</div>',
+            ].join(' '));
+
+            groupChildren.append($li);
+            $('#' + checkboxID).prop('checked', isChecked);
+            $('#' + checkboxID).change(function(){callback(this.checked); sessionStorage[normalizedText] = this.checked;});
+            if(!$('#' + groupClass).is(':checked')){
+                $('#' + checkboxID).prop('disabled', true);
+                callback(false);
+            }
+
+            $('#' + groupClass).change(function(){$('#' + checkboxID).prop('disabled', !this.checked); callback(this.checked);});
+        };
+
+
+        Waze.app.modeController.model.bind('change:mode', function(model, modeId, context){
+            buildLayerItem((sessionStorage[normalizedText]=='true'));
+        });
+
+        buildLayerItem(checked);
+    }
 })();
