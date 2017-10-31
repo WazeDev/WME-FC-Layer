@@ -8,7 +8,7 @@
 // // ==UserScript==
 // @name         WME FC Layer (beta)
 // @namespace    https://greasyfork.org/users/45389
-// @version      2017.10.31.001
+// @version      2017.10.31.002
 // @description  Adds a Functional Class layer for states that publish ArcGIS FC data.
 // @author       MapOMatic
 // @include      /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
@@ -292,7 +292,9 @@
             getFeatureRoadType: function(feature, layer) {
                 if (feature.attributes.RT_PREFIX === 'US') {
                     var suffix = feature.attributes.RT_SUFFIX;
-                    return suffix && suffix.indexOf('X') === -1 ? 'MH' : 'mH';
+                    var type = 'MH';
+                    if (suffix && suffix.indexOf('X') > -1) type = 'mH';
+                    return type;
                 } else {
                     return _stateSettings.global.getFeatureRoadType(feature, layer);
                 }
