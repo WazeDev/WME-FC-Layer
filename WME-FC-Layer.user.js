@@ -8,7 +8,7 @@
 // // ==UserScript==
 // @name         WME FC Layer
 // @namespace    https://greasyfork.org/users/45389
-// @version      0.3.01
+// @version      2017.10.31.001
 // @description  Adds a Functional Class layer for states that publish ArcGIS FC data.
 // @author       MapOMatic
 // @include      /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
@@ -292,7 +292,7 @@
             getFeatureRoadType: function(feature, layer) {
                 if (feature.attributes.RT_PREFIX === 'US') {
                     var suffix = feature.attributes.RT_SUFFIX;
-                    return suffix.indexOf('X') === -1 ? 'MH' : 'mH';
+                    return suffix && suffix.indexOf('X') === -1 ? 'MH' : 'mH';
                 } else {
                     return _stateSettings.global.getFeatureRoadType(feature, layer);
                 }
@@ -508,7 +508,7 @@
             zoomSettings: { maxOffset: [30,15,8,4,2,1,1,1,1,1], excludeRoadTypes: [['St'],['St'],['St'],['St'],[],[],[],[],[],[],[]] },
 
             fcMapLayers: [
-                { layerID:9, fcPropName:'FUNCTION_CLASS', idPropName:'ObjectID', outFields:['FUNCTION_CLASS','ROUTE_TYPE','ROUTE_NBR','NLF_ID','ObjectID'],
+                { layerID:9, fcPropName:'FUNCTION_CLASS', idPropName:'ObjectID', outFields:['FUNCTION_CLASS','ROUTE_TYPE','ROUTE_NBR','ObjectID'],
                  maxRecordCount:1000, supportsPagination:false, roadTypeMap:{Fw:[1],Ew:[2],MH:[3],mH:[4],PS:[5,6],St:[7]} }
             ],
             isPermitted: function() { return true; },
@@ -1040,7 +1040,6 @@
                 var ids = $.parseJSON(res.responseText);
                 if(!ids.objectIds) ids.objectIds = [];
                 sortArray(ids.objectIds);
-                log(context.layer.layerID);
                 log(ids,2);
                 return ids;
             }).then(function(res) {
