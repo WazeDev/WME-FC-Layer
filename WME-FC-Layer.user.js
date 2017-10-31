@@ -8,7 +8,7 @@
 // // ==UserScript==
 // @name         WME FC Layer (beta)
 // @namespace    https://greasyfork.org/users/45389
-// @version      0.3.b01
+// @version      2017.10.31.001
 // @description  Adds a Functional Class layer for states that publish ArcGIS FC data.
 // @author       MapOMatic
 // @include      /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
@@ -292,7 +292,7 @@
             getFeatureRoadType: function(feature, layer) {
                 if (feature.attributes.RT_PREFIX === 'US') {
                     var suffix = feature.attributes.RT_SUFFIX;
-                    return suffix.indexOf('X') === -1 ? 'MH' : 'mH';
+                    return suffix && suffix.indexOf('X') === -1 ? 'MH' : 'mH';
                 } else {
                     return _stateSettings.global.getFeatureRoadType(feature, layer);
                 }
@@ -508,7 +508,7 @@
             zoomSettings: { maxOffset: [30,15,8,4,2,1,1,1,1,1], excludeRoadTypes: [['St'],['St'],['St'],['St'],[],[],[],[],[],[],[]] },
 
             fcMapLayers: [
-                { layerID:9, fcPropName:'FUNCTION_CLASS', idPropName:'ObjectID', outFields:['FUNCTION_CLASS','ROUTE_TYPE','ROUTE_NBR','NLF_ID','ObjectID'],
+                { layerID:9, fcPropName:'FUNCTION_CLASS', idPropName:'ObjectID', outFields:['FUNCTION_CLASS','ROUTE_TYPE','ROUTE_NBR','ObjectID'],
                  maxRecordCount:1000, supportsPagination:false, roadTypeMap:{Fw:[1],Ew:[2],MH:[3],mH:[4],PS:[5,6],St:[7]} }
             ],
             isPermitted: function() { return true; },
@@ -931,84 +931,6 @@
         array.sort(function(a, b){if (a < b)return -1;if (a > b)return 1;else return 0;});
     }
 
-    function addRow($table, feature) {
-        var $row = $('<tr> class="clickable"').append(
-            $('<td>').text(feature.attributes.state),
-            $('<td>').text('test')
-        )
-        .click(function () {
-            // var $row = $(this);
-            // var id = $row.data('reportId');
-            // var marker = getReport(id).marker;
-            // //var $imageDiv = report.imageDiv;
-            // //if (!marker.onScreen()) {
-            // W.map.moveTo(marker.lonlat);
-            //}
-            //toggleReportPopover($imageDiv);
-
-        }); //.data('reportId', report.id);
-        //report.dataRow = $row;
-        $table.append($row);
-        //$row.report = report;
-    }
-
-
-    // function onClickColumnHeader(obj) {
-    //     var prop;
-    //     // switch (/nc-dot-table-(.*)-header/.exec(obj.id)[1]) {
-    //     //     case 'roadname':
-    //     //         prop = 'attributes.RoadName';
-    //     //         break;
-    //     //     case 'start':
-    //     //         prop = 'attributes.StartTime';
-    //     //         break;
-    //     //     case 'desc':
-    //     //         prop = 'attributes.Expr1';
-    //     //         break;
-    //     //     case 'end':
-    //     //         prop = 'attributes.EndTime';
-    //     //         break;
-    //     //     case 'archive':
-    //     //         prop = 'archived';
-    //     //         break;
-    //     //     default:
-    //     //         return;
-    //     // }
-    //     var idx = _columnSortOrder.indexOf(prop);
-    //     if (idx > -1) {
-    //         _columnSortOrder.splice(idx, 1);
-    //         _columnSortOrder.reverse();
-    //         _columnSortOrder.push(prop);
-    //         _columnSortOrder.reverse();
-    //         buildTable();
-    //     }
-    // }
-
-    //     function buildTable() {
-    //         log('Building table', 1);
-    //         var $table = $('<table>',{class:'fcl-table'});
-    //         var $th = $('<thead>').appendTo($table);
-    //         $th.append(
-    //             $('<tr>').append(
-    //                 $('<th>', {id:'fcl-table-state-header',title:'Sort by state'}).text('St'),
-    //                 $('<th>', {id:'fcl-table-roadname-header',title:'Sort by road name'}).text('Road')
-    //             )
-    //         );
-    //         _mapLayer.features.forEach(function(feature) {
-    //             addRow($table, feature);
-    //         });
-    //         // _reports.sort(dynamicSortMultiple(_columnSortOrder));
-    //         // _reports.forEach(function(report) {
-    //         //     addRow($table, report);
-    //         // });
-    //         $('.fcl-table').remove();
-    //         console.log($table);
-    //         $('#fcl-table-container').append($table);
-    //         $('.fcl-table th').click(function() {onClickColumnHeader(this);});
-
-    //         //updateReportsVisibility();
-    //     }
-
     function getVisibleStateAbbrs() {
         var visibleStates = [];
         Waze.model.states.additionalInfo.forEach(function(state) {
@@ -1118,7 +1040,6 @@
                 var ids = $.parseJSON(res.responseText);
                 if(!ids.objectIds) ids.objectIds = [];
                 sortArray(ids.objectIds);
-                log(context.layer.layerID);
                 log(ids,2);
                 return ids;
             }).then(function(res) {
