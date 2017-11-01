@@ -8,7 +8,7 @@
 // // ==UserScript==
 // @name         WME FC Layer
 // @namespace    https://greasyfork.org/users/45389
-// @version      2017.10.31.003
+// @version      2017.10.31.004
 // @description  Adds a Functional Class layer for states that publish ArcGIS FC data.
 // @author       MapOMatic
 // @include      /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
@@ -564,92 +564,82 @@
                 return _stateSettings.global.getRoadTypeFromFC(fc, layer);
             }
         },
-        PA: {
-            baseUrl: 'http://services1.arcgis.com/jOy9iZUXBy03ojXb/arcgis/rest/services/RMS_SEG_ADMIN_Join/FeatureServer/',
-            supportsPagination: false,
-            defaultColors: {Fw:'#ff00c5',Ew:'#4f33df',MH:'#149ece',mH:'#4ce600',PS:'#cfae0e',PS2:'#dfae3e',St:'#eeeeee'},
-            zoomSettings: { maxOffset: [30,15,8,4,2,1,1,1,1,1], excludeRoadTypes: [['St'],['St'],['St'],['St'],[],[],[],[],[],[],[]] },
-            isPermitted: function() { return _r >= 3; },
-            fcMapLayers: [
-                { layerID:0, features:new Map(), fcPropName:'FUNC_CLS', idPropName:'OBJECTID', outFields:['OBJECTID','FUNC_CLS','ST_RT_NO','TRAF_RT_NO_PREFIX','TRAF_RT_NO','TRAF_RT_NO_SUF','STREET_NAME'],
-                 maxRecordCount:1000, supportsPagination:false, roadTypeMap:{Fw:[1],Ew:[2],MH:[3],mH:[4],PS:[5],PS2:[6],St:[7,99]} }
-            ],
-            getWhereClause: function(context) {
-                if(context.mapContext.zoom < 4) {
-                    return "(FUNC_CLS <7 OR TRAF_RT_NO_PREFIX IN ('PA','US','SR') OR ST_RT_NO > 999)";
-                } else {
-                    return null;
-                }
-            },
-            getFeatureHwySys: function(feature, layer) {
-                var attr = feature.attributes;
-                var prefix = attr.TRAF_RT_NO_PREFIX;
-                var suffix = attr.TRAF_RT_NO_SUF;
-                var st_rt_no = Number(attr.ST_RT_NO);
-                var traf_rt_no = Number(attr.TRAF_RT_NO);
-                var rt_no = traf_rt_no === 0 ? st_rt_no : traf_rt_no;
-                var isInterstate = prefix === 'I';
-                var isUS = prefix === 'US';
-                var isPA = prefix === 'PA';
-                var isState = isPA || !(isInterstate || isUS);
-                var isBusiness = suffix === 'B';
-                var is4DigitRoute = rt_no > 999;
-
-                var hwySys;
-                if (isInterstate) {
-                    hwySys = isBusiness ? 'interstate-bus' : 'interstate' ;
-                } else if (isUS) {
-                    hwySys = isBusiness ? 'us-bus' : 'us';
-                } else if (isState) {
-                    hwySys = !is4DigitRoute && isPA ? 'state-shielded' : 'state-unshielded';
-                } else {
-                    hwySys = 'local';
-                }
-                attr.calculatedProps = {
-                    hwySys: hwySys,
-                    prefix: prefix,
-                    suffix: suffix,
-                    rt_no: rt_no,
-                    isInterstate: isInterstate,
-                    isUS: isUS,
-                    isPA: isPA,
-                    isState: isState,
-                    isBusiness: isBusiness,
-                    is4DigitRoute: is4DigitRoute
-                };
-                return hwySys;
-            },
-            getFeatureRoadType: function(feature, layer) {
-                var hwySys = this.getFeatureHwySys(feature, layer);
-                var fc = parseInt(feature.attributes.FUNC_CLS);
-                var roadType;
-                switch (fc) {
-                    case 1:
-                        roadType = 'Fw';
-                        break;
-                    case 2:
-                        roadType = 'Ew';
-                        break;
-                    case 3:
-                        roadType = 'MH';
-                        break;
-                    default:
-                        if ((hwySys === 'interstate-bus') || (hwySys === 'us')) {
-                            roadType = 'MH';
-                        } else if ((hwySys === 'us-bus') || (hwySys === 'state-shielded')) {
-                            roadType = 'mH';
-                        } else if (hwySys === 'state-unshielded') {
-                            roadType = 'PS2';
-                        } else if ((hwySys === 'local') && (fc > 5)) {
-                            roadType = 'St';
-                        } else {
-                            roadType = 'PS';
-                        }
-                        break;
-                }
-                return roadType;
-            }
-        },
+        // PA: {
+        //     baseUrl: 'https://www.pdargissvr.pa.gov/ArcGIS/rest/services/MPMS/MPMS/MapServer/',
+        //     supportsPagination: false,
+        //     defaultColors: {Fw:'#ff00c5',Ew:'#4f33df',MH:'#149ece',mH:'#4ce600',PS:'#cfae0e',PS2:'#dfae3e',St:'#eeeeee'},
+        //     zoomSettings: { maxOffset: [30,15,8,4,2,1,1,1,1,1], excludeRoadTypes: [['St'],['St'],['St'],['St'],[],[],[],[],[],[],[]] },
+        //     isPermitted: function() { return _r >= 3; },
+        //     fcMapLayers: [
+        //         { layerID:78, features:new Map(), fcPropName:'FUNC_CLS', idPropName:'OBJECTID', outFields:['OBJECTID','FUNC_CLS','ST_RT_NO'],
+        //          maxRecordCount:1000, supportsPagination:false, roadTypeMap:{Fw:['01','11']} },
+        //         { layerID:79, features:new Map(), fcPropName:'FUNC_CLS', idPropName:'OBJECTID', outFields:['OBJECTID','FUNC_CLS','ST_RT_NO'],
+        //          maxRecordCount:1000, supportsPagination:false, roadTypeMap:{Ew:['12']} },
+        //         { layerID:80, features:new Map(), fcPropName:'FUNC_CLS', idPropName:'OBJECTID', outFields:['OBJECTID','FUNC_CLS','ST_RT_NO'],
+        //          maxRecordCount:1000, supportsPagination:false, roadTypeMap:{MH:['02','14']} },
+        //         { layerID:81, features:new Map(), fcPropName:'FUNC_CLS', idPropName:'OBJECTID', outFields:['OBJECTID','FUNC_CLS','ST_RT_NO', 'DISTRICT_NO'],
+        //          maxRecordCount:1000, supportsPagination:false, roadTypeMap:{mH:['06','16']} },
+        //         { layerID:82, features:new Map(), fcPropName:'FUNC_CLS', idPropName:'OBJECTID', outFields:['OBJECTID','FUNC_CLS','ST_RT_NO'],
+        //          maxRecordCount:1000, supportsPagination:false, roadTypeMap:{PS:['07','17']} },
+        //         { layerID:83, features:new Map(), fcPropName:'FUNC_CLS', idPropName:'OBJECTID', outFields:['OBJECTID','FUNC_CLS','ST_RT_NO'],
+        //          maxRecordCount:1000, supportsPagination:false, roadTypeMap:{PS:['08']} },
+        //         { layerID:84, features:new Map(), fcPropName:'FUNC_CLS', idPropName:'OBJECTID', outFields:['OBJECTID','FUNC_CLS','ST_RT_NO'],
+        //          maxRecordCount:1000, supportsPagination:false, roadTypeMap:{St:['09','19']} }
+        //     ],
+        //     getWhereClause: function(context) {
+        //         //if(context.mapContext.zoom < 4) {
+        //         //    return "(FUNC_CLS <7 OR TRAF_RT_NO_PREFIX IN ('PA','US','SR') OR ST_RT_NO > 999)";
+        //         //} else {
+        //             return null;
+        //         //}
+        //     },
+        //     getFeatureRoadType: function(feature, layer) {
+        //         var fc = parseInt(feature.attributes.FUNC_CLS);
+        //         var rtNo = feature.attributes.ST_RT_NO;
+        //         var roadType;
+        //         switch (fc) {
+        //             case 1:
+        //             case 11:
+        //                 roadType = 'Fw';
+        //                 break;
+        //             case 12:
+        //                 roadType = 'Ew';
+        //                 break;
+        //             case 2:
+        //             case 14:
+        //                 roadType = 'MH';
+        //                 break;
+        //             case 6:
+        //             case 16:
+        //                 debugger;
+        //                 var distNo = parseInt(feature.attributes.DISTRICT_NO);
+        //                 if ((/[a-zA-Z]/.test(rtNo) || parseInt(rtNo) >= 1000) && (isNaN(distNo) || distNo !== 6)) {
+        //                     roadType = 'PS';
+        //                 } else {
+        //                     roadType = 'mH';
+        //                 }
+        //                 break;
+        //             case 7:
+        //             case 17:
+        //                 if (/[a-zA-Z]/.test(rtNo) || parseInt(rtNo) >= 1000) {
+        //                     roadType = 'PS';
+        //                 } else {
+        //                     roadType = 'mH';
+        //                 }
+        //                 break;
+        //             case 8:
+        //                 roadType = 'PS';
+        //                 break;
+        //             case 9:
+        //             case 19:
+        //                 roadType = 'St';
+        //                 break;
+        //              default:
+        //                 debugger;
+        //         }
+        //         return roadType;
+        //     }
+        // },
         TN: {
             // NOTE: DUE TO ERRORS FROM THE SHELBY COUNTY SERVER, FC IS NOT WORKING PROPERLY HERE YET (9/23/2016)
             baseUrl: 'https://testuasiportal.shelbycountytn.gov/arcgis/rest/services/MPO/Webmap_2015_04_20_TMPO/MapServer/',
@@ -998,7 +988,7 @@
         if (stateWhereClause) whereParts.push(stateWhereClause);
         if (whereParts.length > 0 ) url += '&where=' + encodeURIComponent(whereParts.join(' AND '));
         url += '&spatialRel=esriSpatialRelIntersects&geometryType=esriGeometryEnvelope&inSR=102100&outSR=3857&f=json';
-        wait(500);
+        //wait(500);  // I don't know why this was in the code.  Leaving it commented here just in case it was a hack to solve some issue.
         return url;
     }
 
