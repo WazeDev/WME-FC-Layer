@@ -48,22 +48,15 @@
         '',
         'What\'s New',
         '------------------------------',
-        '- Modified how FC is retrieved from state servers to address issue where not all segments were loaded in certain states when zoomed out.',
-        '- Added support for KY, IL, NY, ID, UT, OK, TX, FL, WV',
-        '- Added support for Shelby county TN.',
-        '- Fixed a bug that was causing some street highlights to show up when zoomed out.',
-        '- Fixed drawing so overlaid segment highlights don\'t appear darker.',
-        '- Updated to new PA server.'
+        ''  // Add important stuff here when _alertUpdate = true.
     ].join('\n');
     var _mapLayer = null;
     var _isAM = false;
     var _uid;
-    var _styles = {};
     var _settings = {};
     var _r;
     var _mapLayerZIndex = 334;
     var _betaIDs = [103400892];
-    var _columnSortOrder = [];
     var _statesHash = {
         'Alabama':'AL','Alaska':'AK','American Samoa':'AS','Arizona':'AZ','Arkansas':'AR','California':'CA','Colorado':'CO','Connecticut':'CT','Delaware':'DE','District of Columbia':'DC',
         'Federated States Of Micronesia':'FM','Florida':'FL','Georgia':'GA','Guam':'GU','Hawaii':'HI','Idaho':'ID','Illinois':'IL','Indiana':'IN','Iowa':'IA','Kansas':'KS',
@@ -126,7 +119,7 @@
             }
         },
         FL: {
-            baseUrl: 'https://services1.arcgis.com/O1JpcwDW8sjYuddV/ArcGIS/rest/services/Functional_Classification/FeatureServer/',
+            baseUrl: 'https://services1.arcgis.com/O1JpcwDW8sjYuddV/ArcGIS/rest/services/Functional_Classification_TDA/FeatureServer/',
             supportsPagination: false,
             defaultColors: {Fw:'#ff00c5',Ew:'#149ece',MH:'#149ece',mH:'#4ce600',PS:'#cfae0e',St:'#eeeeee'},
             zoomSettings: { maxOffset: [30,15,8,4,2,1,1,1,1,1], excludeRoadTypes: [[],[],[],[],[],[],[],[],[],[],[]] },
