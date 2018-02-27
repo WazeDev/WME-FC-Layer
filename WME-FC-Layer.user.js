@@ -1,6 +1,6 @@
-/* global Waze */
+/* global W */
 /* global Promise */
-/* global OpenLayers */
+/* global OL */
 /* global I18n */
 /* global unsafeWindow */
 /* global GM_info */
@@ -8,7 +8,7 @@
 // // ==UserScript==
 // @name         WME FC Layer (beta)
 // @namespace    https://greasyfork.org/users/45389
-// @version      2018.02.17.001
+// @version      2018.02.27.001
 // @description  Adds a Functional Class layer for states that publish ArcGIS FC data.
 // @author       MapOMatic
 // @include      /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
@@ -565,7 +565,7 @@
             isPermitted: function() { return _r >= 3; },
             fcMapLayers: [
                 { layerID:3, features:new Map(), fcPropName:'FUNC_CLS', idPropName:'MSLINK', outFields:['MSLINK','FUNC_CLS'],
-                 maxRecordCount:1000, supportsPagination:false, roadTypeMap:{Fw:['01','11'],Ew:['12'],MH:['02','14'],mH:['06','16'],PS:['07','08','17'],St:['09','19']} },
+                 maxRecordCount:1000, supportsPagination:false, roadTypeMap:{Fw:['01','11'],Ew:['12'],MH:['02','14'],mH:['06','16'],PS:['07','08','17'],St:['09','19']} }
             ],
             getWhereClause: function(context) {
                 return null;
@@ -855,7 +855,7 @@
     }
 
     function getLineWidth() {
-        return 12 * Math.pow(1.15, (Waze.map.getZoom()-1));
+        return 12 * Math.pow(1.15, (W.map.getZoom()-1));
     }
 
     function sortArray(array) {
@@ -864,7 +864,7 @@
 
     function getVisibleStateAbbrs() {
         var visibleStates = [];
-        Waze.model.states.additionalInfo.forEach(function(state) {
+        W.model.states.additionalInfo.forEach(function(state) {
             var stateAbbr = _statesHash[state.name];
             var activeStateAbbr = _settings.activeStateAbbr;
             if(_stateSettings[stateAbbr] && _stateSettings.global.isPermitted(stateAbbr) && (!activeStateAbbr || activeStateAbbr === 'ALL' || activeStateAbbr === stateAbbr)) {
@@ -954,9 +954,9 @@
             var newPoint = null;
             var lastPoint = null;
             path.forEach(function(point){
-                pointList.push(new OpenLayers.Geometry.Point(point[0],point[1]));
+                pointList.push(new OL.Geometry.Point(point[0],point[1]));
             });
-            var vectorFeature = new OpenLayers.Feature.Vector(new OpenLayers.Geometry.LineString(pointList),attr);
+            var vectorFeature = new OL.Feature.Vector(new OL.Geometry.LineString(pointList),attr);
             vectors.push(vectorFeature);
         });
 
@@ -1046,7 +1046,7 @@
         if (_lastPromise) { _lastPromise.cancel(); }
         $('#fc-loading-indicator').text('Loading FC...');
 
-        var mapContext = { zoom:Waze.map.getZoom(), extent:Waze.map.getExtent() };
+        var mapContext = { zoom:W.map.getZoom(), extent:W.map.getExtent() };
         var contexts = [];
         var parentContext = {callCount:0,/*existingFcFeatureUniqueIds:{}, addedFcFeatureUniqueIds:[],*/ startTime:Date.now()};
         // _mapLayer.features.forEach(function(vectorFeature) {
@@ -1133,7 +1133,7 @@
             },
             getStrokeWidth: function() { return getLineWidth(); }
         };
-        var defaultStyle = new OpenLayers.Style({
+        var defaultStyle = new OL.Style({
             strokeColor: '${color}', //'#00aaff',
             strokeDashstyle: "solid",
             strokeOpacity: 1.0,
@@ -1141,16 +1141,16 @@
             graphicZIndex: '${zIndex}'
         });
 
-        var selectStyle = new OpenLayers.Style({
+        var selectStyle = new OL.Style({
             //strokeOpacity: 1.0,
             strokeColor: '#000000'
         });
 
-        _mapLayer = new OpenLayers.Layer.Vector("FC Layer", {
+        _mapLayer = new OL.Layer.Vector("FC Layer", {
             uniqueName: "__FCLayer",
             displayInLayerSwitcher: false,
             rendererOptions: { zIndexing: true },
-            styleMap: new OpenLayers.StyleMap({
+            styleMap: new OL.StyleMap({
                 'default': defaultStyle,
                 'select': selectStyle
             })
@@ -1164,7 +1164,7 @@
         _mapLayer.events.register('visibilitychanged',null,onLayerVisibilityChanged);
         _mapLayer.setVisibility(_settings.layerVisible);
 
-        Waze.map.addLayer(_mapLayer);
+        W.map.addLayer(_mapLayer);
         _mapLayer.setZIndex(_mapLayerZIndex);
         AddLayerCheckbox('Display', 'FC Layer', _settings.layerVisible, onLayerCheckboxChanged);
         // Hack to fix layer zIndex.  Some other code is changing it sometimes but I have not been able to figure out why.
@@ -1179,7 +1179,7 @@
 
         setInterval(function(){checkLayerZIndex();}, 200);
 
-        Waze.map.events.register("moveend",Waze.map,function(e){
+        W.map.events.register("moveend",W.map,function(e){
             fetchAllFC();
             return true;
         },true);
@@ -1271,7 +1271,7 @@
             });
         }
 
-        var u = Waze.loginManager.user;
+        var u = W.loginManager.user;
         _uid = u.id;
         _r = u.rank;
         _isAM = u.isAreaManager;
@@ -1281,18 +1281,18 @@
             return target.replace(new RegExp(search, 'g'), replacement);
         };
         initGui();
-        Waze.app.modeController.model.bind('change:mode', onModeChanged);
-        Waze.prefs.on("change:isImperial", function() {initUserPanel();loadSettingsFromStorage();});
+        W.app.modeController.model.bind('change:mode', onModeChanged);
+        W.prefs.on("change:isImperial", function() {initUserPanel();loadSettingsFromStorage();});
         fetchAllFC();
         log('Initialized.', 0);
     }
 
     function bootstrap() {
-        if (Waze && Waze.loginManager &&
-            Waze.loginManager.events &&
-            Waze.loginManager.events.register &&
-            Waze.model && Waze.model.states && Waze.model.states.additionalInfo &&
-            Waze.map && Waze.loginManager.isLoggedIn()) {
+        if (W && W.loginManager &&
+            W.loginManager.events &&
+            W.loginManager.events.register &&
+            W.model && W.model.states && W.model.states.additionalInfo &&
+            W.map && W.loginManager.isLoggedIn()) {
             log('Initializing...', 0);
 
             init();
@@ -1341,7 +1341,7 @@
                 CreateParentGroup(isParentChecked);  //create the group
                 sessionStorage[groupClass] = isParentChecked;
 
-                Waze.app.modeController.model.bind('change:mode', function(model, modeId, context){ //make it reappear after changing modes
+                W.app.modeController.model.bind('change:mode', function(model, modeId, context){ //make it reappear after changing modes
                     CreateParentGroup((sessionStorage[groupClass]=='true'));
                 });
             }
@@ -1368,7 +1368,7 @@
         };
 
 
-        Waze.app.modeController.model.bind('change:mode', function(model, modeId, context){
+        W.app.modeController.model.bind('change:mode', function(model, modeId, context){
             buildLayerItem((sessionStorage[normalizedText]=='true'));
         });
 
