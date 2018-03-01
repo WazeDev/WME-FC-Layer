@@ -8,12 +8,12 @@
 // // ==UserScript==
 // @name         WME FC Layer (beta)
 // @namespace    https://greasyfork.org/users/45389
-// @version      2018.02.27.001
+// @version      2018.03.01.001
 // @description  Adds a Functional Class layer for states that publish ArcGIS FC data.
 // @author       MapOMatic
 // @include      /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
 // @license      GNU GPLv3
-// @require      https://cdn.jsdelivr.net/bluebird/latest/bluebird.min.js
+// @require      https://greasyfork.org/scripts/39002-bluebird/code/Bluebird.js?version=255146
 // @grant        GM_xmlhttpRequest
 // @connect      maryland.gov
 // @connect      in.gov
@@ -1267,7 +1267,14 @@
                 warnings: true,
                 longStackTraces: true,
                 cancellation: true,
-                monitoring: true
+                monitoring: false
+            });
+        } else {
+            Promise.config({
+                warnings: false,
+                longStackTraces: false,
+                cancellation: true,
+                monitoring: false
             });
         }
 
@@ -1353,7 +1360,7 @@
                 '<div class="controls-container toggler">',
                 '<input type="checkbox" id="' + checkboxID + '"  class="' + checkboxID + ' toggle">',
                 '<label for="' + checkboxID + '"><span class="label-text">' + checkboxText + '</span></label>',
-                '</div>',
+                '</div>'
             ].join(' '));
 
             groupChildren.append($li);
