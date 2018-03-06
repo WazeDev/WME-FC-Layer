@@ -8,7 +8,7 @@
 // // ==UserScript==
 // @name         WME FC Layer (beta)
 // @namespace    https://greasyfork.org/users/45389
-// @version      2018.03.01.001
+// @version      2018.03.06.001
 // @description  Adds a Functional Class layer for states that publish ArcGIS FC data.
 // @author       MapOMatic
 // @include      /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
@@ -33,6 +33,7 @@
 // @connect      idaho.gov
 // @connect      wv.gov
 // @connect      ga.gov
+// @connect      uga.edu
 // ==/UserScript==
 
 (function() {
@@ -140,20 +141,31 @@
             }
         },
         GA: {
-            baseUrl: 'https://egis.dot.ga.gov/arcgis/rest/services/FUNCTIONAL_CLASS/MapServer/',
-            supportsPagination: false,
+            baseUrl: 'https://maps.itos.uga.edu/arcgis/rest/services/GDOT/GDOT_FunctionalClass/mapserver/',
+            supportsPagination: true,
             defaultColors: {Fw:'#ff00c5',Ew:'#149ece',MH:'#149ece',mH:'#4ce600',PS:'#cfae0e',St:'#eeeeee'},
             zoomSettings: { maxOffset: [30,15,8,4,2,1,1,1,1,1], excludeRoadTypes: [[],[],[],[],[],[],[],[],[],[],[]] },
             fetchAllFC: false,
             fcMapLayers: [
-                { layerID:0, fcPropName:'F_SYS_CODE', idPropName:'OBJECTID', outFields:['OBJECTID', 'F_SYS_CODE'], maxRecordCount:1000, supportsPagination:false,
-                 roadTypeMap:{Fw:['1'],Ew:['2'],MH:['3'],mH:['4'],PS:['5','6']} }
+                { layerID:0, fcPropName:'FUNCTIONAL_CLASS', idPropName:'OBJECTID', outFields:['OBJECTID', 'FUNCTIONAL_CLASS', 'SYSTEM_CODE'], maxRecordCount:1000, supportsPagination:true, roadTypeMap:{Fw:[1],Ew:[2],MH:[3],mH:[4],PS:[5,6]} },
+                { layerID:1, fcPropName:'FUNCTIONAL_CLASS', idPropName:'OBJECTID', outFields:['OBJECTID', 'FUNCTIONAL_CLASS', 'SYSTEM_CODE'], maxRecordCount:1000, supportsPagination:true, roadTypeMap:{Fw:[1],Ew:[2],MH:[3],mH:[4],PS:[5,6]} },
+                { layerID:2, fcPropName:'FUNCTIONAL_CLASS', idPropName:'OBJECTID', outFields:['OBJECTID', 'FUNCTIONAL_CLASS', 'SYSTEM_CODE'], maxRecordCount:1000, supportsPagination:true, roadTypeMap:{Fw:[1],Ew:[2],MH:[3],mH:[4],PS:[5,6]} },
+                { layerID:3, fcPropName:'FUNCTIONAL_CLASS', idPropName:'OBJECTID', outFields:['OBJECTID', 'FUNCTIONAL_CLASS', 'SYSTEM_CODE'], maxRecordCount:1000, supportsPagination:true, roadTypeMap:{Fw:[1],Ew:[2],MH:[3],mH:[4],PS:[5,6]} },
+                { layerID:4, fcPropName:'FUNCTIONAL_CLASS', idPropName:'OBJECTID', outFields:['OBJECTID', 'FUNCTIONAL_CLASS', 'SYSTEM_CODE'], maxRecordCount:1000, supportsPagination:true, roadTypeMap:{Fw:[1],Ew:[2],MH:[3],mH:[4],PS:[5,6]} },
+                { layerID:5, fcPropName:'FUNCTIONAL_CLASS', idPropName:'OBJECTID', outFields:['OBJECTID', 'FUNCTIONAL_CLASS', 'SYSTEM_CODE'], maxRecordCount:1000, supportsPagination:true, roadTypeMap:{Fw:[1],Ew:[2],MH:[3],mH:[4],PS:[5,6]} },
+                { layerID:6, fcPropName:'FUNCTIONAL_CLASS', idPropName:'OBJECTID', outFields:['OBJECTID', 'FUNCTIONAL_CLASS', 'SYSTEM_CODE'], maxRecordCount:1000, supportsPagination:true, roadTypeMap:{Fw:[1],Ew:[2],MH:[3],mH:[4],PS:[5,6]} }
             ],
             getFeatureRoadType: function(feature, layer) {
                 if (layer.getFeatureRoadType) {
                     return layer.getFeatureRoadType(feature);
                 } else {
-                    return _stateSettings.global.getFeatureRoadType(feature, layer);
+                    var attr = feature.attributes;
+                    var fc = attr.FUNCTIONAL_CLASS;
+                    if (attr.SYSTEM_CODE === '1' && fc > 4) {
+                        return _stateSettings.global.getRoadTypeFromFC(4, layer);
+                    } else {
+                        return _stateSettings.global.getFeatureRoadType(feature, layer);
+                    }
                 }
             },
             getWhereClause: function(context) {
@@ -1360,7 +1372,7 @@
                 '<div class="controls-container toggler">',
                 '<input type="checkbox" id="' + checkboxID + '"  class="' + checkboxID + ' toggle">',
                 '<label for="' + checkboxID + '"><span class="label-text">' + checkboxText + '</span></label>',
-                '</div>'
+                '</div>',
             ].join(' '));
 
             groupChildren.append($li);
