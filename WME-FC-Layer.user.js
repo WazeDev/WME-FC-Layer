@@ -8,14 +8,14 @@
 // // ==UserScript==
 // @name         WME FC Layer
 // @namespace    https://greasyfork.org/users/45389
-// @version      2018.03.06.001
+// @version      2018.03.31.001
 // @description  Adds a Functional Class layer for states that publish ArcGIS FC data.
 // @author       MapOMatic
 // @include      /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
 // @license      GNU GPLv3
 // @require      https://greasyfork.org/scripts/39002-bluebird/code/Bluebird.js?version=255146
 // @grant        GM_xmlhttpRequest
-// @connect      maryland.gov
+// @connect      md.gov
 // @connect      in.gov
 // @connect      arcgis.com
 // @connect      ncdot.gov
@@ -341,11 +341,11 @@
             }
         },
         MD: {
-            baseUrl: 'http://www.maps.roads.maryland.gov/arcgis/rest/services/TRANSPORTATION/FunctionClassUpdates/MapServer/',
+            baseUrl: 'http://geodata.md.gov/imap/rest/services/Transportation/MD_HighwayPerformanceMonitoringSystem/MapServer/',
             defaultColors: {Fw:'#ff00c5',Ew:'#4f33df',MH:'#149ece',mH:'#4ce600',PS:'#ffff00',St:'#eeeeee'},
             zoomSettings: { maxOffset: [30,15,8,4,2,1,1,1,1,1], excludeRoadTypes: [['St'],['St'],['St'],['St'],[],[],[],[],[],[],[]] },
             fcMapLayers: [
-                { layerID:0, fcPropName:'F_SYSTEM', idPropName:'FID', outFields:['FID','F_SYSTEM','ID_PREFIX','MP_SUFFIX'], roadTypeMap:{Fw:[1],Ew:[2],MH:[3],mH:[4],PS:[5,6],St:[7]}, maxRecordCount:1000, supportsPagination:false }
+                { layerID:3, fcPropName:'F_SYSTEM', idPropName:'OBJECTID', outFields:['OBJECTID','F_SYSTEM','ID_PREFIX','MP_SUFFIX'], roadTypeMap:{Fw:[1],Ew:[2],MH:[3],mH:[4],PS:[5,6],St:[7]}, maxRecordCount:1000, supportsPagination:false }
             ],
             getWhereClause: function(context) {
                 if(context.mapContext.zoom < 4) {
