@@ -8,7 +8,7 @@
 // // ==UserScript==
 // @name         WME FC Layer
 // @namespace    https://greasyfork.org/users/45389
-// @version      2018.03.31.001
+// @version      2018.05.02.001
 // @description  Adds a Functional Class layer for states that publish ArcGIS FC data.
 // @author       MapOMatic
 // @include      /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
@@ -306,22 +306,22 @@
             }
         },
         LA: {
-            baseUrl: 'http://gisweb.dotd.la.gov/ArcGIS/rest/services/LADOTDAGO/LA_RoadwayFunctionalClassification/MapServer/',
+            baseUrl: 'https://giswebnew.dotd.la.gov/arcgis/rest/services/Transportation/LA_RoadwayFunctionalClassification/FeatureServer/',
             supportsPagination: false,
-            defaultColors: {Fw:'#ff00c5',Ew:'#5f33df',MH:'#149ece',mH:'#4ce600',PS:'#cfae0e',St:'#eeeeee'},
+            defaultColors: {Fw:'#4094ff',Ew:'#ffbf40',MH:'#fb674d',mH:'#6abe40',PS1:'#bf40ec',PS2:'#ffff40',St:'#a2a2a2'},
             zoomSettings: { maxOffset: [30,15,8,4,2,1,1,1,1,1], excludeRoadTypes: [['St'],['St'],['St'],['St'],[],[],[],[],[],[],[]] },
             fcMapLayers: [
-                { layerID:0, fcPropName:'Functional_System', idPropName:'OBJECTID', outFields:['OBJECTID','Functional_System','State_Route'], roadTypeMap:{Fw:[1],Ew:['2','2a','2b'],MH:[3],mH:[4],PS:[5,6],St:[7]}, maxRecordCount:1000, supportsPagination:false },
-                { layerID:1, fcPropName:'Functional_System', idPropName:'OBJECTID', outFields:['OBJECTID','Functional_System','State_Route'], roadTypeMap:{Fw:[1],Ew:['2','2a','2b'],MH:[3],mH:[4],PS:[5,6],St:[7]}, maxRecordCount:1000, supportsPagination:false },
-                { layerID:2, fcPropName:'Functional_System', idPropName:'OBJECTID', outFields:['OBJECTID','Functional_System','State_Route'], roadTypeMap:{Fw:[1],Ew:['2','2a','2b'],MH:[3],mH:[4],PS:[5,6],St:[7]}, maxRecordCount:1000, supportsPagination:false },
-                { layerID:3, fcPropName:'Functional_System', idPropName:'OBJECTID', outFields:['OBJECTID','Functional_System','State_Route'], roadTypeMap:{Fw:[1],Ew:['2','2a','2b'],MH:[3],mH:[4],PS:[5,6],St:[7]}, maxRecordCount:1000, supportsPagination:false },
-                { layerID:4, fcPropName:'Functional_System', idPropName:'OBJECTID', outFields:['OBJECTID','Functional_System','State_Route'], roadTypeMap:{Fw:[1],Ew:['2','2a','2b'],MH:[3],mH:[4],PS:[5,6],St:[7]}, maxRecordCount:1000, supportsPagination:false },
-                { layerID:5, fcPropName:'Functional_System', idPropName:'OBJECTID', outFields:['OBJECTID','Functional_System','State_Route'], roadTypeMap:{Fw:[1],Ew:['2','2a','2b'],MH:[3],mH:[4],PS:[5,6],St:[7]}, maxRecordCount:1000, supportsPagination:false },
-                { layerID:6, fcPropName:'Functional_System', idPropName:'OBJECTID', outFields:['OBJECTID','Functional_System','State_Route'], roadTypeMap:{Fw:[1],Ew:['2','2a','2b'],MH:[3],mH:[4],PS:[5,6],St:[7]}, maxRecordCount:1000, supportsPagination:false }
+                { layerID:0, fcPropName:'FunctionalSystem', idPropName:'OBJECTID', outFields:['OBJECTID','FunctionalSystem'], roadTypeMap:{Fw:[1],Ew:['2','2a','2b'],MH:[3],mH:[4],PS1:[5],PS2:[6],St:[7]}, maxRecordCount:1000, supportsPagination:false },
+                { layerID:1, fcPropName:'FunctionalSystem', idPropName:'OBJECTID', outFields:['OBJECTID','FunctionalSystem'], roadTypeMap:{Fw:[1],Ew:['2','2a','2b'],MH:[3],mH:[4],PS1:[5],PS2:[6],St:[7]}, maxRecordCount:1000, supportsPagination:false },
+                { layerID:2, fcPropName:'FunctionalSystem', idPropName:'OBJECTID', outFields:['OBJECTID','FunctionalSystem'], roadTypeMap:{Fw:[1],Ew:['2','2a','2b'],MH:[3],mH:[4],PS1:[5],PS2:[6],St:[7]}, maxRecordCount:1000, supportsPagination:false },
+                { layerID:3, fcPropName:'FunctionalSystem', idPropName:'OBJECTID', outFields:['OBJECTID','FunctionalSystem'], roadTypeMap:{Fw:[1],Ew:['2','2a','2b'],MH:[3],mH:[4],PS1:[5],PS2:[6],St:[7]}, maxRecordCount:1000, supportsPagination:false },
+                { layerID:4, fcPropName:'FunctionalSystem', idPropName:'OBJECTID', outFields:['OBJECTID','FunctionalSystem'], roadTypeMap:{Fw:[1],Ew:['2','2a','2b'],MH:[3],mH:[4],PS1:[5],PS2:[6],St:[7]}, maxRecordCount:1000, supportsPagination:false },
+                { layerID:5, fcPropName:'FunctionalSystem', idPropName:'OBJECTID', outFields:['OBJECTID','FunctionalSystem'], roadTypeMap:{Fw:[1],Ew:['2','2a','2b'],MH:[3],mH:[4],PS1:[5],PS2:[6],St:[7]}, maxRecordCount:1000, supportsPagination:false },
+                { layerID:6, fcPropName:'FunctionalSystem', idPropName:'OBJECTID', outFields:['OBJECTID','FunctionalSystem'], roadTypeMap:{Fw:[1],Ew:['2','2a','2b'],MH:[3],mH:[4],PS1:[5],PS2:[6],St:[7]}, maxRecordCount:1000, supportsPagination:false }
             ],
             getWhereClause: function(context) {
                 if(context.mapContext.zoom < 4) {
-                    return context.layer.fcPropName + "<>'7' OR State_Route LIKE 'US%' OR State_Route LIKE 'LA%'";
+                    return context.layer.fcPropName + "<>'7'"; // OR State_Route LIKE 'US%' OR State_Route LIKE 'LA%'";
                 } else {
                     return null;
                 }
@@ -330,13 +330,13 @@
                 var fc = feature.attributes[layer.fcPropName];
                 if (fc === '2a' || fc === '2b') { fc = 2; }
                 fc = parseInt(fc);
-                var stateRoute = feature.attributes.State_Route;
-                var isBusiness = /BUS$/.test(stateRoute);
-                if (fc > 3 && /^US\s/.test(stateRoute) && !isBusiness) {
-                    fc = 3;
-                } else if (fc > 4 && /^LA\s/.test(stateRoute) && !isBusiness) {
-                    fc = 4;
-                }
+                // var stateRoute = feature.attributes.State_Route;
+                // var isBusiness = /BUS$/.test(stateRoute);
+                // if (fc > 3 && /^US\s/.test(stateRoute) && !isBusiness) {
+                //     fc = 3;
+                // } else if (fc > 4 && /^LA\s/.test(stateRoute) && !isBusiness) {
+                //     fc = 4;
+                // }
                 return _stateSettings.global.getRoadTypeFromFC(fc, layer);
             }
         },
