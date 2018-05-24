@@ -8,12 +8,13 @@
 // // ==UserScript==
 // @name         WME FC Layer
 // @namespace    https://greasyfork.org/users/45389
-// @version      2018.05.02.001
+// @version      2018.05.24.001
 // @description  Adds a Functional Class layer for states that publish ArcGIS FC data.
 // @author       MapOMatic
 // @include      /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
 // @license      GNU GPLv3
 // @require      https://greasyfork.org/scripts/39002-bluebird/code/Bluebird.js?version=255146
+// @require      https://greasyfork.org/scripts/24851-wazewrap/code/WazeWrap.js
 // @grant        GM_xmlhttpRequest
 // @connect      md.gov
 // @connect      in.gov
@@ -1178,7 +1179,8 @@
 
         W.map.addLayer(_mapLayer);
         _mapLayer.setZIndex(_mapLayerZIndex);
-        AddLayerCheckbox('Display', 'FC Layer', _settings.layerVisible, onLayerCheckboxChanged);
+        debugger;
+        WazeWrap.Interface.AddLayerCheckbox('Display', 'FC Layer', _settings.layerVisible, onLayerCheckboxChanged);
         // Hack to fix layer zIndex.  Some other code is changing it sometimes but I have not been able to figure out why.
         // It may be that the FC layer is added to the map before some Waze code loads the base layers and forces other layers higher. (?)
 
@@ -1311,7 +1313,8 @@
             W.loginManager.events &&
             W.loginManager.events.register &&
             W.model && W.model.states && W.model.states.additionalInfo &&
-            W.map && W.loginManager.isLoggedIn()) {
+            W.map && W.loginManager.isLoggedIn() &&
+            WazeWrap.Version) {
             log('Initializing...', 0);
 
             init();
@@ -1325,72 +1328,4 @@
 
     log('Bootstrap...', 0);
     bootstrap();
-
-    // ****************************************************************************************
-    // Copied from WazeWrap (can't currently reference WazeWrap due to sandboxing issues)
-    // ****************************************************************************************
-    function AddLayerCheckbox(group, checkboxText, checked, callback){
-        group = group.toLowerCase();
-        var normalizedText = checkboxText.toLowerCase().replace(/\s/g, '_');
-        var checkboxID = "layer-switcher-item_" + normalizedText;
-        var groupPrefix = 'layer-switcher-group_';
-        var groupClass = groupPrefix + group.toLowerCase();
-        sessionStorage[normalizedText] = checked;
-
-        var CreateParentGroup = function(groupChecked){
-            var groupList = $('.layer-switcher').find('.list-unstyled.togglers');
-            var checkboxText = group.charAt(0).toUpperCase() + group.substr(1);
-            var newLI = $('<li class="group">');
-            newLI.html([
-                '<div class="controls-container toggler">',
-                '<input class="' + groupClass + '" id="' + groupClass + '" type="checkbox" ' + (groupChecked ? 'checked' : '') +'>',
-                '<label for="' + groupClass + '">',
-                '<span class="label-text">'+ checkboxText + '</span>',
-                '</label></div>',
-                '<ul class="children"></ul>'
-            ].join(' '));
-
-            groupList.append(newLI);
-            $('#' + groupClass).change(function(){sessionStorage[groupClass] = this.checked;});
-        };
-
-        if(group !== "issues" && group !== "places" && group !== "road" && group !== "display") //"non-standard" group, check its existence
-            if($('.'+groupClass).length === 0){ //Group doesn't exist yet, create it
-                var isParentChecked = (typeof sessionStorage[groupClass] == "undefined" ? true : sessionStorage[groupClass]=='true');
-                CreateParentGroup(isParentChecked);  //create the group
-                sessionStorage[groupClass] = isParentChecked;
-
-                W.app.modeController.model.bind('change:mode', function(model, modeId, context){ //make it reappear after changing modes
-                    CreateParentGroup((sessionStorage[groupClass]=='true'));
-                });
-            }
-
-        var buildLayerItem = function(isChecked){
-            var groupChildren = $("."+groupClass).parent().parent().find('.children').not('.extended');
-            var $li = $('<li>');
-            $li.html([
-                '<div class="controls-container toggler">',
-                '<input type="checkbox" id="' + checkboxID + '"  class="' + checkboxID + ' toggle">',
-                '<label for="' + checkboxID + '"><span class="label-text">' + checkboxText + '</span></label>',
-                '</div>',
-            ].join(' '));
-
-            groupChildren.append($li);
-            $('#' + checkboxID).prop('checked', isChecked);
-            $('#' + checkboxID).change(function(){callback(this.checked); sessionStorage[normalizedText] = this.checked;});
-            if(!$('#' + groupClass).is(':checked')){
-                $('#' + checkboxID).prop('disabled', true);
-                callback(false);
-            }
-
-            $('#' + groupClass).change(function(){$('#' + checkboxID).prop('disabled', !this.checked); callback(this.checked);});
-        };
-
-
-        W.app.modeController.model.bind('change:mode', function(model, modeId, context){
-            buildLayerItem((sessionStorage[normalizedText]=='true'));
-        });
-
-        buildLayerItem(checked);
-    }
 })();
