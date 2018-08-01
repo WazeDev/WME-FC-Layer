@@ -4,11 +4,12 @@
 /* global I18n */
 /* global unsafeWindow */
 /* global GM_info */
+/* global WazeWrap */
 
 // // ==UserScript==
 // @name         WME FC Layer
 // @namespace    https://greasyfork.org/users/45389
-// @version      2018.07.21.001
+// @version      2018.08.01.001
 // @description  Adds a Functional Class layer for states that publish ArcGIS FC data.
 // @author       MapOMatic
 // @include      /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
@@ -665,7 +666,8 @@
                     }
                     return _stateSettings.global.getRoadTypeFromFC(fc, layer);
                 }
-            }
+            },
+            isPermitted: function() { return _r >= 1; }
         },
         UT: {
             baseUrl: 'http://maps.udot.utah.gov/arcgis/rest/services/Functional_Class/MapServer/',
