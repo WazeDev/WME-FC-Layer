@@ -9,7 +9,7 @@
 // // ==UserScript==
 // @name         WME FC Layer
 // @namespace    https://greasyfork.org/users/45389
-// @version      2018.08.07.001
+// @version      2018.08.18.001
 // @description  Adds a Functional Class layer for states that publish ArcGIS FC data.
 // @author       MapOMatic
 // @include      /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
@@ -1330,7 +1330,7 @@
             W.loginManager.events &&
             W.loginManager.events.register &&
             W.model && W.model.states && W.model.states.additionalInfo &&
-            W.map && W.loginManager.isLoggedIn() &&
+            W.map && W.loginManager.user &&
             WazeWrap.Version) {
             log('Initializing...', 0);
 
