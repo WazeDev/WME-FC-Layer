@@ -640,10 +640,10 @@
             defaultColors: {Fw:'#ff00c5',Ew:'#4f33df',MH:'#149ece',mH:'#4ce600',PS:'#cfae0e',St:'#eeeeee'},
             zoomSettings: { maxOffset:[30,15,8,4,2,1,1,1,1,1] },
             fcMapLayers: [
-                { layerID:0, fcPropName:'F_SYSTEM', idPropName:'OBJECTID_1', outFields:['OBJECTID_1','F_SYSTEM', 'RIA_RTE_ID'], maxRecordCount:1000, supportsPagination:false, roadTypeMap:{Fw:[1],Ew:[2],MH:[3],mH:[4],PS:[5,6],St:[7]} }
+                { layerID:0, fcPropName:'F_SYSTEM', idPropName:'OBJECTID', outFields:['OBJECTID','F_SYSTEM', 'RTE_PRFX'], maxRecordCount:1000, supportsPagination:false, roadTypeMap:{Fw:[1],Ew:[2],MH:[3],mH:[4],PS:[5,6],St:[7]} }
             ],
             getWhereClause: function(context) {
-                var where = " F_SYSTEM IS NOT NULL AND PROPOSED <> 'Y' AND RIA_RTE_ID IS NOT NULL";
+                var where = " F_SYSTEM IS NOT NULL AND RTE_PRFX IS NOT NULL";
                 if(context.mapContext.zoom < 4) {
                     where += ' AND ' + context.layer.fcPropName + " <> 7";
                 }
@@ -669,7 +669,7 @@
                     return layer.getFeatureRoadType(feature);
                 } else {
                     var fc = feature.attributes[layer.fcPropName];
-                    var type = feature.attributes.RIA_RTE_ID.substring(0,2).toUpperCase();
+                    var type = feature.attributes.RTE_PRFX.substring(0,2).toUpperCase();
                     if (type === 'IH' && fc > 1) {
                         fc = 1;
                     } else if ((type === 'US' || type === 'BI' || type === 'UA') && fc > 3) {
