@@ -345,22 +345,22 @@
             }
         },
         MD: {
-            baseUrl: 'http://geodata.md.gov/imap/rest/services/Transportation/MD_HighwayPerformanceMonitoringSystem/MapServer/',
+            baseUrl: 'https://geodata.md.gov/imap/rest/services/Transportation/MD_HighwayPerformanceMonitoringSystem/MapServer/',
             defaultColors: {Fw:'#ff00c5',Ew:'#4f33df',MH:'#149ece',mH:'#4ce600',PS:'#ffff00',St:'#eeeeee'},
             zoomSettings: { maxOffset: [30,15,8,4,2,1,1,1,1,1], excludeRoadTypes: [['St'],['St'],['St'],['St'],[],[],[],[],[],[],[]] },
             fcMapLayers: [
-                { layerID:3, fcPropName:'F_SYSTEM', idPropName:'OBJECTID', outFields:['OBJECTID','F_SYSTEM','ID_PREFIX','MP_SUFFIX'], roadTypeMap:{Fw:[1],Ew:[2],MH:[3],mH:[4],PS:[5,6],St:[7]}, maxRecordCount:1000, supportsPagination:false }
+                { layerID:2, fcPropName:'FUNCTIONAL_CLASS', idPropName:'OBJECTID', outFields:['OBJECTID','FUNCTIONAL_CLASS','ID_PREFIX','MP_SUFFIX'], roadTypeMap:{Fw:[1],Ew:[2],MH:[3],mH:[4],PS:[5,6],St:[7]}, maxRecordCount:1000, supportsPagination:false }
             ],
             getWhereClause: function(context) {
                 if(context.mapContext.zoom < 4) {
-                    return "(F_SYSTEM < 7 OR ID_PREFIX IN('MD'))";
+                    return "(FUNCTIONAL_CLASS < 7 OR ID_PREFIX IN('MD'))";
                 } else {
                     return null;
                 }
             },
             getFeatureRoadType: function(feature,layer) {
                 var attr = feature.attributes;
-                var fc = parseInt(attr.F_SYSTEM);
+                var fc = parseInt(attr.FUNCTIONAL_CLASS);
                 var isState = attr.ID_PREFIX === 'MD';
                 var isUS = attr.ID_PREFIX === 'US';
                 var isBusiness = attr.MP_SUFFIX === 'BU';
