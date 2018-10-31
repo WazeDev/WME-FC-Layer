@@ -9,7 +9,7 @@
 // // ==UserScript==
 // @name         WME FC Layer
 // @namespace    https://greasyfork.org/users/45389
-// @version      2018.10.31.001
+// @version      2018.10.31.002
 // @description  Adds a Functional Class layer for states that publish ArcGIS FC data.
 // @author       MapOMatic
 // @include      /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
@@ -103,7 +103,7 @@
             }
         },
         DC: {
-            baseUrl: 'http://maps2.dcgis.dc.gov/dcgis/rest/services/DCGIS_DATA/Transportation_WebMercator/MapServer/',
+            baseUrl: 'https://maps2.dcgis.dc.gov/dcgis/rest/services/DCGIS_DATA/Transportation_WebMercator/MapServer/',
             supportsPagination: false,
             defaultColors: {Fw:'#ff00c5',Ew:'#149ece',MH:'#149ece',mH:'#4ce600',PS:'#cfae0e',St:'#eeeeee'},
             zoomSettings: { maxOffset: [30,15,8,4,2,1,1,1,1,1], excludeRoadTypes: [[],[],[],[],[],[],[],[],[],[],[]] },
@@ -202,7 +202,7 @@
             }
         },
         IL: {
-            baseUrl: 'http://ags10s1.dot.illinois.gov/ArcGIS/rest/services/AdministrativeData/Roads/MapServer/',
+            baseUrl: 'https://ags10s1.dot.illinois.gov/ArcGIS/rest/services/AdministrativeData/Roads/MapServer/',
             supportsPagination: false,
             defaultColors: {Fw:'#ff00c5',Ew:'#ff00c5',MH:'#149ece',mH:'#4ce600',PS:'#cfae0e',St:'#eeeeee',CH:'#ff5e0e'},
             zoomSettings: { maxOffset:[30,15,8,4,2,1,1,1,1,1] },
@@ -370,7 +370,7 @@
             }
         },
         MI: {
-            baseUrl: 'http://gisp.mcgi.state.mi.us/arcgis/rest/services/MDOT/NFC/MapServer/',
+            baseUrl: 'https://gisp.mcgi.state.mi.us/arcgis/rest/services/MDOT/NFC/MapServer/',
             defaultColors: {Fw:'#ff00c5',Ew:'#149ece',MH:'#149ece',mH:'#4ce600',PS:'#cfae0e',St:'#eeeeee'},
             zoomSettings: { maxOffset: [30,15,8,4,2,1,1,1,1,1], excludeRoadTypes: [['St'],['St'],['St'],['St'],[],[],[],[],[],[],[]] },
             fcMapLayers: [
@@ -558,7 +558,7 @@
             }
         },
         OK: {
-            baseUrl: 'http://services6.arcgis.com/RBtoEUQ2lmN0K3GY/arcgis/rest/services/Roadways/FeatureServer/',
+            baseUrl: 'https://services6.arcgis.com/RBtoEUQ2lmN0K3GY/arcgis/rest/services/Roadways/FeatureServer/',
             defaultColors: {Fw:'#ff00c5',Ew:'#4f33df',MH:'#149ece',mH:'#4ce600',PS:'#cfae0e',St:'#eeeeee'},
             zoomSettings: { maxOffset: [30,15,8,4,2,1,1,1,1,1], excludeRoadTypes: [['St'],['St'],['St'],['St'],[],[],[],[],[],[],[]] },
             fcMapLayers: [
@@ -685,7 +685,7 @@
             isPermitted: function() { return _r >= 1; }
         },
         UT: {
-            baseUrl: 'http://maps.udot.utah.gov/arcgis/rest/services/Functional_Class/MapServer/',
+            baseUrl: 'https://maps.udot.utah.gov/arcgis/rest/services/Functional_Class/MapServer/',
             defaultColors: {Fw:'#ff00c5',Ew:'#4f33df',MH:'#149ece',mH:'#4ce600',PS:'#cfae0e',St:'#eeeeee'},
             zoomSettings: { maxOffset: [30,15,8,4,2,1,1,1,1,1], excludeRoadTypes: [['St'],['St'],['St'],['St'],[],[],[],[],[],[],[]] },
             fcMapLayers: [
@@ -713,7 +713,7 @@
             }
         },
         VA: {
-            baseUrl: 'http://services.arcgis.com/p5v98VHDX9Atv3l7/arcgis/rest/services/FC_2014_FHWA_Submittal1/FeatureServer/',
+            baseUrl: 'https://services.arcgis.com/p5v98VHDX9Atv3l7/arcgis/rest/services/FC_2014_FHWA_Submittal1/FeatureServer/',
             defaultColors: {Fw:'#ff00c5',Ew:'#ff00c5',MH:'#149ece',mH:'#4ce600',PS:'#cfae0e',St:'#eeeeee'},
             zoomSettings: { maxOffset: [30,15,8,4,2,1,1,1,1,1], excludeRoadTypes: [['St'],['St'],['St'],['St'],[],[],[],[],[],[],[]] },
             fcMapLayers: [
@@ -751,7 +751,7 @@
             }
         },
         WV: {
-            baseUrl: 'http://gis.transportation.wv.gov/arcgis/rest/services/Roads_And_Highways/Publication_LRS/MapServer/',
+            baseUrl: 'https://gis.transportation.wv.gov/arcgis/rest/services/Roads_And_Highways/Publication_LRS/MapServer/',
             defaultColors: {Fw:'#ff00c5',Ew:'#ff00c5',MH:'#149ece',mH:'#4ce600',PS:'#cfae0e',St:'#eeeeee'},
             zoomSettings: { maxOffset: [30,15,8,4,2,1,1,1,1,1], excludeRoadTypes: [['St'],['St'],['St'],['St'],[],[],[],[],[],[],[]] },
             fcMapLayers: [
