@@ -283,21 +283,16 @@
             }
         },
         KS: {
-            baseUrl: 'http://wfs.ksdot.org/arcgis_web_adaptor/rest/services/Transportation/Non_State_System/MapServer/',
+            baseUrl: 'http://wfs.ksdot.org/arcgis_web_adaptor/rest/services/Transportation/',
             supportsPagination: false,
             defaultColors: {Fw:'#ff00c5',Ew:'#ff00c5',MH:'#149ece',mH:'#4ce600',PS:'#cfae0e',St:'#eeeeee'},
             zoomSettings: { maxOffset: [30,15,8,4,2,1,1,1,1,1] },
             fcMapLayers: [
-                { layerID:0, idPropName:'ID2', fcPropName:'FUNCLASS', outFields:['FUNCLASS','ID2','LRS_ROUTE_PREFIX', 'LRS_ROUTE_SUFFIX'],
-                 roadTypeMap:{Fw:[1],MH:[2,3],mH:[4],PS:[5,6],St:[7]}, maxRecordCount:1000, supportsPagination:false }
+                { layerID:0, layerPath:'Non_State_System/MapServer/', idPropName:'ID2', fcPropName:'FUNCLASS', outFields:['FUNCLASS','ID2'],
+                 roadTypeMap:{Fw:[1],MH:[2,3],mH:[4],PS:[5,6],St:[7]}, maxRecordCount:1000, supportsPagination:false },
+                { layerID:0, layerPath:'Functional_Classification/MapServer/', idPropName:'OBJECTID', fcPropName:'FUN_CLASS', outFields:['FUN_CLASS','OBJECTID'],
+                  roadTypeMap:{Fw:[1],MH:[2,3],mH:[4],PS:[5,6],St:[7]}, maxRecordCount:1000, supportsPagination:false }
             ],
-/* KS2       MH+ FunClasses
-            baseUrl: 'http://wfs.ksdot.org/arcgis_web_adaptor/rest/services/Transportation/Functional_Classification/MapServer/',
-            fcMapLayers: [
-              { layerID:0, idPropName:'OBJECTID', fcPropName:'FUN_CLASS', outFields:['FUN_CLASS','OBJECTID'],
-               roadTypeMap:{Fw:[1],MH:[2,3],mH:[4],PS:[5,6],St:[7]}, maxRecordCount:1000, supportsPagination:false }
-            ],
-*/
             isPermitted: function() { return true; },
             getWhereClause: function(context) {
                 return null;
@@ -968,7 +963,7 @@
         var geometry = { xmin:extent.left, ymin:extent.bottom, xmax:extent.right, ymax:extent.top, spatialReference: {wkid: 102100, latestWkid: 3857} };
         var geometryStr = JSON.stringify(geometry);
         var stateWhereClause = state.getWhereClause(context);
-        var url = state.baseUrl + layer.layerID + '/query?geometry=' + encodeURIComponent(geometryStr);
+        var url = state.baseUrl + layer.layerPath + layer.layerID + '/query?geometry=' + encodeURIComponent(geometryStr);
 
         if (queryType === 'countOnly') {
             url += '&returnCountOnly=true';
