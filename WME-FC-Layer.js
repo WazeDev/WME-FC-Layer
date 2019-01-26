@@ -9,7 +9,7 @@
 // // ==UserScript==
 // @name         WME FC Layer
 // @namespace    https://greasyfork.org/users/45389
-// @version      2018.10.31.002
+// @version      2018.10.31.002_AddKS
 // @description  Adds a Functional Class layer for states that publish ArcGIS FC data.
 // @author       MapOMatic
 // @include      /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
@@ -28,6 +28,7 @@
 // @connect      nd.gov
 // @connect      pa.gov
 // @connect      oh.us
+// @connect      ksdot.org
 // @connect      ky.gov
 // @connect      shelbycountytn.gov
 // @connect      illinois.gov
@@ -280,6 +281,34 @@
                     return _stateSettings.global.getFeatureRoadType(feature, layer);
                 }
             }
+        },
+        KS: {
+            baseUrl: 'http://wfs.ksdot.org/arcgis_web_adaptor/rest/services/Transportation/Non_State_System/MapServer/',
+            supportsPagination: false,
+            defaultColors: {Fw:'#ff00c5',Ew:'#ff00c5',MH:'#149ece',mH:'#4ce600',PS:'#cfae0e',St:'#eeeeee'},
+            zoomSettings: { maxOffset: [30,15,8,4,2,1,1,1,1,1] },
+            fcMapLayers: [
+                { layerID:0, idPropName:'ID2', fcPropName:'FUNCLASS', outFields:['FUNCLASS','ID2','LRS_ROUTE_PREFIX', 'LRS_ROUTE_SUFFIX'],
+                 roadTypeMap:{Fw:[1],MH:[2,3],mH:[4],PS:[5,6],St:[7]}, maxRecordCount:1000, supportsPagination:false }
+            ],
+/* KS2       MH+ FunClasses
+            baseUrl: 'http://wfs.ksdot.org/arcgis_web_adaptor/rest/services/Transportation/Functional_Classification/MapServer/',
+            fcMapLayers: [
+              { layerID:0, idPropName:'OBJECTID', fcPropName:'FUN_CLASS', outFields:['FUN_CLASS','OBJECTID'],
+               roadTypeMap:{Fw:[1],MH:[2,3],mH:[4],PS:[5,6],St:[7]}, maxRecordCount:1000, supportsPagination:false }
+            ],
+*/
+            isPermitted: function() { return true; },
+            getWhereClause: function(context) {
+                return null;
+            },
+            getFeatureRoadType: function(feature, layer) {
+                if (layer.getFeatureRoadType) {
+                    return layer.getFeatureRoadType(feature);
+                } else {
+                    return _stateSettings.global.getFeatureRoadType(feature, layer);
+                }
+            },
         },
         KY: {
             baseUrl: 'https://maps.kytc.ky.gov/arcgis/rest/services/BaseMap/System/MapServer/',
