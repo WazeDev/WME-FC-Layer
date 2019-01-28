@@ -9,7 +9,7 @@
 // // ==UserScript==
 // @name         WME FC Layer
 // @namespace    https://greasyfork.org/users/45389
-// @version      2018.10.31.002
+// @version      2019.01.28.001
 // @description  Adds a Functional Class layer for states that publish ArcGIS FC data.
 // @author       MapOMatic
 // @include      /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
@@ -28,6 +28,7 @@
 // @connect      nd.gov
 // @connect      pa.gov
 // @connect      oh.us
+// @connect      ksdot.org
 // @connect      ky.gov
 // @connect      shelbycountytn.gov
 // @connect      illinois.gov
@@ -280,6 +281,37 @@
                     return _stateSettings.global.getFeatureRoadType(feature, layer);
                 }
             }
+        },
+        KS: {
+            baseUrl: 'http://wfs.ksdot.org/arcgis_web_adaptor/rest/services/Transportation/',
+            supportsPagination: false,
+            defaultColors: {Fw:'#ff00c5',Ew:'#ff00c5',MH:'#149ece',mH:'#4ce600',PS:'#cfae0e',St:'#eeeeee'},
+            zoomSettings: { maxOffset: [30,15,8,4,2,1,1,1,1,1] },
+            fcMapLayers: [
+                { layerID:0, layerPath:'Non_State_System/MapServer/', idPropName:'ID2', fcPropName:'FUNCLASS', outFields:['FUNCLASS','ID2','ROUTE_ID'],
+                  roadTypeMap:{Fw:[1],MH:[2,3],mH:[4],PS:[5,6],St:[7]}, maxRecordCount:1000, supportsPagination:false },
+                { layerID:1, layerPath:'National_Highway_System/MapServer/', idPropName:'OBJECTID', fcPropName:'FUN_CLASS_CD', outFields:['FUN_CLASS_CD','OBJECTID','INTERSTATE_ROUTES','US_ROUTES','STATE_ROUTES'],
+                  roadTypeMap:{Fw:["1"],MH:["2","3"],mH:["4"],PS:["5","6"],St:["7"]}, maxRecordCount:1000, supportsPagination:false },
+                { layerID:0, layerPath:'State_System/MapServer/', idPropName:'OBJECTID', fcPropName:'FUN_CLASS_CD', outFields:['FUN_CLASS_CD','OBJECTID','INTERSTATE_ROUTES','US_ROUTES','STATE_ROUTES'],
+                  roadTypeMap:{Fw:["1"],MH:["2","3"],mH:["4"],PS:["5","6"],St:["7"]}, maxRecordCount:1000, supportsPagination:false }
+/*                ,{ layerID:0, layerPath:'Functional_Classification/MapServer/', idPropName:'OBJECTID', fcPropName:'FUN_CLASS', outFields:['FUN_CLASS','OBJECTID','CRND_RTE'],
+                  roadTypeMap:{Fw:[1],MH:[2,3],mH:[4],PS:[5,6],St:[7]}, maxRecordCount:1000, supportsPagination:false }
+*/
+            ],
+            getWhereClause: function(context) {
+                if(context.mapContext.zoom < 4) {
+                    return context.layer.fcPropName + "<>'7'";
+                } else {
+                    return null;
+                }
+            },
+            getFeatureRoadType: function(feature, layer) {
+                if (layer.getFeatureRoadType) {
+                    return layer.getFeatureRoadType(feature);
+                } else {
+                    return _stateSettings.global.getFeatureRoadType(feature, layer);
+                }
+            },
         },
         KY: {
             baseUrl: 'https://maps.kytc.ky.gov/arcgis/rest/services/BaseMap/System/MapServer/',
@@ -939,7 +971,7 @@
         var geometry = { xmin:extent.left, ymin:extent.bottom, xmax:extent.right, ymax:extent.top, spatialReference: {wkid: 102100, latestWkid: 3857} };
         var geometryStr = JSON.stringify(geometry);
         var stateWhereClause = state.getWhereClause(context);
-        var url = state.baseUrl + layer.layerID + '/query?geometry=' + encodeURIComponent(geometryStr);
+        var url = state.baseUrl + layer.layerPath + layer.layerID + '/query?geometry=' + encodeURIComponent(geometryStr);
 
         if (queryType === 'countOnly') {
             url += '&returnCountOnly=true';
