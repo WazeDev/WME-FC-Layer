@@ -46,7 +46,7 @@
 
     var _settingsStoreName = 'wme_fc_layer';
     var _alertUpdate = false;
-    var _debugLevel = 2;
+    var _debugLevel = 0;
     var _scriptVersion = GM_info.script.version;
     var _scriptVersionChanges = [
         GM_info.script.name,
@@ -227,7 +227,7 @@
                 { layerID:8, idPropName:'OBJECTID', fcPropName:'FC', outFields:['FC','OBJECTID','MARKED_RT','MARKED_RT2','MARKED_RT3','MARKED_RT4','CH'],
                  roadTypeMap:{Fw:['1'],Ew:['2'],MH:['3'],mH:['4'],PS:['5','6'],St:['7'],CH:['8']}, maxRecordCount:1000, supportsPagination:false }
             ],
-            isPermitted: function() { return _r >= 2; },
+            isPermitted: function() { return _r >= 3; },
             getWhereClause: function(context) {
                 if(context.mapContext.zoom < 4) {
                     return "FC<>'7' OR (FC='7' AND CH<>'0000')";
