@@ -288,14 +288,23 @@
             defaultColors: {Fw:'#ff00c5',Ew:'#ff00c5',MH:'#149ece',mH:'#4ce600',PS:'#cfae0e',St:'#eeeeee'},
             zoomSettings: { maxOffset: [30,15,8,4,2,1,1,1,1,1] },
             fcMapLayers: [
-                { layerID:0, layerPath:'Non_State_System/MapServer/', idPropName:'ID2', fcPropName:'FUNCLASS', outFields:['FUNCLASS','ID2'],
-                 roadTypeMap:{Fw:[1],MH:[2,3],mH:[4],PS:[5,6],St:[7]}, maxRecordCount:1000, supportsPagination:false },
-                { layerID:0, layerPath:'Functional_Classification/MapServer/', idPropName:'OBJECTID', fcPropName:'FUN_CLASS', outFields:['FUN_CLASS','OBJECTID'],
+                { layerID:0, layerPath:'Non_State_System/MapServer/', idPropName:'ID2', fcPropName:'FUNCLASS', outFields:['FUNCLASS','ID2','ROUTE_ID'],
+                  roadTypeMap:{Fw:[1],MH:[2,3],mH:[4],PS:[5,6],St:[7]}, maxRecordCount:1000, supportsPagination:false },
+                { layerID:1, layerPath:'National_Highway_System/MapServer/', idPropName:'OBJECTID', fcPropName:'FUN_CLASS_CD', outFields:['FUN_CLASS_CD','OBJECTID','INTERSTATE_ROUTES','US_ROUTES','STATE_ROUTES'],
+                  roadTypeMap:{Fw:["1"],MH:["2","3"],mH:["4"],PS:["5","6"],St:["7"]}, maxRecordCount:1000, supportsPagination:false },
+                { layerID:0, layerPath:'State_System/MapServer/', idPropName:'OBJECTID', fcPropName:'FUN_CLASS_CD', outFields:['FUN_CLASS_CD','OBJECTID','INTERSTATE_ROUTES','US_ROUTES','STATE_ROUTES'],
+                  roadTypeMap:{Fw:["1"],MH:["2","3"],mH:["4"],PS:["5","6"],St:["7"]}, maxRecordCount:1000, supportsPagination:false }
+/*                ,{ layerID:0, layerPath:'Functional_Classification/MapServer/', idPropName:'OBJECTID', fcPropName:'FUN_CLASS', outFields:['FUN_CLASS','OBJECTID','CRND_RTE'],
                   roadTypeMap:{Fw:[1],MH:[2,3],mH:[4],PS:[5,6],St:[7]}, maxRecordCount:1000, supportsPagination:false }
+*/
             ],
             isPermitted: function() { return true; },
             getWhereClause: function(context) {
-                return null;
+                if(context.mapContext.zoom < 4) {
+                    return context.layer.fcPropName + "<>'7'";
+                } else {
+                    return null;
+                }
             },
             getFeatureRoadType: function(feature, layer) {
                 if (layer.getFeatureRoadType) {
