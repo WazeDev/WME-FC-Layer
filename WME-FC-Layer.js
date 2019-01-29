@@ -9,7 +9,7 @@
 // // ==UserScript==
 // @name         WME FC Layer
 // @namespace    https://greasyfork.org/users/45389
-// @version      2018.08.22.001
+// @version      2019.01.28.001
 // @description  Adds a Functional Class layer for states that publish ArcGIS FC data.
 // @author       MapOMatic
 // @include      /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
@@ -28,6 +28,7 @@
 // @connect      nd.gov
 // @connect      pa.gov
 // @connect      oh.us
+// @connect      ksdot.org
 // @connect      ky.gov
 // @connect      shelbycountytn.gov
 // @connect      illinois.gov
@@ -103,7 +104,7 @@
             }
         },
         DC: {
-            baseUrl: 'http://maps2.dcgis.dc.gov/dcgis/rest/services/DCGIS_DATA/Transportation_WebMercator/MapServer/',
+            baseUrl: 'https://maps2.dcgis.dc.gov/dcgis/rest/services/DCGIS_DATA/Transportation_WebMercator/MapServer/',
             supportsPagination: false,
             defaultColors: {Fw:'#ff00c5',Ew:'#149ece',MH:'#149ece',mH:'#4ce600',PS:'#cfae0e',St:'#eeeeee'},
             zoomSettings: { maxOffset: [30,15,8,4,2,1,1,1,1,1], excludeRoadTypes: [[],[],[],[],[],[],[],[],[],[],[]] },
@@ -202,7 +203,7 @@
             }
         },
         IL: {
-            baseUrl: 'http://ags10s1.dot.illinois.gov/ArcGIS/rest/services/AdministrativeData/Roads/MapServer/',
+            baseUrl: 'https://ags10s1.dot.illinois.gov/ArcGIS/rest/services/AdministrativeData/Roads/MapServer/',
             supportsPagination: false,
             defaultColors: {Fw:'#ff00c5',Ew:'#ff00c5',MH:'#149ece',mH:'#4ce600',PS:'#cfae0e',St:'#eeeeee',CH:'#ff5e0e'},
             zoomSettings: { maxOffset:[30,15,8,4,2,1,1,1,1,1] },
@@ -281,6 +282,37 @@
                 }
             }
         },
+        KS: {
+            baseUrl: 'http://wfs.ksdot.org/arcgis_web_adaptor/rest/services/Transportation/',
+            supportsPagination: false,
+            defaultColors: {Fw:'#ff00c5',Ew:'#ff00c5',MH:'#149ece',mH:'#4ce600',PS:'#cfae0e',St:'#eeeeee'},
+            zoomSettings: { maxOffset: [30,15,8,4,2,1,1,1,1,1] },
+            fcMapLayers: [
+                { layerID:0, layerPath:'Non_State_System/MapServer/', idPropName:'ID2', fcPropName:'FUNCLASS', outFields:['FUNCLASS','ID2','ROUTE_ID'],
+                  roadTypeMap:{Fw:[1],MH:[2,3],mH:[4],PS:[5,6],St:[7]}, maxRecordCount:1000, supportsPagination:false },
+                { layerID:1, layerPath:'National_Highway_System/MapServer/', idPropName:'OBJECTID', fcPropName:'FUN_CLASS_CD', outFields:['FUN_CLASS_CD','OBJECTID','INTERSTATE_ROUTES','US_ROUTES','STATE_ROUTES'],
+                  roadTypeMap:{Fw:["1"],MH:["2","3"],mH:["4"],PS:["5","6"],St:["7"]}, maxRecordCount:1000, supportsPagination:false },
+                { layerID:0, layerPath:'State_System/MapServer/', idPropName:'OBJECTID', fcPropName:'FUN_CLASS_CD', outFields:['FUN_CLASS_CD','OBJECTID','INTERSTATE_ROUTES','US_ROUTES','STATE_ROUTES'],
+                  roadTypeMap:{Fw:["1"],MH:["2","3"],mH:["4"],PS:["5","6"],St:["7"]}, maxRecordCount:1000, supportsPagination:false }
+/*                ,{ layerID:0, layerPath:'Functional_Classification/MapServer/', idPropName:'OBJECTID', fcPropName:'FUN_CLASS', outFields:['FUN_CLASS','OBJECTID','CRND_RTE'],
+                  roadTypeMap:{Fw:[1],MH:[2,3],mH:[4],PS:[5,6],St:[7]}, maxRecordCount:1000, supportsPagination:false }
+*/
+            ],
+            getWhereClause: function(context) {
+                if(context.mapContext.zoom < 4) {
+                    return context.layer.fcPropName + "<>'7'";
+                } else {
+                    return null;
+                }
+            },
+            getFeatureRoadType: function(feature, layer) {
+                if (layer.getFeatureRoadType) {
+                    return layer.getFeatureRoadType(feature);
+                } else {
+                    return _stateSettings.global.getFeatureRoadType(feature, layer);
+                }
+            },
+        },
         KY: {
             baseUrl: 'https://maps.kytc.ky.gov/arcgis/rest/services/BaseMap/System/MapServer/',
             supportsPagination: false,
@@ -345,22 +377,22 @@
             }
         },
         MD: {
-            baseUrl: 'http://geodata.md.gov/imap/rest/services/Transportation/MD_HighwayPerformanceMonitoringSystem/MapServer/',
+            baseUrl: 'https://geodata.md.gov/imap/rest/services/Transportation/MD_HighwayPerformanceMonitoringSystem/MapServer/',
             defaultColors: {Fw:'#ff00c5',Ew:'#4f33df',MH:'#149ece',mH:'#4ce600',PS:'#ffff00',St:'#eeeeee'},
             zoomSettings: { maxOffset: [30,15,8,4,2,1,1,1,1,1], excludeRoadTypes: [['St'],['St'],['St'],['St'],[],[],[],[],[],[],[]] },
             fcMapLayers: [
-                { layerID:3, fcPropName:'F_SYSTEM', idPropName:'OBJECTID', outFields:['OBJECTID','F_SYSTEM','ID_PREFIX','MP_SUFFIX'], roadTypeMap:{Fw:[1],Ew:[2],MH:[3],mH:[4],PS:[5,6],St:[7]}, maxRecordCount:1000, supportsPagination:false }
+                { layerID:2, fcPropName:'FUNCTIONAL_CLASS', idPropName:'OBJECTID', outFields:['OBJECTID','FUNCTIONAL_CLASS','ID_PREFIX','MP_SUFFIX'], roadTypeMap:{Fw:[1],Ew:[2],MH:[3],mH:[4],PS:[5,6],St:[7]}, maxRecordCount:1000, supportsPagination:false }
             ],
             getWhereClause: function(context) {
                 if(context.mapContext.zoom < 4) {
-                    return "(F_SYSTEM < 7 OR ID_PREFIX IN('MD'))";
+                    return "(FUNCTIONAL_CLASS < 7 OR ID_PREFIX IN('MD'))";
                 } else {
                     return null;
                 }
             },
             getFeatureRoadType: function(feature,layer) {
                 var attr = feature.attributes;
-                var fc = parseInt(attr.F_SYSTEM);
+                var fc = parseInt(attr.FUNCTIONAL_CLASS);
                 var isState = attr.ID_PREFIX === 'MD';
                 var isUS = attr.ID_PREFIX === 'US';
                 var isBusiness = attr.MP_SUFFIX === 'BU';
@@ -370,7 +402,7 @@
             }
         },
         MI: {
-            baseUrl: 'http://gisp.mcgi.state.mi.us/arcgis/rest/services/MDOT/NFC/MapServer/',
+            baseUrl: 'https://gisp.mcgi.state.mi.us/arcgis/rest/services/MDOT/NFC/MapServer/',
             defaultColors: {Fw:'#ff00c5',Ew:'#149ece',MH:'#149ece',mH:'#4ce600',PS:'#cfae0e',St:'#eeeeee'},
             zoomSettings: { maxOffset: [30,15,8,4,2,1,1,1,1,1], excludeRoadTypes: [['St'],['St'],['St'],['St'],[],[],[],[],[],[],[]] },
             fcMapLayers: [
@@ -558,7 +590,7 @@
             }
         },
         OK: {
-            baseUrl: 'http://services6.arcgis.com/RBtoEUQ2lmN0K3GY/arcgis/rest/services/Roadways/FeatureServer/',
+            baseUrl: 'https://services6.arcgis.com/RBtoEUQ2lmN0K3GY/arcgis/rest/services/Roadways/FeatureServer/',
             defaultColors: {Fw:'#ff00c5',Ew:'#4f33df',MH:'#149ece',mH:'#4ce600',PS:'#cfae0e',St:'#eeeeee'},
             zoomSettings: { maxOffset: [30,15,8,4,2,1,1,1,1,1], excludeRoadTypes: [['St'],['St'],['St'],['St'],[],[],[],[],[],[],[]] },
             fcMapLayers: [
@@ -685,7 +717,7 @@
             isPermitted: function() { return _r >= 1; }
         },
         UT: {
-            baseUrl: 'http://maps.udot.utah.gov/arcgis/rest/services/Functional_Class/MapServer/',
+            baseUrl: 'https://maps.udot.utah.gov/arcgis/rest/services/Functional_Class/MapServer/',
             defaultColors: {Fw:'#ff00c5',Ew:'#4f33df',MH:'#149ece',mH:'#4ce600',PS:'#cfae0e',St:'#eeeeee'},
             zoomSettings: { maxOffset: [30,15,8,4,2,1,1,1,1,1], excludeRoadTypes: [['St'],['St'],['St'],['St'],[],[],[],[],[],[],[]] },
             fcMapLayers: [
@@ -713,7 +745,7 @@
             }
         },
         VA: {
-            baseUrl: 'http://services.arcgis.com/p5v98VHDX9Atv3l7/arcgis/rest/services/FC_2014_FHWA_Submittal1/FeatureServer/',
+            baseUrl: 'https://services.arcgis.com/p5v98VHDX9Atv3l7/arcgis/rest/services/FC_2014_FHWA_Submittal1/FeatureServer/',
             defaultColors: {Fw:'#ff00c5',Ew:'#ff00c5',MH:'#149ece',mH:'#4ce600',PS:'#cfae0e',St:'#eeeeee'},
             zoomSettings: { maxOffset: [30,15,8,4,2,1,1,1,1,1], excludeRoadTypes: [['St'],['St'],['St'],['St'],[],[],[],[],[],[],[]] },
             fcMapLayers: [
@@ -751,7 +783,7 @@
             }
         },
         WV: {
-            baseUrl: 'http://gis.transportation.wv.gov/arcgis/rest/services/Roads_And_Highways/Publication_LRS/MapServer/',
+            baseUrl: 'https://gis.transportation.wv.gov/arcgis/rest/services/Roads_And_Highways/Publication_LRS/MapServer/',
             defaultColors: {Fw:'#ff00c5',Ew:'#ff00c5',MH:'#149ece',mH:'#4ce600',PS:'#cfae0e',St:'#eeeeee'},
             zoomSettings: { maxOffset: [30,15,8,4,2,1,1,1,1,1], excludeRoadTypes: [['St'],['St'],['St'],['St'],[],[],[],[],[],[],[]] },
             fcMapLayers: [
@@ -939,7 +971,7 @@
         var geometry = { xmin:extent.left, ymin:extent.bottom, xmax:extent.right, ymax:extent.top, spatialReference: {wkid: 102100, latestWkid: 3857} };
         var geometryStr = JSON.stringify(geometry);
         var stateWhereClause = state.getWhereClause(context);
-        var url = state.baseUrl + layer.layerID + '/query?geometry=' + encodeURIComponent(geometryStr);
+        var url = state.baseUrl + layer.layerPath + layer.layerID + '/query?geometry=' + encodeURIComponent(geometryStr);
 
         if (queryType === 'countOnly') {
             url += '&returnCountOnly=true';
