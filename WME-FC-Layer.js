@@ -285,18 +285,15 @@
         KS: {
             baseUrl: 'http://wfs.ksdot.org/arcgis_web_adaptor/rest/services/Transportation/',
             supportsPagination: false,
-            defaultColors: {Fw:'#ff00c5',Ew:'#ff00c5',MH:'#149ece',mH:'#4ce600',PS:'#cfae0e',St:'#eeeeee'},
+            defaultColors: {Fw:'#ff00c5',Ew:'#149ece',MH:'#149ece',mH:'#4ce600',PS:'#cfae0e',St:'#eeeeee'},
             zoomSettings: { maxOffset: [30,15,8,4,2,1,1,1,1,1] },
             fcMapLayers: [
                 { layerID:0, layerPath:'Non_State_System/MapServer/', idPropName:'ID2', fcPropName:'FUNCLASS', outFields:['FUNCLASS','ID2','ROUTE_ID'],
                   roadTypeMap:{Fw:[1],MH:[2,3],mH:[4],PS:[5,6],St:[7]}, maxRecordCount:1000, supportsPagination:false },
-                { layerID:1, layerPath:'National_Highway_System/MapServer/', idPropName:'OBJECTID', fcPropName:'FUN_CLASS_CD', outFields:['FUN_CLASS_CD','OBJECTID','INTERSTATE_ROUTES','US_ROUTES','STATE_ROUTES'],
+                { layerID:1, layerPath:'National_Highway_System/MapServer/', idPropName:'OBJECTID', fcPropName:'FUN_CLASS_CD', outFields:['FUN_CLASS_CD','OBJECTID', 'PREFIX', 'ACCESS_CONTROL'],
                   roadTypeMap:{Fw:["1"],MH:["2","3"],mH:["4"],PS:["5","6"],St:["7"]}, maxRecordCount:1000, supportsPagination:false },
-                { layerID:0, layerPath:'State_System/MapServer/', idPropName:'OBJECTID', fcPropName:'FUN_CLASS_CD', outFields:['FUN_CLASS_CD','OBJECTID','INTERSTATE_ROUTES','US_ROUTES','STATE_ROUTES'],
+                { layerID:0, layerPath:'State_System/MapServer/', idPropName:'OBJECTID', fcPropName:'FUN_CLASS_CD', outFields:['FUN_CLASS_CD','OBJECTID', 'PREFIX', 'ACCESS_CONTROL'],
                   roadTypeMap:{Fw:["1"],MH:["2","3"],mH:["4"],PS:["5","6"],St:["7"]}, maxRecordCount:1000, supportsPagination:false }
-/*                ,{ layerID:0, layerPath:'Functional_Classification/MapServer/', idPropName:'OBJECTID', fcPropName:'FUN_CLASS', outFields:['FUN_CLASS','OBJECTID','CRND_RTE'],
-                  roadTypeMap:{Fw:[1],MH:[2,3],mH:[4],PS:[5,6],St:[7]}, maxRecordCount:1000, supportsPagination:false }
-*/
             ],
             getWhereClause: function(context) {
                 if(context.mapContext.zoom < 4) {
@@ -306,11 +303,30 @@
                 }
             },
             getFeatureRoadType: function(feature, layer) {
-                if (layer.getFeatureRoadType) {
-                    return layer.getFeatureRoadType(feature);
-                } else {
-                    return _stateSettings.global.getFeatureRoadType(feature, layer);
+                var attr = feature.attributes;
+                var fcName = layer.fcPropName;
+                var fc = parseInt(attr[fcName]);
+                var roadPrefix = attr.PREFIX;
+                var isLocal = attr[fcName] === 'FUNCLASS';
+                var isFw = false
+                var isUS = false;
+                var isState = false;
+                var isBusiness = false;
+                if (!isLocal) {
+                    isFw = attr.ACCESS_CONTROL === '1';
+                    isUS = roadPrefix === 'U';
+                    isState = roadPrefix === 'K';
                 }
+                if (fc > 4 && isState) {
+                    fc = (isBusiness ? Math.min(fc,5) : 4);
+                } else if (fc > 3 && isUS) {
+                    fc = (isBusiness ? Math.min(fc, 4) : 3 );
+                } else if (isFw) {
+                    fc = (isBusiness ? Math.min(fc, 3) : 1 );
+                }
+                var roadType = fc === 1 ? 'Fw' : (fc === 2 ? 'Ew' : (fc === 3 ? 'MH' : (fc === 4 ? 'mH' : (fc <= 6 ? 'PS' : 'St'))));
+                console.log([roadPrefix, fc, attr.ACCESS_CONTROL, attr.ADMO, attr.INTERSTATE_ROUTES,attr.US_ROUTES,attr.STATE_ROUTES].join('/'));
+                return roadType;
             },
         },
         KY: {
