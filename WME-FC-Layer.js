@@ -40,6 +40,7 @@
 // @connect      ga.gov
 // @connect      uga.edu
 // @connect      nevadadot.com
+// @connect      mn.us
 // ==/UserScript==
 
 (function() {
@@ -456,6 +457,35 @@
             getWhereClause: function(context) {
                 if(context.mapContext.zoom < 4) {
                     return context.layer.fcPropName + '<>7';
+                } else {
+                    return null;
+                }
+            },
+            getFeatureRoadType: function(feature, layer) {
+                if (layer.getFeatureRoadType) {
+                    return layer.getFeatureRoadType(feature);
+                } else {
+                    return _stateSettings.global.getFeatureRoadType(feature, layer);
+                }
+            }
+        },
+        MN: {
+            baseUrl: 'https://dotapp9.dot.state.mn.us/egis12/rest/services/BASEMAP/BASEMAP_OPERATIONAL_LAYERS/MapServer/',
+            supportsPagination: false, fetchAllFC: false,
+            defaultColors: {Fw:'#ff00c5',Ew:'#149ece',MH:'#149ece',mH:'#4ce600',PS:'#cfae0e',St:'#eeeeee'},
+            zoomSettings: { maxOffset: [30,15,8,4,2,1,1,1,1,1], excludeRoadTypes: [[],[],[],[],[],[],[],[],[],[],[]] },
+            fcMapLayers: [{ layerID:4, fcPropName:'FUNCTIONAL_CLASSIFICATION', idPropName:'OBJECTID', maxRecordCount:1000, supportsPagination:false,
+                            outFields:['OBJECTID', 'FUNCTIONAL_CLASSIFICATION'],
+                            roadTypeMap:{Fw:["Rural Principal arterial - Interstate","Urban Principal arterial - Interstate","Urban Principal arterial - Other freeways or expressways"],
+                                         Ew:[],
+                                         MH:["Rural Principal arterial - Other","Urban Other Principal Arterials"],
+                                         mH:["Rural Minor arterial", "Urban Minor arterial"],
+                                         PS:["Rural Major collector","Rural Minor collector","Urban Collector"],
+                                         St:["Rural Local ","Urban Local"]} }
+            ],
+            getWhereClause: function(context) {
+                if(context.mapContext.zoom < 4) {
+                    return context.layer.fcPropName + "<>'Urban Local' AND " + context.layer.fcPropName + "<>'Rural Local'";
                 } else {
                     return null;
                 }
