@@ -9,7 +9,7 @@
 // // ==UserScript==
 // @name         WME FC Layer
 // @namespace    https://greasyfork.org/users/45389
-// @version      2019.01.28.002
+// @version      2019.01.29.001
 // @description  Adds a Functional Class layer for states that publish ArcGIS FC data.
 // @author       MapOMatic
 // @include      /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
@@ -987,7 +987,8 @@
         var geometry = { xmin:extent.left, ymin:extent.bottom, xmax:extent.right, ymax:extent.top, spatialReference: {wkid: 102100, latestWkid: 3857} };
         var geometryStr = JSON.stringify(geometry);
         var stateWhereClause = state.getWhereClause(context);
-        var url = state.baseUrl + layer.layerPath + layer.layerID + '/query?geometry=' + encodeURIComponent(geometryStr);
+        var layerPath = layer.layerPath || '';
+        var url = state.baseUrl + layerPath + layer.layerID + '/query?geometry=' + encodeURIComponent(geometryStr);
 
         if (queryType === 'countOnly') {
             url += '&returnCountOnly=true';
