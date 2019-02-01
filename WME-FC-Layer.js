@@ -41,6 +41,7 @@
 // @connect      uga.edu
 // @connect      nevadadot.com
 // @connect      mn.us
+// @connect      sd.gov
 // ==/UserScript==
 
 (function() {
@@ -711,6 +712,39 @@
                     return layer.getFeatureRoadType(feature);
                 } else {
                     var fc = feature.attributes[layer.fcPropName];
+                    return _stateSettings.global.getRoadTypeFromFC(fc, layer);
+                }
+            }
+        },
+        SD: {
+            baseUrl: 'https://arcgis.sd.gov/arcgis/rest/services/DOT/LocalRoads/MapServer/',
+            defaultColors: {Fw:'#ff00c5',Ew:'#149ece',MH:'#149ece',mH:'#4ce600',PS:'#cfae0e',St:'#eeeeee',StGr:'#837870'},
+            zoomSettings: { maxOffset: [30,15,8,4,2,1,1,1,1,1], excludeRoadTypes: [['St'],['St'],['St'],['St'],[],[],[],[],[],[],[]] },
+            fcMapLayers: [{ layerID:1, fcPropName:'FUNC_CLASS', idPropName:'OBJECTID', maxRecordCount:1000, supportsPagination:false,
+                            outFields:['OBJECTID', 'FUNC_CLASS', 'SURFACE_TYPE', 'ROADNAME'],
+                            roadTypeMap:{Fw:[1,11], Ew:[2,12], MH:[4,14], mH:[6,16], PS:[7,8,17], St:[9,19]} }
+            ],
+            getWhereClause: function(context) {
+                if(context.mapContext.zoom < 4) {
+                    return context.layer.fcPropName + "<>19 AND " + context.layer.fcPropName + "<>9";
+                } else {
+                    return null;
+                }
+            },
+            getFeatureRoadType: function(feature, layer) {
+                var attr = feature.attributes;
+                var fc = parseInt(attr[layer.fcPropName]) % 10;
+                var isFw = attr.ACCESS_CONTROL === 1;
+                var isUS = RegExp('^US HWY ','i').test(attr.ROADNAME);
+                var isState = RegExp('^SD HWY ','i').test(attr.ROADNAME);
+                var isBus = RegExp('^(US|SD) HWY .* (E|W)?(B|L)$','i').test(attr.ROADNAME);
+                var isPaved = parseInt(attr.SURFACE_TYPE) > 5;
+                if (fc > 1 && isFw) { fc = 1; }
+                else if (fc > 4 && isUS) { fc = (isBus ? Math.min(fc, 6) : 4 ); }
+                else if (fc > 6 && isState) { fc = (isBus ? Math.min(fc,7) : 6); }
+                if (fc > 6 && !isPaved) {
+                    return 'StGr';
+                } else {
                     return _stateSettings.global.getRoadTypeFromFC(fc, layer);
                 }
             }
