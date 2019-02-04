@@ -692,6 +692,50 @@
                 }
             }
         },
+        SC: {
+            baseUrl: 'https://services1.arcgis.com/VaY7cY9pvUYUP1Lf/arcgis/rest/services/Functional_Class/FeatureServer/',
+            defaultColors: { Fw: '#ff00c5', Ew: '#4f33df', MH: '#149ece', mH: '#4ce600', PS: '#cfae0e', St: '#eeeeee' },
+            zoomSettings: { maxOffset: [30, 15, 8, 4, 2, 1, 1, 1, 1, 1], excludeRoadTypes: [['St'], ['St'], ['St'], ['St'], [], [], [], [], [], [], []] },
+            fcMapLayers: [
+                {
+                    layerID: 0, fcPropName: 'FC_GIS' , idPropName: 'FID', outFields:['FID', 'FC_GIS', 'ROUTE_LRS'],
+                    maxRecordCount:1000, supportsPagination:false, roadTypeMap:{Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5,6], St: [7]}
+                }
+            ],
+            isPermitted: function () { return _r >= 3; },
+            getWhereClause: function (context) {
+                return null;
+            },
+            getFeatureRoadType: function (feature, layer) {
+                var roadID = feature.attributes.ROUTE_LRS;
+                var roadType = parseInt(roadID.slice(3,4));
+                var isFw = roadType === 1;
+                var isUS = roadType === 2;
+                var isState = roadType === 4;
+                var isBus = parseInt(roadID.slice(-2,-1)) === 7;
+                var fc = 7;
+                switch(feature.attributes[layer.fcPropName]) {
+                    case 'INT': fc = 1; break;
+                    case 'EXP': fc = 2; break;
+                    case 'PRA': fc = 3; break;
+                    case 'MIA': fc = 4; break;
+                    case 'MAC':
+                    case 'MIC': fc = 5; break;
+                }
+                if (fc > 1 && isFw) {
+                    fc = 1;
+                } else if (fc > 3 && isUS) {
+                    fc = (isBus ? 4 : 3);
+                } else if (fc > 4 && isState) {
+                    fc = (isBus ? 5 : 4);
+                }
+                if (layer.getFeatureRoadType) {
+                    return layer.getFeatureRoadType(feature);
+                } else {
+                    return _stateSettings.global.getRoadTypeFromFC(fc, layer);
+                }
+            }
+        },
         SD: {
             baseUrl: 'https://arcgis.sd.gov/arcgis/rest/services/DOT/LocalRoads/MapServer/',
             defaultColors: { Fw: '#ff00c5', Ew: '#149ece', MH: '#149ece', mH: '#4ce600', PS: '#cfae0e', St: '#eeeeee', PSGr: '#cc6533', StGr: '#e99cb6' },
