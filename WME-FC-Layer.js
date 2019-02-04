@@ -274,19 +274,25 @@
                 }
             ],
             getWhereClause: function (context) {
+                var theWhereClause = "FACILITY_TYPE<>'7'"; // Removed proposed roads
                 if (context.mapContext.zoom < 4) {
-                    return "FACILITY_TYPE<>'7' AND " + context.layer.fcPropName + "<>'7'";
-                } else {
-                    return "FACILITY_TYPE<>'7'";
+                    theWhereClause += " AND " + context.layer.fcPropName + "<>'7'";
                 }
+                return theWhereClause;
             },
             getFeatureRoadType: function (feature, layer) {
                 var attr = feature.attributes;
                 var fc = parseInt(attr[layer.fcPropName]);
                 var isFw = attr.ACCESS_CONTROL === 1;
-                var isUS = RegExp('STATE OF IOWA, US').test(attr.STATE_ROUTE_NAME_1);
-                var isState = RegExp('STATE OF IOWA, IA').test(attr.STATE_ROUTE_NAME_1);
-                fc = isFw ? 1 : ((fc > 3 && isUS) ? Math.min(fc, 3) : ((fc > 4 && isState) ? Math.min(fc, 4) : fc));
+                var isUS = RegExp('^STATE OF IOWA, US').test(attr.STATE_ROUTE_NAME_1);
+                var isState = RegExp('^STATE OF IOWA, IA').test(attr.STATE_ROUTE_NAME_1);
+                if (isFw) {
+                    fc = 1;
+                } else if (fc > 3 && isUS) {
+                    fc = 3;
+                } else if (fc > 4 && isState) {
+                    fc = 4;
+                }
                 if (fc > 4 && attr.SURFACE_TYPE === 20) {
                     return fc < 7 ? 'PSGr' : 'StGr';
                 } else {
@@ -431,8 +437,11 @@
                 var isState = attr.ID_PREFIX === 'MD';
                 var isUS = attr.ID_PREFIX === 'US';
                 var isBusiness = attr.MP_SUFFIX === 'BU';
-                if (fc > 4 && isState) { fc = (isBusiness ? Math.min(fc, 5) : 4); }
-                else if (fc > 3 && isUS) { fc = (isBusiness ? Math.min(fc, 4) : 3); }
+                if (fc > 3 && isUS) {
+                    fc = isBusiness ? 4 : 3;
+                } else if (fc > 4 && isState) {
+                    fc = isBusiness ? 5 : 4;
+                }
                 return _stateSettings.global.getRoadTypeFromFC(fc, layer);
             }
         },
@@ -761,12 +770,12 @@
                 var isState = RegExp('^SD HWY ', 'i').test(attr.ROADNAME);
                 var isBus = RegExp('^(US|SD) HWY .* (E|W)?(B|L)$', 'i').test(attr.ROADNAME);
                 var isPaved = parseInt(attr.SURFACE_TYPE) > 5;
-                if (fc > 1 && isFw) {
+                if (isFw) {
                     fc = 1;
                 } else if (fc > 4 && isUS) {
-                    fc = (isBus ? Math.min(fc, 6) : 4);
+                    fc = (isBus ? 6 : 4);
                 } else if (fc > 6 && isState) {
-                    fc = (isBus ? Math.min(fc, 7) : 6);
+                    fc = (isBus ? 7 : 6);
                 }
                 if (fc > 6 && !isPaved) {
                     return fc < 9 ? 'PSGr' : 'StGr';
