@@ -332,11 +332,11 @@
         },
         KS: {
             baseUrl: 'http://wfs.ksdot.org/arcgis_web_adaptor/rest/services/Transportation/',
-            defaultColors: { Fw: '#ff00c5', Ew: '#149ece', MH: '#149ece', mH: '#4ce600', PS: '#cfae0e', St: '#eeeeee', PSGr: '#cc6533', StGr: '#e99cb6' },
+            defaultColors: { Fw: '#ff00c5', Ew: '#149ece', MH: '#149ece', mH: '#4ce600', PS: '#cfae0e', St: '#eeeeee'},
             zoomSettings: { maxOffset: [30, 15, 8, 4, 2, 1, 1, 1, 1, 1], excludeRoadTypes: [['St'], ['St'], ['St'], ['St'], [], [], [], [], [], [], []] },
             fcMapLayers: [
                 {
-                    layerID: 0, layerPath: 'Non_State_System/MapServer/', idPropName: 'ID2', fcPropName: 'FUNCLASS', outFields: ['FUNCLASS', 'ID2', 'ROUTE_ID', 'SURFACE'],
+                    layerID: 0, layerPath: 'Non_State_System/MapServer/', idPropName: 'ID2', fcPropName: 'FUNCLASS', outFields: ['FUNCLASS', 'ID2', 'ROUTE_ID'],
                     roadTypeMap: { Fw: [1], MH: [2, 3], mH: [4], PS: [5, 6], St: [7] }, maxRecordCount: 1000, supportsPagination: false
                 },
                 {
@@ -359,15 +359,9 @@
                 var attr = feature.attributes;
                 var fc = parseInt(attr[layer.fcPropName]);
                 var roadPrefix = attr.PREFIX;
-                var isLocal = attr[layer.fcPropName] === 'FUNCLASS';
-                var isFw = false;
-                var isUS = false;
-                var isState = false;
-                if (!isLocal) {
-                    isFw = parseInt(attr.ACCESS_CONTROL) === 1;
-                    isUS = roadPrefix === 'U';
-                    isState = roadPrefix === 'K';
-                }
+                var isFw = parseInt(attr.ACCESS_CONTROL) === 1;
+                var isUS = roadPrefix === 'U';
+                var isState = roadPrefix === 'K';
                 if (isFw) {
                     fc = 1;
                 } else if (fc > 3 && isUS) {
@@ -375,11 +369,7 @@
                 } else if (fc > 4 && isState) {
                     fc = 4;
                 }
-                if (fc > 4 && attr.SURFACE !== 'Paved') {
-                    return fc < 7 ? 'PSGr' : 'StGr';
-                } else {
-                    return _stateSettings.global.getRoadTypeFromFC(fc, layer);
-                }
+                return _stateSettings.global.getRoadTypeFromFC(fc, layer);
             },
         },
         KY: {
