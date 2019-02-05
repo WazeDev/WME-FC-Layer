@@ -41,6 +41,7 @@
 // @connect      uga.edu
 // @connect      nevadadot.com
 // @connect      sd.gov
+// @connect      arkansas.gov
 // ==/UserScript==
 
 (function () {
@@ -103,6 +104,35 @@
                     }
                 });
                 return returnValue;
+            }
+        },
+        AR: {
+            baseUrl: 'https://gis.arkansas.gov/arcgis/rest/services/FEATURESERVICES/Transportation/FeatureServer/',
+            defaultColors: { Fw: '#ff00c5', Ew: '#4f33df', MH: '#149ece', mH: '#4ce600', PS: '#cfae0e', St: '#eeeeee' },
+            zoomSettings: { maxOffset: [30, 15, 8, 4, 2, 1, 1, 1, 1, 1], excludeRoadTypes: [[], [], [], [], [], [], [], [], [], [], []] },
+            fcMapLayers: [
+                {
+                    layerID: 8, fcPropName: 'FunctionalClass', idPropName: 'OBJECTID', outFields: ['OBJECTID', 'FunctionalClass','AH_Route','AH_Section'],
+                    roadTypeMap: { Fw: [1,2], Ew: [], MH: [3], mH: [4], PS: [5, 6], St: [7] }, maxRecordCount: 1000, supportsPagination: false
+                }
+            ],
+            getWhereClause: function (context) {
+                return null;
+            },
+            getFeatureRoadType: function (feature, layer) {
+                var attr = feature.attributes;
+                var fc = parseInt(attr[layer.fcPropName]);
+                var roadID = parseInt(attr.AH_Route);
+                var usHwys = [49,59,61,62,63,64,65,67,70,71,79,82,165,167,270,271,278,371,412,425];
+                var isUS = usHwys.includes(roadID);
+                var isState = roadID < 613;
+                var isBiz = attr.AH_Section[attr.AH_Section.length - 1] === 'B';
+                if (fc > 3 && isUS) {
+                    fc = isBiz ? 4 : 3;
+                } else if (fc > 4 && isState) {
+                    fc = isBiz ? 5 : 4;
+                }
+                return _stateSettings.global.getRoadTypeFromFC(fc, layer);
             }
         },
         DC: {
