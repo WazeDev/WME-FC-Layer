@@ -742,7 +742,7 @@
             zoomSettings: { maxOffset: [30, 15, 8, 4, 2, 1, 1, 1, 1, 1], excludeRoadTypes: [['St'], ['St'], ['St'], ['St'], [], [], [], [], [], [], []] },
             fcMapLayers: [
                 {
-                    layerID: 0, fcPropName: 'NFC', idPropName: 'OBJECTID', outFields: ['F_PRIMARY_', 'NFC', 'OBJECTID', 'ROUTE_CLAS'],
+                    layerID: 0, fcPropName: 'NFC', idPropName: 'OBJECTID', outFields: ['F_PRIMARY_', 'NFC', 'OBJECTID', 'ROUTE_CLAS', 'ACCESS_CON'],
                     maxRecordCount: 1000, supportsPagination: false, roadTypeMap: { Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5, 6], St: [7] }
                 }
             ],
@@ -759,12 +759,14 @@
                 var route = (feature.attributes.F_PRIMARY_ || '').trim();
                 var isBusinessOrSpur = /BUS$|SPR$/i.test(route);
                 var prefix = isBusinessOrSpur ? route.substring(0, 1) : feature.attributes.ROUTE_CLAS;
+                var isFw = parseInt(feature.attributes.ACCESS_CON) === 1;
                 var isInterstate = prefix === 'I';
                 var isUS = prefix === 'U';
                 var isState = prefix === 'S';
-                if (((isUS && !isBusinessOrSpur) || (isInterstate && isBusinessOrSpur)) && fc > 3) { fc = 3; }
-                if (((isUS && isBusinessOrSpur) || (isState && !isBusinessOrSpur)) && fc > 4) { fc = 4; }
-                if (isState && isBusinessOrSpur && fc > 5) { fc = 5; }
+                if (isFw) { fc = 1; }
+                else if (fc > 3 && ((isUS && !isBusinessOrSpur) || (isInterstate && isBusinessOrSpur))) { fc = 3; }
+                else if (fc > 4 && ((isUS && isBusinessOrSpur) || (isState && !isBusinessOrSpur))) { fc = 4; }
+                else if (fc > 5 && isState && isBusinessOrSpur) { fc = 5; }
                 return _stateSettings.global.getRoadTypeFromFC(fc, layer);
             }
         },
