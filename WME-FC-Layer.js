@@ -41,6 +41,7 @@
 // @connect      uga.edu
 // @connect      nevadadot.com
 // @connect      sd.gov
+// @connect      mt.gov
 // @connect      arkansas.gov
 // @connect      azdot.gov
 // ==/UserScript==
@@ -521,6 +522,41 @@
                 } else {
                     return _stateSettings.global.getFeatureRoadType(feature, layer);
                 }
+            }
+        },
+        MT: {
+            baseUrl: 'https://app.mdt.mt.gov/arcgis/rest/services/Standard/ROUTES/MapServer/',
+            defaultColors: { Fw: '#ff00c5', Ew: '#4f33df', MH: '#149ece', mH: '#4ce600', PS: '#cfae0e', St: '#eeeeee' },
+            zoomSettings: { maxOffset: [30, 15, 8, 4, 2, 1, 1, 1, 1, 1], excludeRoadTypes: [['St'], ['St'], ['St'], ['St'], [], [], [], [], [], [], []] },
+            fcMapLayers: [
+                { layerID: 0, fcPropName: 'FC' , idPropName: 'OBJECTID', outFields:['OBJECTID', 'FC', 'SIGN_ROUTE', 'ROUTE_NAME'], roadTypeMap:{Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5,6], St: [7]}, maxRecordCount:1000, supportsPagination:false },
+                { layerID: 1, fcPropName: 'FC' , idPropName: 'OBJECTID', outFields:['OBJECTID', 'FC', 'SIGN_ROUTE', 'ROUTE_NAME'], roadTypeMap:{Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5,6], St: [7]}, maxRecordCount:1000, supportsPagination:false }
+            ],
+            isPermitted: function () { return _r >= 3; },
+            getWhereClause: function (context) {
+                if (context.mapContext.zoom < 4) {
+                    return context.layer.fcPropName + "<>'LOCAL'";
+                } else {
+                    return null;
+                }
+            },
+            getFeatureRoadType: function (feature, layer) {
+                var fc = feature.attributes.FC;
+                switch (fc) {
+                    case 'PRINCIPAL ARTERIAL - INTERSTATE': fc = 1; break;
+                    case 'PRINCIPAL ARTERIAL - NON-INTERSTATE': fc = 3; break;
+                    case 'MINOR ARTERIAL': fc = 4; break;
+                    case 'MAJOR COLLECTOR':
+                    case 'MINOR COLLECTOR': fc = 5; break;
+                    default: fc = 7;
+                }
+                var roadID = feature.attributes.SIGN_ROUTE;
+                if (!roadID) { roadID = feature.attributes.ROUTE_NAME; }
+                var isUS = RegExp(/^US \d+/).test(roadID);
+                var isState = RegExp(/^MONTANA \d+|ROUTE \d+|S \d{3}\b/).test(roadID);
+                if (fc > 3 && isUS) { fc = 3; }
+                else if (fc > 4 && isState) { fc = 4; }
+                return _stateSettings.global.getRoadTypeFromFC(fc, layer);
             }
         },
         NV: {
