@@ -41,6 +41,9 @@
 // @connect      uga.edu
 // @connect      nevadadot.com
 // @connect      sd.gov
+// @connect      mt.gov
+// @connect      arkansas.gov
+// @connect      azdot.gov
 // ==/UserScript==
 
 (function () {
@@ -103,6 +106,69 @@
                     }
                 });
                 return returnValue;
+            }
+        },
+        AZ: {
+            baseUrl: 'https://gis.azdot.gov/gis/rest/services/AGOL/FunClass_NHS/MapServer/',
+            defaultColors: { Fw: '#ff00c5', Ew: '#ff00c5', MH: '#149ece', mH: '#4ce600', PS: '#cfae0e', St: '#eeeeee' },
+            zoomSettings: { maxOffset: [30, 15, 8, 4, 2, 1, 1, 1, 1, 1] },
+            fcMapLayers: [
+                {
+                    layerID: 8, fcPropName: 'FunctionalClass', idPropName: 'OBJECTID',
+                    outFields: ['OBJECTID', 'FunctionalClass', 'RouteId'],
+                    roadTypeMap: { Fw: [1, 11], Ew: [2, 3, 12], MH: [4, 14], mH: [6, 16], PS: [7, 17, 8, 18], St: [] }, maxRecordCount: 1000, supportsPagination: false
+                }
+            ],
+            getWhereClause: function (context) {
+                return context.layer.fcPropName + '<>9 OR ' + context.layer.fcPropName + '<>19';
+            },
+            getFeatureRoadType: function (feature, layer) {
+                var roadID = feature.attributes.RouteId.trim().replace(/  +/g, ' ');
+                var roadNum = parseInt(roadID.substring(2,5));
+                var fc = parseInt(feature.attributes[layer.fcPropName]);
+                if (fc === 2) { fc = 4; }
+                fc = fc % 10;
+                var azIH = [8, 10, 11, 17, 19, 40];
+                var isUS = RegExp(/^U\D\d{3}\b/).test(roadID);
+                var isState = RegExp(/^S\D\d{3}\b/).test(roadID);
+                var isBiz = RegExp(/^SB\d{3}\b/).test(roadID);
+                if (fc > 4 && isState && azIH.includes(roadNum) && isBiz) {
+                    fc = 4;
+                } else if (fc > 4 && isUS) {
+                    fc = isBiz ? 6 : 4;
+                } else if (fc > 6 && isState) {
+                    fc = isBiz ? 7 : 6;
+                }
+                return _stateSettings.global.getRoadTypeFromFC(fc, layer);
+            }
+        },
+        AR: {
+            baseUrl: 'https://gis.arkansas.gov/arcgis/rest/services/FEATURESERVICES/Transportation/FeatureServer/',
+            defaultColors: { Fw: '#ff00c5', Ew: '#4f33df', MH: '#149ece', mH: '#4ce600', PS: '#cfae0e', St: '#eeeeee' },
+            zoomSettings: { maxOffset: [30, 15, 8, 4, 2, 1, 1, 1, 1, 1], excludeRoadTypes: [[], [], [], [], [], [], [], [], [], [], []] },
+            fcMapLayers: [
+                {
+                    layerID: 8, fcPropName: 'FunctionalClass', idPropName: 'OBJECTID', outFields: ['OBJECTID', 'FunctionalClass','AH_Route','AH_Section'],
+                    roadTypeMap: { Fw: [1,2], Ew: [], MH: [3], mH: [4], PS: [5, 6], St: [7] }, maxRecordCount: 1000, supportsPagination: false
+                }
+            ],
+            getWhereClause: function (context) {
+                return null;
+            },
+            getFeatureRoadType: function (feature, layer) {
+                var attr = feature.attributes;
+                var fc = parseInt(attr[layer.fcPropName]);
+                var roadID = parseInt(attr.AH_Route);
+                var usHwys = [49,59,61,62,63,64,65,67,70,71,79,82,165,167,270,271,278,371,412,425];
+                var isUS = usHwys.includes(roadID);
+                var isState = roadID < 613;
+                var isBiz = attr.AH_Section[attr.AH_Section.length - 1] === 'B';
+                if (fc > 3 && isUS) {
+                    fc = isBiz ? 4 : 3;
+                } else if (fc > 4 && isState) {
+                    fc = isBiz ? 5 : 4;
+                }
+                return _stateSettings.global.getRoadTypeFromFC(fc, layer);
             }
         },
         DC: {
@@ -274,19 +340,25 @@
                 }
             ],
             getWhereClause: function (context) {
+                var theWhereClause = "FACILITY_TYPE<>'7'"; // Removed proposed roads
                 if (context.mapContext.zoom < 4) {
-                    return "FACILITY_TYPE<>'7' AND " + context.layer.fcPropName + "<>'7'";
-                } else {
-                    return "FACILITY_TYPE<>'7'";
+                    theWhereClause += " AND " + context.layer.fcPropName + "<>'7'";
                 }
+                return theWhereClause;
             },
             getFeatureRoadType: function (feature, layer) {
                 var attr = feature.attributes;
                 var fc = parseInt(attr[layer.fcPropName]);
                 var isFw = attr.ACCESS_CONTROL === 1;
-                var isUS = RegExp('STATE OF IOWA, US').test(attr.STATE_ROUTE_NAME_1);
-                var isState = RegExp('STATE OF IOWA, IA').test(attr.STATE_ROUTE_NAME_1);
-                fc = isFw ? 1 : ((fc > 3 && isUS) ? Math.min(fc, 3) : ((fc > 4 && isState) ? Math.min(fc, 4) : fc));
+                var isUS = RegExp('^STATE OF IOWA, US').test(attr.STATE_ROUTE_NAME_1);
+                var isState = RegExp('^STATE OF IOWA, IA').test(attr.STATE_ROUTE_NAME_1);
+                if (isFw) {
+                    fc = 1;
+                } else if (fc > 3 && isUS) {
+                    fc = 3;
+                } else if (fc > 4 && isState) {
+                    fc = 4;
+                }
                 if (fc > 4 && attr.SURFACE_TYPE === 20) {
                     return fc < 7 ? 'PSGr' : 'StGr';
                 } else {
@@ -296,11 +368,11 @@
         },
         KS: {
             baseUrl: 'http://wfs.ksdot.org/arcgis_web_adaptor/rest/services/Transportation/',
-            defaultColors: { Fw: '#ff00c5', Ew: '#149ece', MH: '#149ece', mH: '#4ce600', PS: '#cfae0e', St: '#eeeeee', PSGr: '#cc6533', StGr: '#e99cb6' },
+            defaultColors: { Fw: '#ff00c5', Ew: '#149ece', MH: '#149ece', mH: '#4ce600', PS: '#cfae0e', St: '#eeeeee'},
             zoomSettings: { maxOffset: [30, 15, 8, 4, 2, 1, 1, 1, 1, 1], excludeRoadTypes: [['St'], ['St'], ['St'], ['St'], [], [], [], [], [], [], []] },
             fcMapLayers: [
                 {
-                    layerID: 0, layerPath: 'Non_State_System/MapServer/', idPropName: 'ID2', fcPropName: 'FUNCLASS', outFields: ['FUNCLASS', 'ID2', 'ROUTE_ID', 'SURFACE'],
+                    layerID: 0, layerPath: 'Non_State_System/MapServer/', idPropName: 'ID2', fcPropName: 'FUNCLASS', outFields: ['FUNCLASS', 'ID2', 'ROUTE_ID'],
                     roadTypeMap: { Fw: [1], MH: [2, 3], mH: [4], PS: [5, 6], St: [7] }, maxRecordCount: 1000, supportsPagination: false
                 },
                 {
@@ -323,15 +395,9 @@
                 var attr = feature.attributes;
                 var fc = parseInt(attr[layer.fcPropName]);
                 var roadPrefix = attr.PREFIX;
-                var isLocal = attr[layer.fcPropName] === 'FUNCLASS';
-                var isFw = false;
-                var isUS = false;
-                var isState = false;
-                if (!isLocal) {
-                    isFw = parseInt(attr.ACCESS_CONTROL) === 1;
-                    isUS = roadPrefix === 'U';
-                    isState = roadPrefix === 'K';
-                }
+                var isFw = parseInt(attr.ACCESS_CONTROL) === 1;
+                var isUS = roadPrefix === 'U';
+                var isState = roadPrefix === 'K';
                 if (isFw) {
                     fc = 1;
                 } else if (fc > 3 && isUS) {
@@ -339,11 +405,7 @@
                 } else if (fc > 4 && isState) {
                     fc = 4;
                 }
-                if (fc > 4 && attr.SURFACE !== 'Paved') {
-                    return fc < 7 ? 'PSGr' : 'StGr';
-                } else {
-                    return _stateSettings.global.getRoadTypeFromFC(fc, layer);
-                }
+                return _stateSettings.global.getRoadTypeFromFC(fc, layer);
             },
         },
         KY: {
@@ -431,8 +493,11 @@
                 var isState = attr.ID_PREFIX === 'MD';
                 var isUS = attr.ID_PREFIX === 'US';
                 var isBusiness = attr.MP_SUFFIX === 'BU';
-                if (fc > 4 && isState) { fc = (isBusiness ? Math.min(fc, 5) : 4); }
-                else if (fc > 3 && isUS) { fc = (isBusiness ? Math.min(fc, 4) : 3); }
+                if (fc > 3 && isUS) {
+                    fc = isBusiness ? 4 : 3;
+                } else if (fc > 4 && isState) {
+                    fc = isBusiness ? 5 : 4;
+                }
                 return _stateSettings.global.getRoadTypeFromFC(fc, layer);
             }
         },
@@ -459,6 +524,41 @@
                 }
             }
         },
+        MT: {
+            baseUrl: 'https://app.mdt.mt.gov/arcgis/rest/services/Standard/ROUTES/MapServer/',
+            defaultColors: { Fw: '#ff00c5', Ew: '#4f33df', MH: '#149ece', mH: '#4ce600', PS: '#cfae0e', St: '#eeeeee' },
+            zoomSettings: { maxOffset: [30, 15, 8, 4, 2, 1, 1, 1, 1, 1], excludeRoadTypes: [['St'], ['St'], ['St'], ['St'], [], [], [], [], [], [], []] },
+            fcMapLayers: [
+                { layerID: 0, fcPropName: 'FC' , idPropName: 'OBJECTID', outFields:['OBJECTID', 'FC', 'SIGN_ROUTE', 'ROUTE_NAME'], roadTypeMap:{Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5,6], St: [7]}, maxRecordCount:1000, supportsPagination:false },
+                { layerID: 1, fcPropName: 'FC' , idPropName: 'OBJECTID', outFields:['OBJECTID', 'FC', 'SIGN_ROUTE', 'ROUTE_NAME'], roadTypeMap:{Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5,6], St: [7]}, maxRecordCount:1000, supportsPagination:false }
+            ],
+            isPermitted: function () { return _r >= 3; },
+            getWhereClause: function (context) {
+                if (context.mapContext.zoom < 4) {
+                    return context.layer.fcPropName + "<>'LOCAL'";
+                } else {
+                    return null;
+                }
+            },
+            getFeatureRoadType: function (feature, layer) {
+                var fc = feature.attributes.FC;
+                switch (fc) {
+                    case 'PRINCIPAL ARTERIAL - INTERSTATE': fc = 1; break;
+                    case 'PRINCIPAL ARTERIAL - NON-INTERSTATE': fc = 3; break;
+                    case 'MINOR ARTERIAL': fc = 4; break;
+                    case 'MAJOR COLLECTOR':
+                    case 'MINOR COLLECTOR': fc = 5; break;
+                    default: fc = 7;
+                }
+                var roadID = feature.attributes.SIGN_ROUTE;
+                if (!roadID) { roadID = feature.attributes.ROUTE_NAME; }
+                var isUS = RegExp(/^US \d+/).test(roadID);
+                var isState = RegExp(/^MONTANA \d+|ROUTE \d+|S \d{3}\b/).test(roadID);
+                if (fc > 3 && isUS) { fc = 3; }
+                else if (fc > 4 && isState) { fc = 4; }
+                return _stateSettings.global.getRoadTypeFromFC(fc, layer);
+            }
+        },
         NV: {
             baseUrl: 'https://gis.nevadadot.com/arcgis/rest/services/ArcGISOnline/PublicMaintenanceMap/MapServer/',
             defaultColors: { Fw: '#ff00c5', Ew: '#149ece', MH: '#149ece', mH: '#4ce600', PS: '#cfae0e', St: '#eeeeee' },
@@ -471,6 +571,32 @@
             },
             getFeatureRoadType: function (feature, layer) {
                 return _stateSettings.global.getFeatureRoadType(feature, layer);
+            }
+        },
+        NM: {
+            baseUrl: 'https://services.arcgis.com/hOpd7wfnKm16p9D9/ArcGIS/rest/services/NMDOT_Functional_Class/FeatureServer/',
+            defaultColors: { Fw: '#ff00c5', Ew: '#ff00c5', MH: '#149ece', mH: '#4ce600', PS: '#cfae0e', St: '#eeeeee' },
+            zoomSettings: { maxOffset: [30, 15, 8, 4, 2, 1, 1, 1, 1, 1] },
+            fcMapLayers: [
+                {
+                    layerID: 0, fcPropName: 'Func_Class', idPropName: 'OBJECTID_1', maxRecordCount: 1000, supportsPagination: false,
+                    outFields: ['OBJECTID_1', 'Func_Class', 'D_RT_ROUTE'], roadTypeMap: { Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5, 6], St: [7] }
+                }
+            ],
+            getWhereClause: function (context) {
+                return null;
+            },
+            getFeatureRoadType: function (feature, layer) {
+                var fc = parseInt(feature.attributes[layer.fcPropName]);
+                var roadType = feature.attributes.D_RT_ROUTE.split('-',1).shift();
+                var isBiz = roadType === 'BL'; // Interstate Business Loop
+                var isUS = roadType === 'US';
+                var isState = roadType === 'NM';
+                console.log([fc,roadType,isBiz,isUS,isState].join(' / '));
+                if (roadType === 'IX') { fc = 0; }
+                else if (fc > 3 && (isBiz || isUS)) { fc = 3; }
+                else if (fc > 4 && isState) { fc = 4; }
+                return _stateSettings.global.getRoadTypeFromFC(fc, layer);
             }
         },
         NY: {//https://gis3.dot.ny.gov/arcgis/rest/services/Basemap/MapServer/21
@@ -642,7 +768,7 @@
             zoomSettings: { maxOffset: [30, 15, 8, 4, 2, 1, 1, 1, 1, 1], excludeRoadTypes: [['St'], ['St'], ['St'], ['St'], [], [], [], [], [], [], []] },
             fcMapLayers: [
                 {
-                    layerID: 0, fcPropName: 'NFC', idPropName: 'OBJECTID', outFields: ['F_PRIMARY_', 'NFC', 'OBJECTID', 'ROUTE_CLAS'],
+                    layerID: 0, fcPropName: 'NFC', idPropName: 'OBJECTID', outFields: ['F_PRIMARY_', 'NFC', 'OBJECTID', 'ROUTE_CLAS', 'ACCESS_CON'],
                     maxRecordCount: 1000, supportsPagination: false, roadTypeMap: { Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5, 6], St: [7] }
                 }
             ],
@@ -659,12 +785,14 @@
                 var route = (feature.attributes.F_PRIMARY_ || '').trim();
                 var isBusinessOrSpur = /BUS$|SPR$/i.test(route);
                 var prefix = isBusinessOrSpur ? route.substring(0, 1) : feature.attributes.ROUTE_CLAS;
+                var isFw = parseInt(feature.attributes.ACCESS_CON) === 1;
                 var isInterstate = prefix === 'I';
                 var isUS = prefix === 'U';
                 var isState = prefix === 'S';
-                if (((isUS && !isBusinessOrSpur) || (isInterstate && isBusinessOrSpur)) && fc > 3) { fc = 3; }
-                if (((isUS && isBusinessOrSpur) || (isState && !isBusinessOrSpur)) && fc > 4) { fc = 4; }
-                if (isState && isBusinessOrSpur && fc > 5) { fc = 5; }
+                if (isFw) { fc = 1; }
+                else if (fc > 3 && ((isUS && !isBusinessOrSpur) || (isInterstate && isBusinessOrSpur))) { fc = 3; }
+                else if (fc > 4 && ((isUS && isBusinessOrSpur) || (isState && !isBusinessOrSpur))) { fc = 4; }
+                else if (fc > 5 && isState && isBusinessOrSpur) { fc = 5; }
                 return _stateSettings.global.getRoadTypeFromFC(fc, layer);
             }
         },
@@ -688,6 +816,50 @@
                     return layer.getFeatureRoadType(feature);
                 } else {
                     var fc = feature.attributes[layer.fcPropName];
+                    return _stateSettings.global.getRoadTypeFromFC(fc, layer);
+                }
+            }
+        },
+        SC: {
+            baseUrl: 'https://services1.arcgis.com/VaY7cY9pvUYUP1Lf/arcgis/rest/services/Functional_Class/FeatureServer/',
+            defaultColors: { Fw: '#ff00c5', Ew: '#4f33df', MH: '#149ece', mH: '#4ce600', PS: '#cfae0e', St: '#eeeeee' },
+            zoomSettings: { maxOffset: [30, 15, 8, 4, 2, 1, 1, 1, 1, 1], excludeRoadTypes: [['St'], ['St'], ['St'], ['St'], [], [], [], [], [], [], []] },
+            fcMapLayers: [
+                {
+                    layerID: 0, fcPropName: 'FC_GIS' , idPropName: 'FID', outFields:['FID', 'FC_GIS', 'ROUTE_LRS'],
+                    maxRecordCount:1000, supportsPagination:false, roadTypeMap:{Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5,6], St: [7]}
+                }
+            ],
+            isPermitted: function () { return _r >= 3; },
+            getWhereClause: function (context) {
+                return null;
+            },
+            getFeatureRoadType: function (feature, layer) {
+                var roadID = feature.attributes.ROUTE_LRS;
+                var roadType = parseInt(roadID.slice(3,4));
+                var isFw = roadType === 1;
+                var isUS = roadType === 2;
+                var isState = roadType === 4;
+                var isBus = parseInt(roadID.slice(-2,-1)) === 7;
+                var fc = 7;
+                switch(feature.attributes[layer.fcPropName]) {
+                    case 'INT': fc = 1; break;
+                    case 'EXP': fc = 2; break;
+                    case 'PRA': fc = 3; break;
+                    case 'MIA': fc = 4; break;
+                    case 'MAC':
+                    case 'MIC': fc = 5; break;
+                }
+                if (fc > 1 && isFw) {
+                    fc = 1;
+                } else if (fc > 3 && isUS) {
+                    fc = (isBus ? 4 : 3);
+                } else if (fc > 4 && isState) {
+                    fc = (isBus ? 5 : 4);
+                }
+                if (layer.getFeatureRoadType) {
+                    return layer.getFeatureRoadType(feature);
+                } else {
                     return _stateSettings.global.getRoadTypeFromFC(fc, layer);
                 }
             }
@@ -717,12 +889,12 @@
                 var isState = RegExp('^SD HWY ', 'i').test(attr.ROADNAME);
                 var isBus = RegExp('^(US|SD) HWY .* (E|W)?(B|L)$', 'i').test(attr.ROADNAME);
                 var isPaved = parseInt(attr.SURFACE_TYPE) > 5;
-                if (fc > 1 && isFw) {
+                if (isFw) {
                     fc = 1;
                 } else if (fc > 4 && isUS) {
-                    fc = (isBus ? Math.min(fc, 6) : 4);
+                    fc = (isBus ? 6 : 4);
                 } else if (fc > 6 && isState) {
-                    fc = (isBus ? Math.min(fc, 7) : 6);
+                    fc = (isBus ? 7 : 6);
                 }
                 if (fc > 6 && !isPaved) {
                     return fc < 9 ? 'PSGr' : 'StGr';
