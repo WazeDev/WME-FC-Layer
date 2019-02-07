@@ -573,6 +573,32 @@
                 return _stateSettings.global.getFeatureRoadType(feature, layer);
             }
         },
+        NM: {
+            baseUrl: 'https://services.arcgis.com/hOpd7wfnKm16p9D9/ArcGIS/rest/services/NMDOT_Functional_Class/FeatureServer/',
+            defaultColors: { Fw: '#ff00c5', Ew: '#ff00c5', MH: '#149ece', mH: '#4ce600', PS: '#cfae0e', St: '#eeeeee' },
+            zoomSettings: { maxOffset: [30, 15, 8, 4, 2, 1, 1, 1, 1, 1] },
+            fcMapLayers: [
+                {
+                    layerID: 0, fcPropName: 'Func_Class', idPropName: 'OBJECTID_1', maxRecordCount: 1000, supportsPagination: false,
+                    outFields: ['OBJECTID_1', 'Func_Class', 'D_RT_ROUTE'], roadTypeMap: { Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5, 6], St: [7] }
+                }
+            ],
+            getWhereClause: function (context) {
+                return null;
+            },
+            getFeatureRoadType: function (feature, layer) {
+                var fc = parseInt(feature.attributes[layer.fcPropName]);
+                var roadType = feature.attributes.D_RT_ROUTE.split('-',1).shift();
+                var isBiz = roadType === 'BL'; // Interstate Business Loop
+                var isUS = roadType === 'US';
+                var isState = roadType === 'NM';
+                console.log([fc,roadType,isBiz,isUS,isState].join(' / '));
+                if (roadType === 'IX') { fc = 0; }
+                else if (fc > 3 && (isBiz || isUS)) { fc = 3; }
+                else if (fc > 4 && isState) { fc = 4; }
+                return _stateSettings.global.getRoadTypeFromFC(fc, layer);
+            }
+        },
         NY: {//https://gis3.dot.ny.gov/arcgis/rest/services/Basemap/MapServer/21
             baseUrl: 'https://gis3.dot.ny.gov/arcgis/rest/services/',
             defaultColors: { Fw: '#ff00c5', Ew: '#5f33df', MH: '#149ece', mH: '#4ce600', PS: '#cfae0e', St: '#eeeeee' },
