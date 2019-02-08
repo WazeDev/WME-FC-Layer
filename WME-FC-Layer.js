@@ -44,6 +44,7 @@
 // @connect      mt.gov
 // @connect      arkansas.gov
 // @connect      azdot.gov
+// @connect      coloradodot.info
 // ==/UserScript==
 
 (function () {
@@ -167,6 +168,46 @@
                     fc = isBiz ? 4 : 3;
                 } else if (fc > 4 && isState) {
                     fc = isBiz ? 5 : 4;
+                }
+                return _stateSettings.global.getRoadTypeFromFC(fc, layer);
+            }
+        },
+        CO: {
+            baseUrl: 'http://dtdapps.coloradodot.info/arcgis/rest/services/MapView/BaseLayers_MapView_ext/MapServer/',
+            defaultColors: { Fw: '#ff00c5', Ew: '#4f33df', MH: '#149ece', mH: '#4ce600', PS: '#cfae0e', St: '#eeeeee' },
+            zoomSettings: { maxOffset: [30, 15, 8, 4, 2, 1, 1, 1, 1, 1], excludeRoadTypes: [[], [], [], [], [], [], [], [], [], [], []] },
+            fcMapLayers: [
+                { layerID: 7, fcPropName: 'FUNCCLASS', idPropName: 'OBJECTID', outFields: ['OBJECTID', 'FUNCCLASS','ROUTE','REFPT'],
+                 roadTypeMap: { Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5, 6], St: [7] }, maxRecordCount: 1000, supportsPagination: false },
+                { layerID: 17, fcPropName: 'FUNCCLASSID', idPropName: 'OBJECTID', outFields: ['OBJECTID', 'FUNCCLASSID','ROUTE'],
+                 roadTypeMap: { Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5, 6], St: [7] }, maxRecordCount: 1000, supportsPagination: false },
+                { layerID: 18, fcPropName: 'FUNCCLASSID', idPropName: 'OBJECTID', outFields: ['OBJECTID', 'FUNCCLASSID','ROUTE'],
+                 roadTypeMap: { Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5, 6], St: [7] }, maxRecordCount: 1000, supportsPagination: false }
+            ],
+            getWhereClause: function (context) {
+                if (context.mapContext.zoom < 4) {
+                    return context.layer.fcPropName + "<>'7'";
+                } else {
+                    return null;
+                }
+            },
+            getFeatureRoadType: function (feature, layer) {
+                var attr = feature.attributes;
+                var fc = parseInt(attr[layer.fcPropName]);
+                if (layer.layerID === 7) {
+                    var route = parseInt(attr.ROUTE.slice(0,3));
+                    console.log([fc,attr.ROUTE,attr.REFPT].toString());
+                    var usHwys = [6, 24, 34, 36, 40, 50, 84, 85, 87, 138, 160, 285, 287, 350, 385, 400, 491, 550];
+                    fc = (usHwys.includes(route)) ? Math.min(fc, 3) : Math.min(fc, 4);
+                    // Exceptions
+                    if ( attr.ROUTE === '085F' ||
+                        (route === 40 && (attr.REFPT > 320 || attr.REFPT < 385)) ||
+                        (route === 36 && (attr.REFPT > 76 || attr.REFPT < 100.99))) {
+                        fc = 4;
+                    }
+                }
+                else {
+                    console.log([fc,attr.ROUTE].toString());
                 }
                 return _stateSettings.global.getRoadTypeFromFC(fc, layer);
             }
