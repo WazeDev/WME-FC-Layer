@@ -615,20 +615,6 @@
                 return _stateSettings.global.getRoadTypeFromFC(fc, layer);
             }
         },
-        NV: {
-            baseUrl: 'https://gis.nevadadot.com/arcgis/rest/services/ArcGISOnline/PublicMaintenanceMap/MapServer/',
-            defaultColors: { Fw: '#ff00c5', Ew: '#149ece', MH: '#149ece', mH: '#4ce600', PS: '#cfae0e', St: '#eeeeee' },
-            zoomSettings: { maxOffset: [30, 15, 8, 4, 2, 1, 1, 1, 1, 1], excludeRoadTypes: [['St'], ['St'], ['St'], ['St'], [], [], [], [], [], [], []] },
-            fcMapLayers: [
-                { layerID: 3, fcPropName: 'FUNC_CODE', idPropName: 'OBJECTID', outFields: ['OBJECTID', 'FUNC_CODE'], roadTypeMap: { Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5, 6], St: [7] }, maxRecordCount: 1000, supportsPagination: false }
-            ],
-            getWhereClause: function (context) {
-                return null;
-            },
-            getFeatureRoadType: function (feature, layer) {
-                return _stateSettings.global.getFeatureRoadType(feature, layer);
-            }
-        },
         NM: {
             baseUrl: 'https://services.arcgis.com/hOpd7wfnKm16p9D9/ArcGIS/rest/services/NMDOT_Functional_Class/FeatureServer/',
             defaultColors: { Fw: '#ff00c5', Ew: '#ff00c5', MH: '#149ece', mH: '#4ce600', PS: '#cfae0e', St: '#eeeeee' },
