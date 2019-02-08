@@ -179,7 +179,7 @@
             fcMapLayers: [
                 { layerID: 7, fcPropName: 'FUNCCLASS', idPropName: 'OBJECTID', outFields: ['OBJECTID', 'FUNCCLASS','ROUTE','REFPT'],
                  roadTypeMap: { Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5, 6], St: [7] }, maxRecordCount: 1000, supportsPagination: false },
-                { layerID: 17, fcPropName: 'FUNCCLASSID', idPropName: 'OBJECTID', outFields: ['OBJECTID', 'FUNCCLASSID','ROUTE'],
+                { layerID: 17, fcPropName: 'FUNCCLASSID', idPropName: 'OBJECTID', outFields: ['OBJECTID', 'FUNCCLASSID','ROUTE','FIPSCOUNTY'],
                  roadTypeMap: { Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5, 6], St: [7] }, maxRecordCount: 1000, supportsPagination: false },
                 { layerID: 18, fcPropName: 'FUNCCLASSID', idPropName: 'OBJECTID', outFields: ['OBJECTID', 'FUNCCLASSID','ROUTE'],
                  roadTypeMap: { Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5, 6], St: [7] }, maxRecordCount: 1000, supportsPagination: false }
@@ -194,20 +194,35 @@
             getFeatureRoadType: function (feature, layer) {
                 var attr = feature.attributes;
                 var fc = parseInt(attr[layer.fcPropName]);
+                var route = attr.ROUTE.replace(/  +/g, ' ');
                 if (layer.layerID === 7) {
-                    var route = parseInt(attr.ROUTE.slice(0,3));
-                    console.log([fc,attr.ROUTE,attr.REFPT].toString());
-                    var usHwys = [6, 24, 34, 36, 40, 50, 84, 85, 87, 138, 160, 285, 287, 350, 385, 400, 491, 550];
-                    fc = (usHwys.includes(route)) ? Math.min(fc, 3) : Math.min(fc, 4);
-                    // Exceptions
-                    if ( attr.ROUTE === '085F' ||
-                        (route === 40 && (attr.REFPT > 320 || attr.REFPT < 385)) ||
-                        (route === 36 && (attr.REFPT > 76 || attr.REFPT < 100.99))) {
+                    var rtnum = parseInt(route.slice(0,3));
+                    var refpt = attr.REFPT;
+                    var hwys = [6, 24, 25, 34, 36, 40, 50, 70, 84, 85, 87, 138, 160, 285, 287, 350, 385, 400, 491, 550];
+                    var IH = [25,70];
+                    // Exceptions first, then normal classification
+                    var doNothing = ['024D', '040G'];
+                    var notNothing = ['070K', '070L', '070O', '070Q', '070R'];
+                    var doMin = ['024E', '050D', '070O', '085F', '160D'];
+                    if (doNothing.includes(route) || (rtnum === 70 && route !== '070K' && !notNothing.includes(route))) { }
+                    else if (doMin.includes(route) ||
+                        (rtnum === 40 && refpt > 320 && refpt < 385) ||
+                        (rtnum === 36 && refpt > 79 && refpt < 100.99) ||
+                        (route === '034D' && refpt > 11)) {
                         fc = 4;
+                    } else if (hwys.includes(rtnum)) {
+                        fc = Math.min(fc, 3);
+                    }
+                    else {
+                        fc = Math.min(fc, 4);
                     }
                 }
                 else {
-                    console.log([fc,attr.ROUTE].toString());
+                    // All exceptions
+                    var fips = parseInt(attr.FIPSCOUNTY);
+                    if ((fips === 19 && route === 'COLORADO BD') ||
+                       (fips === 37 && (route === 'GRAND AV' || route === 'S H6'))) { fc = 3; }
+                    else if (fips === 67 && route === 'BAYFIELDPAY') { fc = 4; }
                 }
                 return _stateSettings.global.getRoadTypeFromFC(fc, layer);
             }
