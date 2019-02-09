@@ -862,6 +862,33 @@
                 }
             }
         },
+        RI: {
+            baseUrl: 'https://services2.arcgis.com/S8zZg9pg23JUEexQ/arcgis/rest/services/RIDOT_Roads_2016/FeatureServer/',
+            defaultColors: { Fw: '#ff00c5', Ew: '#4f33df', MH: '#149ece', mH: '#4ce600', PS: '#cfae0e', St: '#eeeeee' },
+            zoomSettings: { maxOffset: [30, 15, 8, 4, 2, 1, 1, 1, 1, 1], excludeRoadTypes: [[], [], [], [], [], [], [], [], [], [], []] },
+            fcMapLayers: [
+                {
+                    layerID: 0, fcPropName: 'F_SYSTEM', idPropName: 'OBJECTID', outFields: ['OBJECTID', 'F_SYSTEM','ROADTYPE','RTNO'],
+                    roadTypeMap: { Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5, 6], St: [7,0] }, maxRecordCount: 1000, supportsPagination: false
+                }
+            ],
+            getWhereClause: function (context) {
+                if (context.mapContext.zoom < 4) {
+                    return context.layer.fcPropName + "<>'7 OR ";
+                } else {
+                    return null;
+                }
+            },
+            getFeatureRoadType: function (feature, layer) {
+                var fc = parseInt(feature.attributes[layer.fcPropName]);
+                var type = feature.attributes.ROADTYPE;
+                var rtnum = feature.attributes.RTNO;
+                if (fc === 2 && ['10','24','37','78','99','138','403'].includes(rtnum)) { fc = 1; } //isFw
+                else if ((fc > 3 && type === 'US') || rtnum === '1') { fc = 3; } //isUS
+                else if (fc > 4 && rtnum.trim() !== '') { fc = 4; } //isState
+                return _stateSettings.global.getRoadTypeFromFC(fc, layer);
+            }
+        },
         SC: {
             baseUrl: 'https://services1.arcgis.com/VaY7cY9pvUYUP1Lf/arcgis/rest/services/Functional_Class/FeatureServer/',
             defaultColors: { Fw: '#ff00c5', Ew: '#4f33df', MH: '#149ece', mH: '#4ce600', PS: '#cfae0e', St: '#eeeeee' },
