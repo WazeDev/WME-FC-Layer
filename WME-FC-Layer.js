@@ -45,6 +45,7 @@
 // @connect      arkansas.gov
 // @connect      azdot.gov
 // @connect      coloradodot.info
+// @connect      unh.edu
 // ==/UserScript==
 
 (function () {
@@ -184,6 +185,7 @@
                 { layerID: 18, fcPropName: 'FUNCCLASSID', idPropName: 'OBJECTID', outFields: ['OBJECTID', 'FUNCCLASSID','ROUTE'],
                  roadTypeMap: { Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5, 6], St: [7] }, maxRecordCount: 1000, supportsPagination: false }
             ],
+            isPermitted: function () { return _r >= 4; },
             getWhereClause: function (context) {
                 if (context.mapContext.zoom < 4) {
                     return context.layer.fcPropName + "<>'7'";
@@ -615,6 +617,36 @@
                 return _stateSettings.global.getRoadTypeFromFC(fc, layer);
             }
         },
+        NH: {
+            baseUrl: 'https://nhgeodata.unh.edu/nhgeodata/rest/services/GRANITView/GV_BaseLayers/MapServer/',
+            defaultColors: { Fw: '#ff00c5', Ew: '#4f33df', MH: '#149ece', mH: '#4ce600', PS: '#cfae0e', St: '#eeeeee' },
+            zoomSettings: { maxOffset: [30, 15, 8, 4, 2, 1, 1, 1, 1, 1], excludeRoadTypes: [[], [], [], [], [], [], [], [], [], [], []] },
+            fcMapLayers: [
+                {
+                    layerID: 18, fcPropName: 'FUNCT_SYSTEM', idPropName: 'OBJECTID', outFields: ['OBJECTID', 'FUNCT_SYSTEM', 'STREET_ALIASES', 'TIER'],
+                    roadTypeMap: { Fw: [1], Ew: [2], MH: [2,3], mH: [4], PS: [5, 6], St: [7,0] }, maxRecordCount: 1000, supportsPagination: false
+                }
+            ],
+            isPermitted: function () { return _r >= 3; },
+            getWhereClause: function (context) {
+                if (context.mapContext.zoom < 4) {
+                    return context.layer.fcPropName + "<>7 AND " + context.layer.fcPropName + "<>0";
+                } else {
+                    return null;
+                }
+            },
+            getFeatureRoadType: function (feature, layer) {
+                var fc = parseInt(feature.attributes[layer.fcPropName]);
+                if (!(fc > 0)) { fc = 7; }
+                var route = feature.attributes.STREET_ALIASES;
+                var isUS = RegExp(/US /).test(route);
+                var isState = RegExp(/NH /).test(route);
+                if (fc === 2) { feature.attributes.TIER === 1 ? fc = 1 : fc = 3; }
+                else if (fc > 3 && isUS) { RegExp(/US 3B/).test(route) ? fc = 4 : fc = 3; }
+                else if (fc > 4 && isState) { fc = 4; }
+                return _stateSettings.global.getRoadTypeFromFC(fc, layer);
+            }
+        },
         NM: {
             baseUrl: 'https://services.arcgis.com/hOpd7wfnKm16p9D9/ArcGIS/rest/services/NMDOT_Functional_Class/FeatureServer/',
             defaultColors: { Fw: '#ff00c5', Ew: '#ff00c5', MH: '#149ece', mH: '#4ce600', PS: '#cfae0e', St: '#eeeeee' },
@@ -634,7 +666,6 @@
                 var isBiz = roadType === 'BL'; // Interstate Business Loop
                 var isUS = roadType === 'US';
                 var isState = roadType === 'NM';
-                console.log([fc,roadType,isBiz,isUS,isState].join(' / '));
                 if (roadType === 'IX') { fc = 0; }
                 else if (fc > 3 && (isBiz || isUS)) { fc = 3; }
                 else if (fc > 4 && isState) { fc = 4; }
@@ -872,6 +903,7 @@
                     roadTypeMap: { Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5, 6], St: [7,0] }, maxRecordCount: 1000, supportsPagination: false
                 }
             ],
+            isPermitted: function () { return _r >= 3; },
             getWhereClause: function (context) {
                 if (context.mapContext.zoom < 4) {
                     return context.layer.fcPropName + "<>'7 OR ";
