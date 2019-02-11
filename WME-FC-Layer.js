@@ -333,13 +333,13 @@
             }
         },
         IL: {
-            baseUrl: 'https://gis1.dot.illinois.gov/arcgis/rest/services/AdministrativeData/FunctionalClass/MapServer/',
+            baseUrl: 'http://ags10s1.dot.illinois.gov/ArcGIS/rest/services/IRoads/IRoads_53/MapServer/',
             supportsPagination: false,
             defaultColors: { Fw: '#ff00c5', Ew: '#ff00c5', MH: '#149ece', mH: '#4ce600', PS: '#cfae0e', St: '#eeeeee', CH: '#ff5e0e' },
             zoomSettings: { maxOffset: [30, 15, 8, 4, 2, 1, 1, 1, 1, 1] },
             fcMapLayers: [
                 {
-                    layerID: 0, idPropName: 'OBJECTID', fcPropName: 'FC', outFields: ['FC', 'OBJECTID'],
+                    layerID: 3, idPropName: 'OBJECTID', fcPropName: 'FC', outFields: ['FC', 'MRK_RT_TYP', 'CH', 'OBJECTID'],
                     roadTypeMap: { Fw: ['1'], Ew: ['2'], MH: ['3'], mH: ['4'], PS: ['5', '6'], St: ['7'] }, maxRecordCount: 1000, supportsPagination: false
                 }
             ],
@@ -348,11 +348,17 @@
                 return context.mapContext.zoom < 4 ? "FC<>7" : null;
             },
             getFeatureRoadType: function (feature, layer) {
-                if (layer.getFeatureRoadType) {
-                    return layer.getFeatureRoadType(feature);
-                } else {
-                    return _stateSettings.global.getFeatureRoadType(feature, layer);
-                }
+                var attr = feature.attributes;
+                    var fc = attr.FC;
+                    var type = attr.MRK_RT_TYP;
+                    if (fc > 3 && type === 'U') { // US Route
+                        fc = 3;
+                    } else if (fc > 4 && type === 'S') { // State Route
+                        fc = 4;
+                    } else if (fc > 6 && attr.CH !== '0000') { // County Route
+                        fc = 6;
+                    }
+                    return _stateSettings.global.getRoadTypeFromFC(fc, layer);
             }
         },
         IN: {
@@ -1525,16 +1531,6 @@
                 $('#fc-loading-indicator').text('');
             }
         });
-
-        let mapState = W.model.states.top;
-        let selState = $('#fcl-state-select').val();
-        if (mapState && mapState.name === 'Illinois' && (selState === 'ALL' || selState === 'IL') && !_settings.ilFcWarning) {
-            _settings.ilFcWarning = true;
-            saveSettingsToStorage();
-            alert('FC Layers, Illinois:\n'
-                + 'Due to changes in the way IDOT is presenting data, the FC highlights represent the MINIMUM road type in WME.'
-                + ' Further research will be required to determine proper road type for US / IL / County highways.')
-        }
 
         _fcCallCount += 1;
         _lastPromise = map;
