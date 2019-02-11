@@ -9,7 +9,7 @@
 // // ==UserScript==
 // @name         WME FC Layer
 // @namespace    https://greasyfork.org/users/45389
-// @version      2019.02.06.001
+// @version      2019.02.11.001
 // @description  Adds a Functional Class layer for states that publish ArcGIS FC data.
 // @author       MapOMatic
 // @include      /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
@@ -1136,7 +1136,6 @@
                 var roadID = feature.attributes.ETE_LR;
                 var fc = feature.attributes[layer.fcPropName];
                 if (!(fc > 0)) { fc = 7; }
-                console.log([fc,roadID].toString());
                 var isUS = RegExp(/^U/).test(roadID);
                 var isState = RegExp(/^V/).test(roadID);
                 var isUSBiz = RegExp(/^B/).test(roadID);
