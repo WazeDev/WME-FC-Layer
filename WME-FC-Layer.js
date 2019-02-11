@@ -46,6 +46,7 @@
 // @connect      azdot.gov
 // @connect      coloradodot.info
 // @connect      unh.edu
+// @connect      vermont.gov
 // ==/UserScript==
 
 (function () {
