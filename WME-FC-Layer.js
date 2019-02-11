@@ -349,16 +349,16 @@
             },
             getFeatureRoadType: function (feature, layer) {
                 var attr = feature.attributes;
-                    var fc = attr.FC;
-                    var type = attr.MRK_RT_TYP;
-                    if (fc > 3 && type === 'U') { // US Route
-                        fc = 3;
-                    } else if (fc > 4 && type === 'S') { // State Route
-                        fc = 4;
-                    } else if (fc > 6 && attr.CH !== '0000') { // County Route
-                        fc = 6;
-                    }
-                    return _stateSettings.global.getRoadTypeFromFC(fc, layer);
+                var fc = attr.FC;
+                var type = attr.MRK_RT_TYP;
+                if (fc > 3 && type === 'U') { // US Route
+                    fc = 3;
+                } else if (fc > 4 && type === 'S') { // State Route
+                    fc = 4;
+                } else if (fc > 6 && attr.CH !== '0000') { // County Route
+                    fc = 6;
+                }
+                return _stateSettings.global.getRoadTypeFromFC(fc, layer);
             }
         },
         IN: {
@@ -1110,6 +1110,39 @@
                     fc = 3;
                 } else if (routeId <= 491 && fc > 4) {
                     // State highway
+                    fc = 4;
+                }
+                return _stateSettings.global.getRoadTypeFromFC(fc, layer);
+            }
+        },
+        VT: {
+            baseUrl: 'https://maps.vtrans.vermont.gov/arcgis/rest/services/Master/General/FeatureServer/',
+            defaultColors: { Fw: '#ff00c5', Ew: '#4f33df', MH: '#149ece', mH: '#4ce600', PS: '#cfae0e', St: '#eeeeee' },
+            zoomSettings: { maxOffset: [30, 15, 8, 4, 2, 1, 1, 1, 1, 1] },
+            fcMapLayers: [
+                {
+                    layerID: 39, fcPropName: 'FUNCL', idPropName: 'OBJECTID', outFields: ['OBJECTID', 'FUNCL', 'ETE_LR'],
+                    roadTypeMap: { Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5, 6], St: [7] }, maxRecordCount: 1000, supportsPagination: false
+                }
+            ],
+            getWhereClause: function (context) {
+                if (context.mapContext.zoom < 4) {
+                    return context.layer.fcPropName + "<>7 AND " + context.layer.fcPropName + "<>0";
+                } else {
+                    return null;
+                }
+            },
+            getFeatureRoadType: function (feature, layer) {
+                var roadID = feature.attributes.ETE_LR;
+                var fc = feature.attributes[layer.fcPropName];
+                if (!(fc > 0)) { fc = 7; }
+                console.log([fc,roadID].toString());
+                var isUS = RegExp(/^U/).test(roadID);
+                var isState = RegExp(/^V/).test(roadID);
+                var isUSBiz = RegExp(/^B/).test(roadID);
+                if (fc > 3 && isUS) {
+                    fc = 3;
+                } else if (fc > 4 && (isUSBiz || isState)) {
                     fc = 4;
                 }
                 return _stateSettings.global.getRoadTypeFromFC(fc, layer);
