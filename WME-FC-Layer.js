@@ -1121,7 +1121,7 @@
             zoomSettings: { maxOffset: [30, 15, 8, 4, 2, 1, 1, 1, 1, 1] },
             fcMapLayers: [
                 {
-                    layerID: 39, fcPropName: 'FUNCL', idPropName: 'OBJECTID', outFields: ['OBJECTID', 'FUNCL', 'ETE_LR'],
+                    layerID: 39, fcPropName: 'FUNCL', idPropName: 'OBJECTID', outFields: ['OBJECTID', 'FUNCL', 'HWYSIGN'],
                     roadTypeMap: { Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5, 6], St: [7] }, maxRecordCount: 1000, supportsPagination: false
                 }
             ],
@@ -1133,7 +1133,7 @@
                 }
             },
             getFeatureRoadType: function (feature, layer) {
-                var roadID = feature.attributes.ETE_LR;
+                var roadID = feature.attributes.HWYSIGN;
                 var fc = feature.attributes[layer.fcPropName];
                 if (!(fc > 0)) { fc = 7; }
                 var isUS = RegExp(/^U/).test(roadID);
