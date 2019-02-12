@@ -47,6 +47,7 @@
 // @connect      coloradodot.info
 // @connect      unh.edu
 // @connect      vermont.gov
+// @connect      ma.us
 // ==/UserScript==
 
 (function () {
@@ -562,6 +563,41 @@
                     fc = isBusiness ? 4 : 3;
                 } else if (fc > 4 && isState) {
                     fc = isBusiness ? 5 : 4;
+                }
+                return _stateSettings.global.getRoadTypeFromFC(fc, layer);
+            }
+        },
+        MA: {
+            baseUrl: 'https://gis.massdot.state.ma.us/arcgis/rest/services/Roads/RoadInventory/MapServer/',
+            defaultColors: { Fw: '#ff00c5', Ew: '#4f33df', MH: '#149ece', mH: '#4ce600', PS: '#cfae0e', St: '#eeeeee' },
+            zoomSettings: { maxOffset: [30, 15, 8, 4, 2, 1, 1, 1, 1, 1], excludeRoadTypes: [['St'], ['St'], ['St'], ['St'], [], [], [], [], [], [], []] },
+            fcMapLayers: [
+                {
+                    layerID: 0, fcPropName: 'F_F_Class', idPropName: 'OBJECTID', outFields: ['OBJECTID', 'F_F_Class', 'Route_ID', 'Control'],
+                    roadTypeMap: { Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5, 6], St: [7] }, maxRecordCount: 1000, supportsPagination: false
+                }
+            ],
+            getWhereClause: function (context) {
+                if (context.mapContext.zoom < 4) {
+                    return context.layer.fcPropName + "<>'7'";
+                } else {
+                    return null;
+                }
+            },
+            getFeatureRoadType: function (feature, layer) {
+                var attr = feature.attributes;
+                var fc = parseInt(attr[layer.fcPropName]);
+                var route = attr.Route_ID;
+                var isFw = attr.Control === 1
+                var isUS = /^US\d/.test(route);
+                var isState = /^SR\d/.test(route);
+                console.log([fc,route].toString());
+                if (fc > 1 && isFw) {
+                    fc = 1;
+                } else if (fc > 3 && isUS) {
+                    fc = 3;
+                } else if (fc > 4 && isState) {
+                    fc = 4;
                 }
                 return _stateSettings.global.getRoadTypeFromFC(fc, layer);
             }
