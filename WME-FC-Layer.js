@@ -990,11 +990,7 @@
             ],
             isPermitted: function () { return _r >= 3; },
             getWhereClause: function (context) {
-                if (context.mapContext.zoom < 4) {
-                    return context.layer.fcPropName + "<>'7 OR ";
-                } else {
-                    return null;
-                }
+                return (context.mapContext.zoom < 4) ? context.layer.fcPropName + " NOT IN (7,0)" : null;
             },
             getFeatureRoadType: function (feature, layer) {
                 var fc = parseInt(feature.attributes[layer.fcPropName]);
