@@ -48,6 +48,7 @@
 // @connect      unh.edu
 // @connect      vermont.gov
 // @connect      ma.us
+// @connect      maine.gov
 // ==/UserScript==
 
 (function () {
@@ -539,6 +540,47 @@
                 return _stateSettings.global.getRoadTypeFromFC(fc, layer);
             }
         },
+        ME: {
+            baseUrl: 'https://arcgisserver.maine.gov/arcgis/rest/services/mdot/MaineDOT_Dynamic/MapServer/',
+            defaultColors: { Fw: '#ff00c5', Ew: '#4f33df', MH: '#149ece', mH: '#4ce600', PS: '#cfae0e', St: '#eeeeee' },
+            zoomSettings: { maxOffset: [30, 15, 8, 4, 2, 1, 1, 1, 1, 1], excludeRoadTypes: [['St'], ['St'], ['St'], ['St'], [], [], [], [], [], [], []] },
+            fcMapLayers: [
+                {
+                    layerID: 811, fcPropName: 'fedfunccls', idPropName: 'objectid', outFields: ['objectid', 'fedfunccls', 'prirtename'],
+                    roadTypeMap: { Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5, 6], St: [7] }, maxRecordCount: 1000, supportsPagination: false
+                }
+            ],
+            getWhereClause: function (context) {
+                if (context.mapContext.zoom < 4) {
+                    return context.layer.fcPropName + "<>'Local'";
+                } else {
+                    return null;
+                }
+            },
+            getFeatureRoadType: function (feature, layer) {
+                var attr = feature.attributes;
+                var fc = attr[layer.fcPropName];
+                switch (fc) {
+                    case 'Princ art interstate': fc = 1; break;
+                    case 'Princ art other f&e': fc = 2; break;
+                    case 'Other princ arterial': fc = 3; break;
+                    case 'Minor arterial': fc = 4; break;
+                    case 'Major/urb collector':
+                    case 'Minor collector': fc = 5; break;
+                    default: fc = 7;
+                }
+                var route = attr.prirtename;
+                var isUS = RegExp(/^US \d/).test(route);
+                var isState = RegExp(/^ST RTE \d/).test(route);
+                var isBiz = (isUS && RegExp(/(1B|1BS)$/).test(route)) || (isState && RegExp(/(15B|24B|25B|137B)$/).test(route));
+                if (fc > 3 && isUS) {
+                    fc = isBiz ? 4 : 3;
+                } else if (fc > 4 && isState) {
+                    fc = isBiz ? 5 : 4;
+                }
+                return _stateSettings.global.getRoadTypeFromFC(fc, layer);
+            }
+        },
         MD: {
             baseUrl: 'https://geodata.md.gov/imap/rest/services/Transportation/MD_HighwayPerformanceMonitoringSystem/MapServer/',
             defaultColors: { Fw: '#ff00c5', Ew: '#4f33df', MH: '#149ece', mH: '#4ce600', PS: '#ffff00', St: '#eeeeee' },
@@ -573,7 +615,7 @@
             zoomSettings: { maxOffset: [30, 15, 8, 4, 2, 1, 1, 1, 1, 1], excludeRoadTypes: [['St'], ['St'], ['St'], ['St'], [], [], [], [], [], [], []] },
             fcMapLayers: [
                 {
-                    layerID: 0, fcPropName: 'F_F_Class', idPropName: 'OBJECTID', outFields: ['OBJECTID', 'F_F_Class', 'Route_ID', 'Control'],
+                    layerID: 0, fcPropName: 'F_F_Class', idPropName: 'OBJECTID', outFields: ['OBJECTID', 'F_F_Class', 'Route_ID'],
                     roadTypeMap: { Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5, 6], St: [7] }, maxRecordCount: 1000, supportsPagination: false
                 }
             ],
@@ -588,13 +630,9 @@
                 var attr = feature.attributes;
                 var fc = parseInt(attr[layer.fcPropName]);
                 var route = attr.Route_ID;
-                var isFw = attr.Control === 1
                 var isUS = /^US\d/.test(route);
                 var isState = /^SR\d/.test(route);
-                console.log([fc,route].toString());
-                if (fc > 1 && isFw) {
-                    fc = 1;
-                } else if (fc > 3 && isUS) {
+                if (fc > 3 && isUS) {
                     fc = 3;
                 } else if (fc > 4 && isState) {
                     fc = 4;
