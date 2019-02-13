@@ -189,6 +189,8 @@
                  roadTypeMap: { Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5, 6], St: [7] }, maxRecordCount: 1000, supportsPagination: false }
             ],
             isPermitted: function () { return _r >= 4; },
+            information: { Source: 'CDOT', Permission: 'Visible to R4+',
+                           Description: 'Please consult with a state manager before making any changes to road types based on the data presented.' },
             getWhereClause: function (context) {
                 if (context.mapContext.zoom < 4) {
                     return context.layer.fcPropName + "<>'7'";
@@ -406,6 +408,7 @@
                     roadTypeMap: { Fw: [1], MH: [2, 3], mH: [4], PS: [5, 6], St: [7] }, maxRecordCount: 1000, supportsPagination: false
                 }
             ],
+            information: { Source: 'Iowa DOT', Description: 'Additional colors denote unpaved PS and LS segements.' },
             getWhereClause: function (context) {
                 var theWhereClause = "FACILITY_TYPE<>'7'"; // Removed proposed roads
                 if (context.mapContext.zoom < 4) {
@@ -451,6 +454,7 @@
                     roadTypeMap: { Fw: [1], MH: [2, 3], mH: [4], PS: [5, 6], St: [7] }, maxRecordCount: 1000, supportsPagination: false
                 }
             ],
+            information: { Source: 'KDOT', Description: 'Additional colors denote unpaved PS and LS segements.' },
             getWhereClause: function (context) {
                 if (context.mapContext.zoom < 4) {
                     return context.layer.fcPropName + "<>'7'";
@@ -986,11 +990,7 @@
             ],
             isPermitted: function () { return _r >= 3; },
             getWhereClause: function (context) {
-                if (context.mapContext.zoom < 4) {
-                    return context.layer.fcPropName + "<>'7 OR ";
-                } else {
-                    return null;
-                }
+                return (context.mapContext.zoom < 4) ? context.layer.fcPropName + " NOT IN (7,0)" : null;
             },
             getFeatureRoadType: function (feature, layer) {
                 var fc = parseInt(feature.attributes[layer.fcPropName]);
@@ -1086,15 +1086,13 @@
             }
         },
         TN: {
-            // NOTE: DUE TO ERRORS FROM THE SHELBY COUNTY SERVER, FC IS NOT WORKING PROPERLY HERE YET (9/23/2016)
             baseUrl: 'https://testuasiportal.shelbycountytn.gov/arcgis/rest/services/MPO/Webmap_2015_04_20_TMPO/MapServer/',
-
-            // TODO: UPDATE COLORS TO MATCH ORIGINAL TN FC MAP COLORS.
             defaultColors: { Fw: '#ff00c5', Ew: '#4f33df', MH: '#149ece', mH: '#4ce600', PS: '#cfae0e', PS2: '#cfae0e', St: '#eeeeee' },
             zoomSettings: { maxOffset: [30, 15, 8, 4, 2, 1, 1, 1, 1, 1] },
             fcMapLayers: [
                 { layerID: 17, fcPropName: 'FuncClass', idPropName: 'OBJECTID', outFields: ['OBJECTID', 'FuncClass'], maxRecordCount: 1000, supportsPagination: false, roadTypeMap: { Fw: [1, 11], Ew: [2, 12], MH: [4, 14], mH: [6, 16], PS: [7, 17], PS2: [8, 18], St: [9, 19] } }
             ],
+            information: { Source: 'Shelby County', Description: 'FC data for the Memphis region only.'},
             getWhereClause: function (context) {
                 if (context.mapContext.zoom < 4) {
                     return context.layer.fcPropName + ' NOT IN (9,19)';
@@ -1639,6 +1637,7 @@
             }
         });
 
+       loadStateFCInfo();
         _fcCallCount += 1;
         _lastPromise = map;
     }
@@ -1766,6 +1765,10 @@
             $('<div>', { id: 'fcl-table-container' })
         );
 
+        $panel.append( $('<div>', { id: 'fcl-state-info' }));
+        //console.log(_stateSettings[_settings.activeStateAbbr].toString());
+        loadStateFCInfo();
+
         $panel.append(
             $('<div>', { style: 'margin-top:10px;font-size:10px;color:#999999;' })
                 .append($('<div>').text('version ' + _scriptVersion))
@@ -1781,8 +1784,22 @@
         $('#fcl-state-select').change(function () {
             _settings.activeStateAbbr = this.value;
             saveSettingsToStorage();
+            loadStateFCInfo();
             fetchAllFC();
         });
+    }
+
+    function loadStateFCInfo() {
+        $('#fcl-state-info').empty();
+        if (_stateSettings[_settings.activeStateAbbr]) {
+            var stateInfo = _stateSettings[_settings.activeStateAbbr]['info'];
+            var $panelStateInfo = $('<dl>');
+            for(var propertyName in stateInfo) {
+                $panelStateInfo.append($('<dt>', { style: 'margin-top:1em;color:#777777' }).text(propertyName))
+                    .append($('<dd>').text(stateInfo[propertyName]))
+            }
+            $('#fcl-state-info').append($panelStateInfo);
+        }
     }
 
     function addLoadingIndicator() {
