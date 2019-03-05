@@ -28,6 +28,7 @@
 // @connect      nd.gov
 // @connect      pa.gov
 // @connect      oh.us
+// @connect      or.us
 // @connect      iowadot.gov
 // @connect      ksdot.org
 // @connect      ky.gov
@@ -36,6 +37,7 @@
 // @connect      ny.gov
 // @connect      utah.gov
 // @connect      idaho.gov
+// @connect      wa.gov
 // @connect      wv.gov
 // @connect      ga.gov
 // @connect      uga.edu
@@ -975,6 +977,32 @@
                 return _stateSettings.global.getRoadTypeFromFC(fc, layer);
             }
         },
+        OR: {
+            baseUrl: 'https://gis.odot.state.or.us/arcgis/rest/services/transgis/data_catalog_display/Mapserver/',
+            defaultColors: { Fw: '#ff00c5', Ew: '#4f33df', MH: '#149ece', mH: '#4ce600', PS: '#cfae0e', St: '#eeeeee' },
+            zoomSettings: { maxOffset: [30, 15, 8, 4, 2, 1, 1, 1, 1, 1], excludeRoadTypes: [['St'], ['St'], ['St'], ['St'], [], [], [], [], [], [], []] },
+            fcMapLayers: [
+                {layerID: 78, fcPropName: 'NEW_FC_CD', idPropName: 'OBJECTID', outFields: ['OBJECTID', 'NEW_FC_CD'],
+                 roadTypeMap: { Fw: ['1'], Ew: ['2'], MH: ['3'], mH: ['4'], PS: ['5', '6'], St: ['7'] }, maxRecordCount: 1000, supportsPagination: false },
+                {layerID: 80, fcPropName: 'NEW_FC_CD', idPropName: 'OBJECTID', outFields: ['OBJECTID', 'NEW_FC_CD'],
+                 roadTypeMap: { Fw: ['1'], Ew: ['2'], MH: ['3'], mH: ['4'], PS: ['5', '6'], St: ['7'] }, maxRecordCount: 1000, supportsPagination: false }
+            ],
+            information: { Source: 'ODOT', Permission: 'Visible to R3+', Description: 'Raw unmodified FC data.' },
+            getWhereClause: function (context) {
+                if (context.mapContext.zoom < 4) {
+                    return context.layer.fcPropName + " <> '7'";
+                } else {
+                    return null;
+                }
+            },
+            getFeatureRoadType: function (feature, layer) {
+                if (layer.getFeatureRoadType) {
+                    return layer.getFeatureRoadType(feature);
+                } else {
+                    return _stateSettings.global.getFeatureRoadType(feature, layer);
+                }
+            }
+        },
         PA: {
             baseUrl: 'https://www.pdarcgissvr.pa.gov/penndotgis/rest/services/PennShare/PennShare/MapServer/',
             supportsPagination: false,
@@ -1217,7 +1245,7 @@
         VT: {
             baseUrl: 'https://maps.vtrans.vermont.gov/arcgis/rest/services/Master/General/FeatureServer/',
             defaultColors: { Fw: '#ff00c5', Ew: '#4f33df', MH: '#149ece', mH: '#4ce600', PS: '#cfae0e', St: '#eeeeee' },
-            zoomSettings: { maxOffset: [30, 15, 8, 4, 2, 1, 1, 1, 1, 1] },
+            zoomSettings: { maxOffset: [30, 15, 8, 4, 2, 1, 1, 1, 1, 1], excludeRoadTypes: [['St'], ['St'], ['St'], ['St'], [], [], [], [], [], [], []] },
             fcMapLayers: [
                 {
                     layerID: 39, fcPropName: 'FUNCL', idPropName: 'OBJECTID', outFields: ['OBJECTID', 'FUNCL', 'HWYSIGN'],
@@ -1283,6 +1311,34 @@
                         fc = isBusiness ? 5 : 4;
                     }
                     return _stateSettings.global.getRoadTypeFromFC(fc, layer);
+                }
+            }
+        },
+        WA: {
+            baseUrl: 'https://data.wsdot.wa.gov/arcgis/rest/services/FunctionalClass/WSDOTFunctionalClassMap/MapServer/',
+            defaultColors: { Fw: '#ff00c5', Ew: '#4f33df', MH: '#149ece', mH: '#4ce600', PS: '#cfae0e', St: '#eeeeee' },
+            zoomSettings: { maxOffset: [30, 15, 8, 4, 2, 1, 1, 1, 1, 1], excludeRoadTypes: [['St'], ['St'], ['St'], ['St'], [], [], [], [], [], [], []] },
+            fcMapLayers: [
+                {layerID: 2, fcPropName: 'FederalFunctionalClassCode', idPropName: 'OBJECTID', outFields: ['OBJECTID', 'FederalFunctionalClassCode'],
+                 roadTypeMap: { Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5, 6], St: [7] }, maxRecordCount: 1000, supportsPagination: false },
+                {layerID: 1, fcPropName: 'FederalFunctionalClassCode', idPropName: 'OBJECTID', outFields: ['OBJECTID', 'FederalFunctionalClassCode'],
+                 roadTypeMap: { Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5, 6], St: [7] }, maxRecordCount: 1000, supportsPagination: false },
+                {layerID: 4, fcPropName: 'FederalFunctionalClassCode', idPropName: 'OBJECTID', outFields: ['OBJECTID', 'FederalFunctionalClassCode'],
+                 roadTypeMap: { Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5, 6], St: [7] }, maxRecordCount: 1000, supportsPagination: false }
+            ],
+            information: { Source: 'WSDOT', Permission: 'Visible to R3+', Description: 'Raw unmodified FC data.' },
+            getWhereClause: function (context) {
+                if (context.mapContext.zoom < 4) {
+                    return context.layer.fcPropName + " <> 7";
+                } else {
+                    return null;
+                }
+            },
+            getFeatureRoadType: function (feature, layer) {
+                if (layer.getFeatureRoadType) {
+                    return layer.getFeatureRoadType(feature);
+                } else {
+                    return _stateSettings.global.getFeatureRoadType(feature, layer);
                 }
             }
         },
