@@ -134,7 +134,7 @@
                 var roadID = feature.attributes.RouteId.trim().replace(/  +/g, ' ');
                 var roadNum = parseInt(roadID.substring(2,5));
                 var fc = parseInt(feature.attributes[layer.fcPropName]);
-                fc = (fc === 2) ? fc = 4 : fc % 10;
+                fc = (fc === 2) ? 4 : fc % 10;
                 var azIH = [8, 10, 11, 17, 19, 40]; // Interstate hwys in AZ
                 var isUS = RegExp(/^U\D\d{3}\b/).test(roadID);
                 var isState = RegExp(/^S\D\d{3}\b/).test(roadID);
