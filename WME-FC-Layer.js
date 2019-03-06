@@ -18,39 +18,40 @@
 // @require      https://greasyfork.org/scripts/39002-bluebird/code/Bluebird.js?version=255146
 // @require      https://greasyfork.org/scripts/24851-wazewrap/code/WazeWrap.js
 // @grant        GM_xmlhttpRequest
-// @connect      md.gov
-// @connect      in.gov
 // @connect      arcgis.com
-// @connect      ncdot.gov
-// @connect      state.mi.us
-// @connect      dc.gov
-// @connect      la.gov
-// @connect      nd.gov
-// @connect      pa.gov
-// @connect      oh.us
-// @connect      or.us
-// @connect      iowadot.gov
-// @connect      ksdot.org
-// @connect      ky.gov
-// @connect      shelbycountytn.gov
-// @connect      illinois.gov
-// @connect      ny.gov
-// @connect      utah.gov
-// @connect      idaho.gov
-// @connect      wa.gov
-// @connect      wv.gov
-// @connect      ga.gov
-// @connect      uga.edu
-// @connect      nevadadot.com
-// @connect      sd.gov
-// @connect      mt.gov
 // @connect      arkansas.gov
 // @connect      azdot.gov
 // @connect      coloradodot.info
-// @connect      unh.edu
-// @connect      vermont.gov
-// @connect      ma.us
+// @connect      delaware.gov
+// @connect      dc.gov
+// @connect      ga.gov
+// @connect      uga.edu
+// @connect      hawaii.gov
+// @connect      idaho.gov
+// @connect      in.gov
+// @connect      iowadot.gov
+// @connect      illinois.gov
+// @connect      ksdot.org
+// @connect      ky.gov
+// @connect      la.gov
 // @connect      maine.gov
+// @connect      md.gov
+// @connect      ma.us
+// @connect      state.mi.us
+// @connect      mt.gov
+// @connect      unh.edu
+// @connect      ny.gov
+// @connect      ncdot.gov
+// @connect      nd.gov
+// @connect      oh.us
+// @connect      or.us
+// @connect      pa.gov
+// @connect      sd.gov
+// @connect      shelbycountytn.gov
+// @connect      utah.gov
+// @connect      vermont.gov
+// @connect      wa.gov
+// @connect      wv.gov
 // ==/UserScript==
 
 (function () {
@@ -113,6 +114,30 @@
                     }
                 });
                 return returnValue;
+            }
+        },
+        AK: {
+            baseUrl: 'https://services.arcgis.com/r4A0V7UzH9fcLVvv/ArcGIS/rest/services/AKDOTPF_Route_Data/FeatureServer/',
+            defaultColors: { Ew: '#4f33df', MH: '#149ece', mH: '#4ce600', PS: '#cfae0e', St: '#eeeeee' },
+            zoomSettings: { maxOffset: [30, 15, 8, 4, 2, 1, 1, 1, 1, 1], excludeRoadTypes: [[], [], [], [], [], [], [], [], [], [], []] },
+            fcMapLayers: [
+                { layerID: 13, fcPropName: 'Functional_Class', idPropName: 'OBJECTID', outFields: ['OBJECTID', 'Functional_Class'],
+                 roadTypeMap: { Ew: [1, 2], MH: [3], mH: [4], PS: [5, 6], St: [7] }, maxRecordCount: 1000, supportsPagination: false }
+            ],
+            information: { Source: 'Alaska DOT&PF', Permission: 'Visible to R3+', Description: 'Raw unmodified FC data.' },
+            getWhereClause: function (context) {
+                if (context.mapContext.zoom < 4) {
+                    return context.layer.fcPropName + "<>7";
+                } else {
+                    return null;
+                }
+            },
+            getFeatureRoadType: function (feature, layer) {
+                if (layer.getFeatureRoadType) {
+                    return layer.getFeatureRoadType(feature);
+                } else {
+                    return _stateSettings.global.getFeatureRoadType(feature, layer);
+                }
             }
         },
         AZ: {
@@ -184,11 +209,11 @@
             defaultColors: { Fw: '#ff00c5', Ew: '#4f33df', MH: '#149ece', mH: '#4ce600', PS: '#cfae0e', St: '#eeeeee' },
             zoomSettings: { maxOffset: [30, 15, 8, 4, 2, 1, 1, 1, 1, 1], excludeRoadTypes: [[], [], [], [], [], [], [], [], [], [], []] },
             fcMapLayers: [
-                { layerID: 7, fcPropName: 'FUNCCLASS', idPropName: 'OBJECTID', outFields: ['OBJECTID', 'FUNCCLASS','ROUTE','REFPT'],
+                { layerID: 7, fcPropName: 'FUNCCLASS', idPropName: 'OBJECTID', outFields: ['OBJECTID', 'FUNCCLASS', 'ROUTE', 'REFPT'],
                  roadTypeMap: { Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5, 6], St: [7] }, maxRecordCount: 1000, supportsPagination: false },
-                { layerID: 17, fcPropName: 'FUNCCLASSID', idPropName: 'OBJECTID', outFields: ['OBJECTID', 'FUNCCLASSID','ROUTE','FIPSCOUNTY'],
+                { layerID: 17, fcPropName: 'FUNCCLASSID', idPropName: 'OBJECTID', outFields: ['OBJECTID', 'FUNCCLASSID', 'ROUTE', 'FIPSCOUNTY'],
                  roadTypeMap: { Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5, 6], St: [7] }, maxRecordCount: 1000, supportsPagination: false },
-                { layerID: 18, fcPropName: 'FUNCCLASSID', idPropName: 'OBJECTID', outFields: ['OBJECTID', 'FUNCCLASSID','ROUTE'],
+                { layerID: 18, fcPropName: 'FUNCCLASSID', idPropName: 'OBJECTID', outFields: ['OBJECTID', 'FUNCCLASSID', 'ROUTE'],
                  roadTypeMap: { Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5, 6], St: [7] }, maxRecordCount: 1000, supportsPagination: false }
             ],
             isPermitted: function () { return _r >= 4; },
@@ -235,6 +260,30 @@
                     else if (fips === 67 && route === 'BAYFIELDPAY') { fc = 4; }
                 }
                 return _stateSettings.global.getRoadTypeFromFC(fc, layer);
+            }
+        },
+        DE: {
+            baseUrl: 'https://firstmap.delaware.gov/arcgis/rest/services/Transportation/DE_FUNCTIONAL_CLASSIFICATION/MapServer/',
+            defaultColors: { Fw: '#ff00c5', Ew: '#4f33df', MH: '#149ece', mH: '#4ce600', PS: '#cfae0e', St: '#eeeeee' },
+            zoomSettings: { maxOffset: [30, 15, 8, 4, 2, 1, 1, 1, 1, 1], excludeRoadTypes: [['St'], ['St'], ['St'], ['St'], [], [], [], [], [], [], []] },
+            fcMapLayers: [
+                {layerID: 0, fcPropName: 'VALUE_TEXT', idPropName: 'OBJECTID', outFields: ['OBJECTID', 'VALUE_TEXT'], maxRecordCount: 1000, supportsPagination: false,
+                 roadTypeMap: { Fw: ['Interstate'], Ew: ['Other Expressways & Freeway'], MH: ['Other Principal Arterials'], mH: ['Minor Arterial'], PS: ['Major Collector', 'Minor Collector'], St: ['Local'] } }
+            ],
+            information: { Source: 'Delaware FirstMap', Permission: 'Visible to R3+', Description: 'Raw unmodified FC data.' },
+            getWhereClause: function (context) {
+                if (context.mapContext.zoom < 4) {
+                    return context.layer.fcPropName + " <> 'Local'";
+                } else {
+                    return null;
+                }
+            },
+            getFeatureRoadType: function (feature, layer) {
+                if (layer.getFeatureRoadType) {
+                    return layer.getFeatureRoadType(feature);
+                } else {
+                    return _stateSettings.global.getFeatureRoadType(feature, layer);
+                }
             }
         },
         DC: {
@@ -315,6 +364,30 @@
                     } else {
                         return _stateSettings.global.getFeatureRoadType(feature, layer);
                     }
+                }
+            }
+        },
+        HI: {
+            baseUrl: 'http://geodata.hawaii.gov/arcgis/rest/services/Transportation/MapServer/',
+            defaultColors: { Fw: '#ff00c5', Ew: '#4f33df', MH: '#149ece', mH: '#4ce600', PS: '#cfae0e', St: '#eeeeee' },
+            zoomSettings: { maxOffset: [30, 15, 8, 4, 2, 1, 1, 1, 1, 1], excludeRoadTypes: [[], [], [], [], [], [], [], [], [], [], []] },
+            fcMapLayers: [
+                { layerID: 12, fcPropName: 'funsystem', idPropName: 'OBJECTID', outFields: ['OBJECTID', 'funsystem'],
+                 roadTypeMap: { Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5, 6], St: [7] }, maxRecordCount: 1000, supportsPagination: false }
+            ],
+            information: { Source: 'HDOT', Permission: 'Visible to R3+', Description: 'Raw unmodified FC data.' },
+            getWhereClause: function (context) {
+                if (context.mapContext.zoom < 4) {
+                    return context.layer.fcPropName + "<>7";
+                } else {
+                    return null;
+                }
+            },
+            getFeatureRoadType: function (feature, layer) {
+                if (layer.getFeatureRoadType) {
+                    return layer.getFeatureRoadType(feature);
+                } else {
+                    return _stateSettings.global.getFeatureRoadType(feature, layer);
                 }
             }
         },
