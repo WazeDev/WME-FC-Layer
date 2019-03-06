@@ -1211,30 +1211,6 @@
             }
         },
         TN: {
-            baseUrl: 'https://testuasiportal.shelbycountytn.gov/arcgis/rest/services/MPO/Webmap_2015_04_20_TMPO/MapServer/',
-            defaultColors: { Fw: '#ff00c5', Ew: '#4f33df', MH: '#149ece', mH: '#4ce600', PS: '#cfae0e', PS2: '#cfae0e', St: '#eeeeee' },
-            zoomSettings: { maxOffset: [30, 15, 8, 4, 2, 1, 1, 1, 1, 1] },
-            fcMapLayers: [
-                { layerID: 17, fcPropName: 'FuncClass', idPropName: 'OBJECTID', outFields: ['OBJECTID', 'FuncClass'], maxRecordCount: 1000, supportsPagination: false, roadTypeMap: { Fw: [1, 11], Ew: [2, 12], MH: [4, 14], mH: [6, 16], PS: [7, 17], PS2: [8, 18], St: [9, 19] } }
-            ],
-            information: { Source: 'Shelby County', Permission: 'Visible to R3+', Description: 'FC data for the Memphis region only.'},
-            getWhereClause: function (context) {
-                if (context.mapContext.zoom < 4) {
-                    return context.layer.fcPropName + ' NOT IN (9,19)';
-                } else {
-                    return null;
-                }
-            },
-            getFeatureRoadType: function (feature, layer) {
-                if (layer.getFeatureRoadType) {
-                    return layer.getFeatureRoadType(feature);
-                } else {
-                    var fc = feature.attributes[layer.fcPropName];
-                    return _stateSettings.global.getRoadTypeFromFC(fc, layer);
-                }
-            }
-        },
-        TN: {
             baseUrl: 'https://',
             defaultColors: { Fw: '#ff00c5', Ew: '#4f33df', MH: '#149ece', mH: '#4ce600', PS: '#cfae0e', PS2: '#cfae0e', St: '#eeeeee' },
             zoomSettings: { maxOffset: [30, 15, 8, 4, 2, 1, 1, 1, 1, 1] },
@@ -1252,7 +1228,7 @@
                 if (context.mapContext.zoom < 4) {
                     return context.layer.fcPropName + ' NOT IN (0,7,9,19)';
                 } else {
-                    return null;
+                    return context.layer.fcPropName + ' <> 0';
                 }
             },
             getFeatureRoadType: function (feature, layer) {
