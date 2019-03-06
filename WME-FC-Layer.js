@@ -1234,6 +1234,35 @@
                 }
             }
         },
+        TN: {
+            baseUrl: 'https://',
+            defaultColors: { Fw: '#ff00c5', Ew: '#4f33df', MH: '#149ece', mH: '#4ce600', PS: '#cfae0e', PS2: '#cfae0e', St: '#eeeeee' },
+            zoomSettings: { maxOffset: [30, 15, 8, 4, 2, 1, 1, 1, 1, 1] },
+            fcMapLayers: [
+                { layerPath: 'testuasiportal.shelbycountytn.gov/arcgis/rest/services/MPO/Webmap_2015_04_20_TMPO/MapServer/', maxRecordCount: 1000, supportsPagination: false,
+                  layerID: 17, fcPropName: 'FuncClass', idPropName: 'OBJECTID', outFields: ['OBJECTID', 'FuncClass'],
+                  roadTypeMap: { Fw: [1, 11], Ew: [2, 12], MH: [4, 14], mH: [6, 16], PS: [7, 17], PS2: [8, 18], St: [9, 19] } },
+                { layerPath: 'services3.arcgis.com/pXGyp7DHTIE4RXOJ/ArcGIS/rest/services/Functional_Classification/FeatureServer/', maxRecordCount: 1000, supportsPagination: false,
+                  layerID: 0, fcPropName: 'FC_MPO', idPropName: 'FID', outFields: ['FID', 'FC_MPO'],
+                  roadTypeMap: { Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5, 6], St: [7] } }
+            ],
+            information: { Source: 'Shelby County, Nashville Area MPO', Permission: 'Visible to R3+',
+                           Description: 'Raw unmodified FC data for the Memphis and Nashville regions only.'},
+            getWhereClause: function (context) {
+                if (context.mapContext.zoom < 4) {
+                    return context.layer.fcPropName + ' NOT IN (0,7,9,19)';
+                } else {
+                    return null;
+                }
+            },
+            getFeatureRoadType: function (feature, layer) {
+                if (layer.getFeatureRoadType) {
+                    return layer.getFeatureRoadType(feature);
+                } else {
+                    return _stateSettings.global.getFeatureRoadType(feature, layer);
+                }
+            }
+        },
         TX: {
             baseUrl: 'https://services.arcgis.com/KTcxiTD9dsQw4r7Z/ArcGIS/rest/services/TxDOT_Functional_Classification/FeatureServer/',
             defaultColors: { Fw: '#ff00c5', Ew: '#4f33df', MH: '#149ece', mH: '#4ce600', PS: '#cfae0e', St: '#eeeeee' },
