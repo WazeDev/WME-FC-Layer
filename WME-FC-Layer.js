@@ -9,7 +9,7 @@
 // // ==UserScript==
 // @name         WME FC Layer
 // @namespace    https://greasyfork.org/users/45389
-// @version      2019.03.11.001
+// @version      2019.03.11.002
 // @description  Adds a Functional Class layer for states that publish ArcGIS FC data.
 // @author       MapOMatic
 // @include      /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
@@ -38,6 +38,7 @@
 // @connect      md.gov
 // @connect      ma.us
 // @connect      state.mi.us
+// @connect      modot.org
 // @connect      mt.gov
 // @connect      unh.edu
 // @connect      ny.gov
@@ -147,7 +148,7 @@
                 { layerID: 13, fcPropName: 'Functional_Class', idPropName: 'OBJECTID', outFields: ['OBJECTID', 'Functional_Class'],
                  roadTypeMap: { Ew: [1, 2], MH: [3], mH: [4], PS: [5, 6], St: [7] }, maxRecordCount: 1000, supportsPagination: false }
             ],
-            information: { Source: 'Alaska DOT&PF', Permission: 'Visible to R3+', Description: 'Raw unmodified FC data.' },
+            information: { Source: 'Alaska DOT&PF', Permission: 'Visible to R4+ or R3-AM', Description: 'Raw unmodified FC data.' },
             getWhereClause: function (context) {
                 if (context.mapContext.zoom < 4) {
                     return context.layer.fcPropName + "<>7";
@@ -174,7 +175,7 @@
                     roadTypeMap: { Fw: [1, 11], Ew: [2, 3, 12], MH: [4, 14], mH: [6, 16], PS: [7, 17, 8, 18], St: [] }, maxRecordCount: 1000, supportsPagination: false
                 }
             ],
-            information: { Source: 'ADOT', Permission: 'Visible to R3+' },
+            information: { Source: 'ADOT', Permission: 'Visible to R4+ or R3-AM' },
             getWhereClause: function (context) {
                 return context.layer.fcPropName + ' NOT IN (9, 19)';
             },
@@ -207,7 +208,7 @@
                     roadTypeMap: { Fw: [1,2], Ew: [], MH: [3], mH: [4], PS: [5, 6], St: [7] }, maxRecordCount: 1000, supportsPagination: false
                 }
             ],
-            information: { Source: 'ARDOT', Permission: 'Visible to R3+' },
+            information: { Source: 'ARDOT', Permission: 'Visible to R4+ or R3-AM' },
             getWhereClause: function (context) {
                 return null;
             },
@@ -293,7 +294,7 @@
                 {layerID: 0, fcPropName: 'VALUE_TEXT', idPropName: 'OBJECTID', outFields: ['OBJECTID', 'VALUE_TEXT'], maxRecordCount: 1000, supportsPagination: false,
                  roadTypeMap: { Fw: ['Interstate'], Ew: ['Other Expressways & Freeway'], MH: ['Other Principal Arterials'], mH: ['Minor Arterial'], PS: ['Major Collector', 'Minor Collector'], St: ['Local'] } }
             ],
-            information: { Source: 'Delaware FirstMap', Permission: 'Visible to R3+', Description: 'Raw unmodified FC data.' },
+            information: { Source: 'Delaware FirstMap', Permission: 'Visible to R4+ or R3-AM', Description: 'Raw unmodified FC data.' },
             getWhereClause: function (context) {
                 if (context.mapContext.zoom < 4) {
                     return context.layer.fcPropName + " <> 'Local'";
@@ -321,16 +322,16 @@
                     roadTypeMap: { Fw: ['Interstate'], Ew: ['Other Freeway and Expressway'], MH: ['Principal Arterial'], mH: ['Minor Arterial'], PS: ['Collector'] }
                 }
             ],
+            information: { Source: 'DDOT', Permission: 'Visible to R4+ or R3-AM' },
+            getWhereClause: function (context) {
+                return null;
+            },
             getFeatureRoadType: function (feature, layer) {
                 if (layer.getFeatureRoadType) {
                     return layer.getFeatureRoadType(feature);
                 } else {
                     return _stateSettings.global.getFeatureRoadType(feature, layer);
                 }
-            },
-            information: { Source: 'DDOT', Permission: 'Visible to R3+' },
-            getWhereClause: function (context) {
-                return null;
             }
         },
         FL: {
@@ -345,7 +346,7 @@
                     roadTypeMap: { Fw: ['01', '11'], Ew: ['02', '12'], MH: ['04', '14'], mH: ['06', '16'], PS: ['07', '08', '17', '18'] }
                 }
             ],
-            information: { Source: 'FDOT', Permission: 'Visible to R3+', Description: 'Raw unmodified FC data.'},
+            information: { Source: 'FDOT', Permission: 'Visible to R4+ or R3-AM', Description: 'Raw unmodified FC data.'},
             getWhereClause: function (context) {
                 return null;
             },
@@ -372,7 +373,7 @@
                 { layerID: 5, fcPropName: 'FUNCTIONAL_CLASS', idPropName: 'OBJECTID', outFields: ['OBJECTID', 'FUNCTIONAL_CLASS', 'SYSTEM_CODE'], maxRecordCount: 1000, supportsPagination: true, roadTypeMap: { Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5, 6] } },
                 { layerID: 6, fcPropName: 'FUNCTIONAL_CLASS', idPropName: 'OBJECTID', outFields: ['OBJECTID', 'FUNCTIONAL_CLASS', 'SYSTEM_CODE'], maxRecordCount: 1000, supportsPagination: true, roadTypeMap: { Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5, 6] } }
             ],
-            information: { Source: 'GDOT', Permission: 'Visible to R3+', Description: 'Federal and State highways set to a minimum of mH.' },
+            information: { Source: 'GDOT', Permission: 'Visible to R4+ or R3-AM', Description: 'Federal and State highways set to a minimum of mH.' },
             getWhereClause: function (context) {
                 return null;
             },
@@ -398,7 +399,7 @@
                 { layerID: 12, fcPropName: 'funsystem', idPropName: 'OBJECTID', outFields: ['OBJECTID', 'funsystem'],
                  roadTypeMap: { Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5, 6], St: [7] }, maxRecordCount: 1000, supportsPagination: false }
             ],
-            information: { Source: 'HDOT', Permission: 'Visible to R3+', Description: 'Raw unmodified FC data.' },
+            information: { Source: 'HDOT', Permission: 'Visible to R4+ or R3-AM', Description: 'Raw unmodified FC data.' },
             getWhereClause: function (context) {
                 if (context.mapContext.zoom < 4) {
                     return context.layer.fcPropName + "<>7";
@@ -428,7 +429,7 @@
                 { layerID: 4, fcPropName: 'FCCODE', idPropName: 'OBJECTID', outFields: ['OBJECTID', 'FCCODE'], maxRecordCount: 1000, supportsPagination: false, roadTypeMap: { Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5, 6] } },
                 { layerID: 5, fcPropName: 'FCCODE', idPropName: 'OBJECTID', outFields: ['OBJECTID', 'FCCODE'], maxRecordCount: 1000, supportsPagination: false, roadTypeMap: { Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5, 6] } }
             ],
-            information: { Source: 'ITD', Permission: 'Visible to R3+', Description: 'Raw unmodified FC data.' },
+            information: { Source: 'ITD', Permission: 'Visible to R4+ or R3-AM', Description: 'Raw unmodified FC data.' },
             getWhereClause: function (context) {
                 return null;
             },
@@ -510,7 +511,7 @@
                     roadTypeMap: { Fw: [1], MH: [2, 3], mH: [4], PS: [5, 6], St: [7] }, maxRecordCount: 1000, supportsPagination: false
                 }
             ],
-            information: { Source: 'Iowa DOT', Permission: 'Visible to R3+', Description: 'Additional colors denote unpaved PS and LS segements.' },
+            information: { Source: 'Iowa DOT', Permission: 'Visible to R4+ or R3-AM', Description: 'Additional colors denote unpaved PS and LS segements.' },
             getWhereClause: function (context) {
                 var theWhereClause = "FACILITY_TYPE<>'7'"; // Removed proposed roads
                 if (context.mapContext.zoom < 4) {
@@ -556,7 +557,7 @@
                     roadTypeMap: { Fw: [1], MH: [2, 3], mH: [4], PS: [5, 6], St: [7] }, maxRecordCount: 1000, supportsPagination: false
                 }
             ],
-            information: { Source: 'KDOT', Permission: 'Visible to R3+' },
+            information: { Source: 'KDOT', Permission: 'Visible to R4+ or R3-AM' },
             getWhereClause: function (context) {
                 if (context.mapContext.zoom < 4) {
                     return context.layer.fcPropName + "<>'7'";
@@ -625,7 +626,7 @@
                 { layerID: 5, fcPropName: 'FunctionalSystem', idPropName: 'OBJECTID', outFields: ['OBJECTID', 'FunctionalSystem', 'RouteID'], roadTypeMap: { Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5,6], St: [7] }, maxRecordCount: 1000, supportsPagination: false },
                 { layerID: 6, fcPropName: 'FunctionalSystem', idPropName: 'OBJECTID', outFields: ['OBJECTID', 'FunctionalSystem', 'RouteID'], roadTypeMap: { Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5,6], St: [7] }, maxRecordCount: 1000, supportsPagination: false }
             ],
-            information: { Source: 'LaDOTD', Permission: 'Visible to R3+' },
+            information: { Source: 'LaDOTD', Permission: 'Visible to R4+ or R3-AM' },
             getWhereClause: function (context) {
                 if (context.mapContext.zoom < 4) {
                     return context.layer.fcPropName + "<>'7'"; // OR State_Route LIKE 'US%' OR State_Route LIKE 'LA%'";
@@ -659,7 +660,7 @@
                     roadTypeMap: { Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5, 6], St: [7] }, maxRecordCount: 1000, supportsPagination: false
                 }
             ],
-            information: { Source: 'MaineDOT', Permission: 'Visible to R3+' },
+            information: { Source: 'MaineDOT', Permission: 'Visible to R4+ or R3-AM' },
             getWhereClause: function (context) {
                 if (context.mapContext.zoom < 4) {
                     return context.layer.fcPropName + "<>'Local'";
@@ -698,7 +699,7 @@
             fcMapLayers: [
                 { layerID: 2, fcPropName: 'FUNCTIONAL_CLASS', idPropName: 'OBJECTID', outFields: ['OBJECTID', 'FUNCTIONAL_CLASS', 'ID_PREFIX', 'MP_SUFFIX'], roadTypeMap: { Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5, 6], St: [7] }, maxRecordCount: 1000, supportsPagination: false }
             ],
-            information: { Source: 'MDOT', Permission: 'Visible to R3+' },
+            information: { Source: 'MDOT', Permission: 'Visible to R4+ or R3-AM' },
             getWhereClause: function (context) {
                 if (context.mapContext.zoom < 4) {
                     return "(FUNCTIONAL_CLASS < 7 OR ID_PREFIX IN('MD'))";
@@ -730,7 +731,7 @@
                     roadTypeMap: { Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5, 6], St: [7] }, maxRecordCount: 1000, supportsPagination: false
                 }
             ],
-            information: { Source: 'MDOT', Permission: 'Visible to R3+' },
+            information: { Source: 'MDOT', Permission: 'Visible to R4+ or R3-AM' },
             getWhereClause: function (context) {
                 if (context.mapContext.zoom < 4) {
                     return context.layer.fcPropName + "<>'7'";
@@ -774,6 +775,53 @@
                 } else {
                     return _stateSettings.global.getFeatureRoadType(feature, layer);
                 }
+            }
+        },
+        MO: {
+            baseUrl: 'http://mapping.modot.org/arcgis/rest/services/Base-Map/Tms_Utility/MapServer/',
+            defaultColors: { Fw: '#ff00c5', Ew: '#4f33df', MH: '#149ece', mH: '#4ce600', PS: '#cfae0e', St: '#eeeeee' },
+            zoomSettings: { maxOffset: [30, 15, 8, 4, 2, 1, 1, 1, 1, 1], excludeRoadTypes: [['St'], ['St'], ['St'], ['St'], [], [], [], [], [], [], []] },
+            fcMapLayers: [
+                {layerID: 5, fcPropName: 'FUNC_CLASS_NAME' , idPropName: 'SS_PAVEMENT_ID', outFields:['SS_PAVEMENT_ID', 'FUNC_CLASS_NAME', 'CNTL_TW_DESG', 'CNTL_TW_NAME', 'ACCESS_CAT_NAME'],
+                 roadTypeMap:{Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5, 6], St: [7]}, maxRecordCount:1000, supportsPagination:false }
+            ],
+            isPermitted: function () { return _r >= 3 || (_r >= 2 && _isAM); },
+            information: { Source: 'MoDOT', Permission: 'Visible to R3+ or R2-AM' },
+            getWhereClause: function (context) {
+                if (context.mapContext.zoom < 2) {
+                    return '1=0';
+                } else {
+                    return "TRAVELWAY_ID = CNTL_TW_ID AND FUNC_CLASS_NAME IS NOT NULL";
+                }
+            },
+            getFeatureRoadType: function (feature, layer) {
+                var attr = feature.attributes;
+                var fc = attr[layer.fcPropName];
+                switch (fc) {
+                    case 'INTERSTATE': fc = 1; break;
+                    case 'FREEWAY': fc = 2; break;
+                    case 'PRINCIPAL ARTERIAL': fc = 3; break;
+                    case 'MINOR ARTERIAL': fc = 4; break;
+                    case 'MAJOR COLLECTOR': fc = 5; break
+                    case 'MINOR COLLECTOR': fc = 6; break;
+                    default: fc = 8; // not a typo
+                }
+                var rtType = attr.CNTL_TW_DESG;
+                var route = attr.CNTL_TW_NAME;
+                var usHwys = ['24','36','40','50','54','56','59','60','61','62','63','65','67','69','71','136','159','160','166','169','275','400','412'];
+                var isUS = ['US', 'LP'].includes(rtType); // is US or interstate biz
+                var isState = ['MO','AL'].includes(rtType);
+                var isSup = rtType === 'RT';
+                var isBiz = ['BU', 'SP'].includes(rtType);
+                var isUSBiz = isBiz && usHwys.includes(route);
+                if ((fc === 2 && attr.ACCESS_CAT_NAME !== 'FULL') || (fc > 3 && isUS)) {
+                    fc = 3;
+                } else if (fc > 4 && (isState || isUSBiz)) {
+                    fc = 4;
+                } else if (fc > 6 && (isSup || isBiz)) {
+                    fc = 6;
+                }
+                return _stateSettings.global.getRoadTypeFromFC(fc, layer);
             }
         },
         MT: {
@@ -881,7 +929,7 @@
                 },
                 { layerID: 'Basemap/MapServer/21', idPropName: 'OBJECTID', outFields: ['OBJECTID', 'SHIELD'], maxRecordCount: 1000, supportsPagination: false }
             ],
-            information: { Source: 'NYSDOT', Permission: 'Visible to R3+' },
+            information: { Source: 'NYSDOT', Permission: 'Visible to R4+ or R3-AM' },
             getWhereClause: function (context) {
                 if (context.layer.layerID === 'Basemap/MapServer/21') {
                     return ("SHIELD IN ('C','CT')");
@@ -917,7 +965,7 @@
                 //{ layerID:5, fcPropName:'FC_TYP_CD', idPropName:'OBJECTID', outFields:['OBJECTID','FC_TYP_CD','RTE_1_CLSS_CD'], roadTypeMap:{Fw:[1],Ew:[2],MH:[3],mH:[4],PS:[5,6],St:[7]}, zoomLevels:[], maxRecordCount:1000, supportsPagination:false },
                 //{ layerID:6, fcPropName:'FC_TYP_CD', idPropName:'OBJECTID', outFields:['OBJECTID','FC_TYP_CD','RTE_1_CLSS_CD'], roadTypeMap:{Fw:[1],Ew:[2],MH:[3],mH:[4],PS:[5,6],St:[7]}, zoomLevels:[], maxRecordCount:1000, supportsPagination:false }
             ],
-            isPermitted: function () { return _r > 2; },
+            isPermitted: function () { return _r >= 3; },
             information: { Source: 'NCDOT', Permission: 'Visible to R3+' },
             getWhereClause: function (context) {
                 if (context.mapContext.zoom < 4) {
@@ -992,7 +1040,7 @@
                     maxRecordCount: 1000, supportsPagination: false
                 }
             ],
-            information: { Source: 'NDDOT', Permission: 'Visible to R3+' },
+            information: { Source: 'NDDOT', Permission: 'Visible to R4+ or R3-AM' },
             getWhereClause: function (context) {
                 if (context.mapContext.zoom < 4) {
                     if (context.layer.layerID !== 16) return context.layer.fcPropName + "<>'Local'";
@@ -1047,7 +1095,7 @@
                     maxRecordCount: 1000, supportsPagination: false, roadTypeMap: { Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5, 6], St: [7] }
                 }
             ],
-            information: { Source: 'ODOT', Permission: 'Visible to R3+' },
+            information: { Source: 'ODOT', Permission: 'Visible to R4+ or R3-AM' },
             getWhereClause: function (context) {
                 if (context.mapContext.zoom < 4) {
                     var clause = '(' + context.layer.fcPropName + " < 7 OR ROUTE_CLAS IN ('U','S','I'))";
@@ -1082,7 +1130,7 @@
                 {layerID: 80, fcPropName: 'NEW_FC_CD', idPropName: 'OBJECTID', outFields: ['OBJECTID', 'NEW_FC_CD'],
                  roadTypeMap: { Fw: ['1'], Ew: ['2'], MH: ['3'], mH: ['4'], PS: ['5', '6'], St: ['7'] }, maxRecordCount: 1000, supportsPagination: false }
             ],
-            information: { Source: 'ODOT', Permission: 'Visible to R3+', Description: 'Raw unmodified FC data.' },
+            information: { Source: 'ODOT', Permission: 'Visible to R4+ or R3-AM', Description: 'Raw unmodified FC data.' },
             getWhereClause: function (context) {
                 if (context.mapContext.zoom < 4) {
                     return context.layer.fcPropName + " <> '7'";
@@ -1202,7 +1250,7 @@
                 outFields: ['OBJECTID', 'FUNC_CLASS', 'SURFACE_TYPE', 'ROADNAME'],
                 roadTypeMap: { Fw: [1, 11], Ew: [2, 12], MH: [4, 14], mH: [6, 16], PS: [7, 8, 17], St: [9, 19] }
             }],
-            information: { Source: 'SDDOT', Permission: 'Visible to R3+', Description: 'Additional colors denote unpaved PS and LS segements.' },
+            information: { Source: 'SDDOT', Permission: 'Visible to R4+ or R3-AM', Description: 'Additional colors denote unpaved PS and LS segements.' },
             getWhereClause: function (context) {
                 if (context.mapContext.zoom < 4) {
                     return context.layer.fcPropName + " NOT IN (9,19)";
@@ -1244,7 +1292,7 @@
                   layerID: 0, fcPropName: 'FC_MPO', idPropName: 'FID', outFields: ['FID', 'FC_MPO'],
                   roadTypeMap: { Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5, 6], St: [7] } }
             ],
-            information: { Source: 'Shelby County, Nashville Area MPO', Permission: 'Visible to R3+',
+            information: { Source: 'Shelby County, Nashville Area MPO', Permission: 'Visible to R4+ or R3-AM',
                            Description: 'Raw unmodified FC data for the Memphis and Nashville regions only.'},
             getWhereClause: function (context) {
                 if (context.mapContext.zoom < 4) {
@@ -1321,7 +1369,7 @@
                     maxRecordCount: 1000, supportsPagination: false
                 }
             ],
-            information: { Source: 'TxDOT', Permission: 'Visible to R3+' },
+            information: { Source: 'TxDOT', Permission: 'Visible to R4+ or R3-AM' },
             getWhereClause: function (context) {
                 var clause = context.layer.fcPropName + '<=7';
                 if (context.mapContext.zoom < 4) {
@@ -1352,7 +1400,7 @@
                     roadTypeMap: { Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5, 6], St: [7] }, maxRecordCount: 1000, supportsPagination: false
                 }
             ],
-            information: { Source: 'TxDOT', Permission: 'Visible to R3+' },
+            information: { Source: 'TxDOT', Permission: 'Visible to R4+ or R3-AM' },
             getWhereClause: function (context) {
                 if (context.mapContext.zoom < 4) {
                     return context.layer.fcPropName + "<>7 AND " + context.layer.fcPropName + "<>0";
@@ -1384,7 +1432,7 @@
                 { layerID: 1, fcPropName: 'STATE_FUNCT_CLASS_ID', idPropName: 'OBJECTID', outFields: ['OBJECTID', 'STATE_FUNCT_CLASS_ID', 'RTE_NM', 'ROUTE_NO'], maxRecordCount: 2000, supportsPagination: true, roadTypeMap: { Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5, 6], St: [7] } },
                 { layerID: 3, fcPropName: 'TMPD_FC', idPropName: 'OBJECTID', outFields: ['OBJECTID', 'TMPD_FC', 'RTE_NM'], maxRecordCount: 2000, supportsPagination: true, roadTypeMap: { Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5, 6], St: [7] } }
             ],
-            information: { Source: 'VDOT', Permission: 'Visible to R3+' },
+            information: { Source: 'VDOT', Permission: 'Visible to R4+ or R3-AM' },
             srExceptions: [217, 302, 303, 305, 308, 310, 313, 314, 315, 317, 318, 319, 320, 321, 322, 323, 324, 325, 326, 327, 328, 329, 330, 331, 332, 333, 334, 335, 336, 339, 341, 342, 343, 344, 345, 346, 347, 348, 350, 353, 355, 357, 358, 361, 362, 363, 364, 365, 366, 367, 368, 369, 370, 371, 372, 373, 374, 375, 376, 377, 378, 379, 382, 383, 384, 385, 386, 387, 388, 389, 390, 391, 392, 393, 394, 396, 397, 398, 399, 785, 895],
             getWhereClause: function (context) {
                 if (context.mapContext.zoom < 4) {
@@ -1426,7 +1474,7 @@
                 {layerID: 4, fcPropName: 'FederalFunctionalClassCode', idPropName: 'OBJECTID', outFields: ['OBJECTID', 'FederalFunctionalClassCode'],
                  roadTypeMap: { Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5, 6], St: [7] }, maxRecordCount: 1000, supportsPagination: false }
             ],
-            information: { Source: 'WSDOT', Permission: 'Visible to R3+', Description: 'Raw unmodified FC data.' },
+            information: { Source: 'WSDOT', Permission: 'Visible to R4+ or R3-AM', Description: 'Raw unmodified FC data.' },
             getWhereClause: function (context) {
                 if (context.mapContext.zoom < 4) {
                     return context.layer.fcPropName + " <> 7";
@@ -1449,7 +1497,7 @@
             fcMapLayers: [
                 { layerID: 35, fcPropName: 'NAT_FUNCTIONAL_CLASS', idPropName: 'OBJECTID', outFields: ['OBJECTID', 'NAT_FUNCTIONAL_CLASS', 'ROUTE_ID'], maxRecordCount: 1000, supportsPagination: true, roadTypeMap: { Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5, 6], St: [7] } }
             ],
-            information: { Source: 'WV DOT', Permission: 'Visible to R3+' },
+            information: { Source: 'WV DOT', Permission: 'Visible to R4+ or R3-AM' },
             getWhereClause: function (context) {
                 if (context.mapContext.zoom < 4) {
                     return context.layer.fcPropName + ' NOT IN (9,19)';
