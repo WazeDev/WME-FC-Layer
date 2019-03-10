@@ -9,7 +9,7 @@
 // // ==UserScript==
 // @name         WME FC Layer
 // @namespace    https://greasyfork.org/users/45389
-// @version      2019.03.07.001
+// @version      2019.03.11.001
 // @description  Adds a Functional Class layer for states that publish ArcGIS FC data.
 // @author       MapOMatic
 // @include      /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
@@ -114,6 +114,29 @@
                     }
                 });
                 return returnValue;
+            }
+        },
+        AL: {
+            baseUrl: 'https://services.arcgis.com/LZzQi3xDiclG6XvQ/arcgis/rest/services/HPMS_Year2017_F_System_Data/FeatureServer/',
+            defaultColors: { Fw: '#ff00c5', Ew: '#4f33df', MH: '#149ece', mH: '#4ce600', PS: '#cfae0e', St: '#eeeeee' },
+            zoomSettings: { maxOffset: [30, 15, 8, 4, 2, 1, 1, 1, 1, 1], excludeRoadTypes: [['St'], ['St'], ['St'], ['St'], [], [], [], [], [], [], []] },
+            fcMapLayers: [
+                { layerID: 0, fcPropName: 'F_SYSTEM_V', idPropName: 'OBJECTID', outFields: ['FID', 'F_SYSTEM_V', 'State_Sys'],
+                 roadTypeMap: { Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5, 6], St: [7] }, maxRecordCount: 1000, supportsPagination: false }
+            ],
+            isPermitted: function () { return _r >= 3; },
+            information: { Source: 'ALDOT', Permission: 'Visible to R3+', Description: 'Federal and State highways set to a minimum of mH.' },
+            getWhereClause: function (context) {
+                if (context.mapContext.zoom < 4) {
+                    return context.layer.fcPropName + "<>7";
+                } else {
+                    return null;
+                }
+            },
+            getFeatureRoadType: function (feature, layer) {
+                var fc = parseInt(feature.attributes[layer.fcPropName]);
+                if (fc > 4 && feature.attributes.State_Sys === 'YES') { fc = 4; }
+                return _stateSettings.global.getRoadTypeFromFC(fc, layer);
             }
         },
         AK: {
@@ -349,7 +372,7 @@
                 { layerID: 5, fcPropName: 'FUNCTIONAL_CLASS', idPropName: 'OBJECTID', outFields: ['OBJECTID', 'FUNCTIONAL_CLASS', 'SYSTEM_CODE'], maxRecordCount: 1000, supportsPagination: true, roadTypeMap: { Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5, 6] } },
                 { layerID: 6, fcPropName: 'FUNCTIONAL_CLASS', idPropName: 'OBJECTID', outFields: ['OBJECTID', 'FUNCTIONAL_CLASS', 'SYSTEM_CODE'], maxRecordCount: 1000, supportsPagination: true, roadTypeMap: { Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5, 6] } }
             ],
-            information: { Source: 'GDOT', Permission: 'Visible to R3+' },
+            information: { Source: 'GDOT', Permission: 'Visible to R3+', Description: 'Federal and State highways set to a minimum of mH.' },
             getWhereClause: function (context) {
                 return null;
             },
@@ -566,7 +589,7 @@
             fcMapLayers: [
                 {
                     layerID: 0, idPropName: 'OBJECTID', fcPropName: 'FC', outFields: ['FC', 'OBJECTID', 'RT_PREFIX', 'RT_SUFFIX'],
-                    roadTypeMap: { Fw: ['1'], Ew: ['2'], MH: ['3'], mH: ['4'], PS: ['5', '6'], St: ['7'] }, maxRecordCount: 1000, supportsPagination: false
+                    roadTypeMap: { Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5, 6], St: [7] }, maxRecordCount: 1000, supportsPagination: false
                 }
             ],
             isPermitted: function () { return true; },
@@ -579,14 +602,13 @@
                 }
             },
             getFeatureRoadType: function (feature, layer) {
-                if (feature.attributes.RT_PREFIX === 'US') {
-                    var suffix = feature.attributes.RT_SUFFIX;
-                    var type = 'MH';
-                    if (suffix && suffix.indexOf('X') > -1) type = 'mH';
-                    return type;
-                } else {
-                    return _stateSettings.global.getFeatureRoadType(feature, layer);
+                var attr = feature.attributes;
+                var fc = parseInt(attr[layer.fcPropName]);
+                if (fc > 3 && attr.RT_PREFIX === 'US') {
+                    var suffix = attr.RT_SUFFIX;
+                    fc = (suffix && suffix.indexOf('X') > -1) ? 4 : 3;
                 }
+                return _stateSettings.global.getRoadTypeFromFC(fc, layer);
             }
         },
         LA: {
@@ -970,7 +992,7 @@
                     maxRecordCount: 1000, supportsPagination: false
                 }
             ],
-            information: { Source: 'NDDOT', Permission: 'Visible to R3+', Description: 'Raw unmodified FC data.' },
+            information: { Source: 'NDDOT', Permission: 'Visible to R3+' },
             getWhereClause: function (context) {
                 if (context.mapContext.zoom < 4) {
                     if (context.layer.layerID !== 16) return context.layer.fcPropName + "<>'Local'";
