@@ -782,7 +782,7 @@
             defaultColors: { Fw: '#ff00c5', Ew: '#4f33df', MH: '#149ece', mH: '#4ce600', PS: '#cfae0e', St: '#eeeeee' },
             zoomSettings: { maxOffset: [30, 15, 8, 4, 2, 1, 1, 1, 1, 1], excludeRoadTypes: [['St'], ['St'], ['St'], ['St'], [], [], [], [], [], [], []] },
             fcMapLayers: [
-                {layerID: 5, fcPropName: 'FUNC_CLASS_NAME' , idPropName: 'SS_PAVEMENT_ID', outFields:['SS_PAVEMENT_ID', 'FUNC_CLASS_NAME', 'CNTL_TW_DESG', 'CNTL_TW_NAME', 'ACCESS_CAT_NAME'],
+                {layerID: 5, fcPropName: 'FUNC_CLASS_NAME' , idPropName: 'SS_PAVEMENT_ID', outFields:['SS_PAVEMENT_ID', 'FUNC_CLASS_NAME', 'TRAVELWAY_DESG', 'TRAVELWAY_NAME', 'ACCESS_CAT_NAME'],
                  roadTypeMap:{Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5, 6], St: [7]}, maxRecordCount:1000, supportsPagination:false }
             ],
             isPermitted: function () { return _r >= 3 || (_r >= 2 && _isAM); },
@@ -791,7 +791,8 @@
                 if (context.mapContext.zoom < 2) {
                     return '1=0';
                 } else {
-                    return "TRAVELWAY_ID = CNTL_TW_ID AND FUNC_CLASS_NAME IS NOT NULL";
+                    // Remove duplicate rows, but suss out interstate business loops
+                    return "FUNC_CLASS_NAME IS NOT NULL AND (TRAVELWAY_ID = CNTL_TW_ID OR (TRAVELWAY_ID <> CNTL_TW_ID AND TRAVELWAY_DESG = 'LP'))";
                 }
             },
             getFeatureRoadType: function (feature, layer) {
@@ -806,8 +807,8 @@
                     case 'MINOR COLLECTOR': fc = 6; break;
                     default: fc = 8; // not a typo
                 }
-                var rtType = attr.CNTL_TW_DESG;
-                var route = attr.CNTL_TW_NAME;
+                var rtType = attr.TRAVELWAY_DESG;
+                var route = attr.TRAVELWAY_NAME;
                 var usHwys = ['24','36','40','50','54','56','59','60','61','62','63','65','67','69','71','136','159','160','166','169','275','400','412'];
                 var isUS = ['US', 'LP'].includes(rtType); // is US or interstate biz
                 var isState = ['MO','AL'].includes(rtType);
