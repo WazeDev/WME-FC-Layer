@@ -813,7 +813,7 @@
                 var isUS = ['US', 'LP'].includes(rtType); // is US or interstate biz
                 var isState = ['MO','AL'].includes(rtType);
                 var isSup = rtType === 'RT';
-                var isBiz = ['BU', 'SP'].includes(rtType);
+                var isBiz = ['BU', 'SP'].includes(rtType) || /BUSINESS .+ \d/.test(route);
                 var isUSBiz = isBiz && usHwys.includes(route);
                 if ((fc === 2 && attr.ACCESS_CAT_NAME !== 'FULL') || (fc > 3 && isUS)) {
                     fc = 3;
