@@ -788,16 +788,18 @@
             isPermitted: function () { return _r >= 3 || (_r >= 2 && _isAM); },
             information: { Source: 'MoDOT', Permission: 'Visible to R3+ or R2-AM' },
             getWhereClause: function (context) {
-                if (context.mapContext.zoom < 2) {
-                    return '1=0';
+                if (context.mapContext.zoom < 1) {
+                    return '1=0'; //WME very laggy at zoom 0
                 } else {
                     // Remove duplicate rows, but suss out interstate business loops
-                    return "FUNC_CLASS_NAME IS NOT NULL AND (TRAVELWAY_ID = CNTL_TW_ID OR (TRAVELWAY_ID <> CNTL_TW_ID AND TRAVELWAY_DESG = 'LP'))";
+                    return "FUNC_CLASS_NAME <> ' ' AND (TRAVELWAY_ID = CNTL_TW_ID OR (TRAVELWAY_ID <> CNTL_TW_ID AND TRAVELWAY_DESG = 'LP'))";
                 }
             },
             getFeatureRoadType: function (feature, layer) {
                 var attr = feature.attributes;
                 var fc = attr[layer.fcPropName];
+                var rtType = attr.TRAVELWAY_DESG;
+                var route = attr.TRAVELWAY_NAME;
                 switch (fc) {
                     case 'INTERSTATE': fc = 1; break;
                     case 'FREEWAY': fc = 2; break;
@@ -807,8 +809,6 @@
                     case 'MINOR COLLECTOR': fc = 6; break;
                     default: fc = 8; // not a typo
                 }
-                var rtType = attr.TRAVELWAY_DESG;
-                var route = attr.TRAVELWAY_NAME;
                 var usHwys = ['24','36','40','50','54','56','59','60','61','62','63','65','67','69','71','136','159','160','166','169','275','400','412'];
                 var isUS = ['US', 'LP'].includes(rtType); // is US or interstate biz
                 var isState = ['MO','AL'].includes(rtType);
