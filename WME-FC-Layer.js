@@ -9,7 +9,7 @@
 // // ==UserScript==
 // @name         WME FC Layer
 // @namespace    https://greasyfork.org/users/45389
-// @version      2019.03.11.002
+// @version      2019.04.02.001
 // @description  Adds a Functional Class layer for states that publish ArcGIS FC data.
 // @author       MapOMatic
 // @include      /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
@@ -1634,7 +1634,7 @@
 
     function getVisibleStateAbbrs() {
         var visibleStates = [];
-        W.model.states.additionalInfo.forEach(function (state) {
+        W.model.states.getObjectArray().forEach(function (state) {
             var stateAbbr = _statesHash[state.name];
             var activeStateAbbr = _settings.activeStateAbbr;
             if (_stateSettings[stateAbbr] && _stateSettings.global.isPermitted(stateAbbr) && (!activeStateAbbr || activeStateAbbr === 'ALL' || activeStateAbbr === stateAbbr)) {
@@ -2086,7 +2086,7 @@
         if (W && W.loginManager &&
             W.loginManager.events &&
             W.loginManager.events.register &&
-            W.model && W.model.states && W.model.states.additionalInfo &&
+            W.model && W.model.states && W.model.states.getObjectArray().length &&
             W.map && W.loginManager.user &&
             WazeWrap.Ready) {
             log('Initializing...', 0);
