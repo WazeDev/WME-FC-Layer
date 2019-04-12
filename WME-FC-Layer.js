@@ -53,6 +53,7 @@
 // @connect      vermont.gov
 // @connect      wa.gov
 // @connect      wv.gov
+// @connect      wyoroad.info
 // ==/UserScript==
 
 (function () {
@@ -1539,6 +1540,60 @@
                     else if (fc > 4 && isState) { fc = 4; }
                     return _stateSettings.global.getRoadTypeFromFC(fc, layer);
                 }
+            }
+        },
+        WY: {
+            baseUrl: 'https://apps.wyoroad.info/arcgis/rest/services/ITSM/LAYERS/MapServer/',
+            defaultColors: { Fw: '#ff00c5', Ew: '#4f33df', MH: '#149ece', mH: '#4ce600', PS: '#cfae0e', St: '#eeeeee' },
+            zoomSettings: { maxOffset: [30, 15, 8, 4, 2, 1, 1, 1, 1, 1], excludeRoadTypes: [['St'], ['St'], ['St'], ['St'], [], [], [], [], [], [], []] },
+            fcMapLayers: [
+                {layerID: 21, fcPropName: 'CLASSIFICATION', idPropName: 'OBJECTID', outFields: ['OBJECTID', 'CLASSIFICATION', 'COMMON_ROUTE_NAME'],
+                 roadTypeMap: { Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5, 6], St: [7] }, maxRecordCount: 1000, supportsPagination: false },
+                {layerID: 22, fcPropName: 'CLASSIFICATION', idPropName: 'OBJECTID', outFields: ['OBJECTID', 'CLASSIFICATION', 'COMMON_ROUTE_NAME'],
+                 roadTypeMap: { Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5, 6], St: [7] }, maxRecordCount: 1000, supportsPagination: false },
+                {layerID: 23, fcPropName: 'CLASSIFICATION', idPropName: 'OBJECTID', outFields: ['OBJECTID', 'CLASSIFICATION', 'COMMON_ROUTE_NAME'],
+                 roadTypeMap: { Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5, 6], St: [7] }, maxRecordCount: 1000, supportsPagination: false },
+                {layerID: 24, fcPropName: 'CLASSIFICATION', idPropName: 'OBJECTID', outFields: ['OBJECTID', 'CLASSIFICATION', 'COMMON_ROUTE_NAME'],
+                 roadTypeMap: { Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5, 6], St: [7] }, maxRecordCount: 1000, supportsPagination: false },
+                {layerID: 25, fcPropName: 'CLASSIFICATION', idPropName: 'OBJECTID', outFields: ['OBJECTID', 'CLASSIFICATION', 'COMMON_ROUTE_NAME'],
+                 roadTypeMap: { Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5, 6], St: [7] }, maxRecordCount: 1000, supportsPagination: false },
+                {layerID: 26, fcPropName: 'CLASSIFICATION', idPropName: 'OBJECTID', outFields: ['OBJECTID', 'CLASSIFICATION', 'COMMON_ROUTE_NAME'],
+                 roadTypeMap: { Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5, 6], St: [7] }, maxRecordCount: 1000, supportsPagination: false },
+                {layerID: 27, fcPropName: 'CLASSIFICATION', idPropName: 'OBJECTID', outFields: ['OBJECTID', 'CLASSIFICATION', 'COMMON_ROUTE_NAME'],
+                 roadTypeMap: { Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5, 6], St: [7] }, maxRecordCount: 1000, supportsPagination: false }
+            ],
+            information: { Source: 'WYDOT', Permission: 'Visible to R4+ or R3-AM', Description: 'Minimum suggested FC.' },
+            getWhereClause: function (context) {
+                if (context.mapContext.zoom < 4) {
+                    return context.layer.fcPropName + " <> 'Local'";
+                } else {
+                    return null;
+                }
+            },
+            getFeatureRoadType: function (feature, layer) {
+                var attr = feature.attributes;
+                var fc = attr[layer.fcPropName];
+                var route = attr.COMMON_ROUTE_NAME;
+                switch (fc) {
+                    case 'Interstate': fc = 1; break;
+                    case 'Expressway': fc = 2; break;
+                    case 'Principal Arterial': fc = 3; break;
+                    case 'Minor Arterial': fc = 4; break;
+                    case 'Major Collector': fc = 5; break
+                    case 'Minor Collector': fc = 6; break;
+                    default: fc = 7;
+                }
+                var isIntBiz = /I (25|80) BUS/.test(route);
+                var isUS = /US \d+/.test(route);
+                var isUSBiz = /US \d+ BUS/.test(route);
+                var isState = /WY \d+/.test(route);
+                var isStateBiz = /WY \d+ BUS/.test(route);
+                if (fc > 3 && (isUS || isIntBiz)) {
+                    fc = isUSBiz ? 4 : 3;
+                } else if (fc > 4 && isState) {
+                    fc = isStateBiz ? 5 : 4;
+                }
+                return _stateSettings.global.getRoadTypeFromFC(fc, layer);
             }
         }
     };
