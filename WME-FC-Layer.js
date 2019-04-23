@@ -9,7 +9,7 @@
 // // ==UserScript==
 // @name         WME FC Layer
 // @namespace    https://greasyfork.org/users/45389
-// @version      2019.04.19.001
+// @version      2019.04.23.002
 // @description  Adds a Functional Class layer for states that publish ArcGIS FC data.
 // @author       MapOMatic
 // @include      /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
@@ -779,7 +779,7 @@
             }
         },
         MO: {
-            baseUrl: 'http://mapping.modot.org/arcgis/rest/services/Base-Map/Tms_Utility/MapServer/',
+            baseUrl: 'http://mapping.modot.org/external/rest/services/BaseMap/TmsUtility/MapServer/',
             defaultColors: { Fw: '#ff00c5', Ew: '#4f33df', MH: '#149ece', mH: '#4ce600', PS: '#cfae0e', St: '#eeeeee' },
             zoomSettings: { maxOffset: [30, 15, 8, 4, 2, 1, 1, 1, 1, 1], excludeRoadTypes: [['St'], ['St'], ['St'], ['St'], [], [], [], [], [], [], []] },
             fcMapLayers: [
@@ -1093,25 +1093,24 @@
             zoomSettings: { maxOffset: [30, 15, 8, 4, 2, 1, 1, 1, 1, 1], excludeRoadTypes: [['St'], ['St'], ['St'], ['St'], [], [], [], [], [], [], []] },
             fcMapLayers: [
                 {
-                    layerID: 0, fcPropName: 'NFC', idPropName: 'OBJECTID', outFields: ['F_PRIMARY_', 'NFC', 'OBJECTID', 'ROUTE_CLAS', 'ACCESS_CON'],
+                    layerID: 0, fcPropName: 'FUNCTIONALCLASS', idPropName: 'OBJECTID', outFields: ['OBJECTID', 'FUNCTIONALCLASS', 'FHWAPRIMARYROUTE', 'ODOTROUTECLASS', 'ACCESSCONTROL'],
                     maxRecordCount: 1000, supportsPagination: false, roadTypeMap: { Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5, 6], St: [7] }
                 }
             ],
             information: { Source: 'ODOT', Permission: 'Visible to R4+ or R3-AM' },
             getWhereClause: function (context) {
                 if (context.mapContext.zoom < 4) {
-                    var clause = '(' + context.layer.fcPropName + " < 7 OR ROUTE_CLAS IN ('U','S','I'))";
-                    return clause;
+                    return context.layer.fcPropName + " < 7 OR ODOTROUTECLASS IN ('U','S','I')";
                 } else {
                     return null;
                 }
             },
             getFeatureRoadType: function (feature, layer) {
                 var fc = feature.attributes[layer.fcPropName];
-                var route = (feature.attributes.F_PRIMARY_ || '').trim();
+                var route = (feature.attributes.FHWAPRIMARYROUTE || '').trim();
                 var isBusinessOrSpur = /BUS$|SPR$/i.test(route);
-                var prefix = isBusinessOrSpur ? route.substring(0, 1) : feature.attributes.ROUTE_CLAS;
-                var isFw = parseInt(feature.attributes.ACCESS_CON) === 1;
+                var prefix = isBusinessOrSpur ? route.substring(0, 1) : feature.attributes.ODOTROUTECLASS;
+                var isFw = parseInt(feature.attributes.ACCESSCONTROL) === 1;
                 var isInterstate = prefix === 'I';
                 var isUS = prefix === 'U';
                 var isState = prefix === 'S';
