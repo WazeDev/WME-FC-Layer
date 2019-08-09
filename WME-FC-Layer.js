@@ -976,11 +976,11 @@
             }
         },
         NC: {
-            baseUrl: 'https://gis11.services.ncdot.gov/arcgis/rest/services/NCDOT_FunctionalClass/MapServer/',
+            baseUrl: 'https://gis11.services.ncdot.gov/arcgis/rest/services/NCDOT_FunctionalClassQtr/MapServer/',
             defaultColors: { Fw: '#ff00c5', Rmp: '#999999', Ew: '#5f33df', MH: '#149ece', mH: '#4ce600', PS: '#cfae0e', St: '#eeeeee' },
             zoomSettings: { maxOffset: [30, 15, 8, 4, 2, 1, 1, 1, 1, 1], excludeRoadTypes: [['St'], ['St'], ['St'], ['St'], [], [], [], [], [], [], []] },
             fcMapLayers: [
-                { layerID: 0, fcPropName: 'FC_TYP_CD', idPropName: 'OBJECTID', outFields: ['OBJECTID', 'FC_TYP_CD', 'RTE_1_CLSS_CD'], roadTypeMap: { Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5, 6], St: [7] }, zoomLevels: [3, 4, 5, 6, 7, 8, 9, 10], maxRecordCount: 1000, supportsPagination: false }
+                { layerID: 0, fcPropName: 'FuncClass', idPropName: 'OBJECTID', outFields: ['OBJECTID', 'FuncClass', 'RouteClass'], roadTypeMap: { Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5, 6], St: [7] }, zoomLevels: [3, 4, 5, 6, 7, 8, 9, 10], maxRecordCount: 1000, supportsPagination: false }
                 //{ layerID:2, fcPropName:'FC_TYP_CD', idPropName:'OBJECTID', outFields:['OBJECTID','FC_TYP_CD','RTE_1_CLSS_CD'], roadTypeMap:{Fw:[1],Ew:[2],MH:[3],mH:[4],PS:[5,6],St:[7]}, zoomLevels:[2], maxRecordCount:1000, supportsPagination:false },
                 //{ layerID:3, fcPropName:'FC_TYP_CD', idPropName:'OBJECTID', outFields:['OBJECTID','FC_TYP_CD','RTE_1_CLSS_CD'], roadTypeMap:{Fw:[1],Ew:[2],MH:[3],mH:[4],PS:[5,6],St:[7]}, zoomLevels:[0,1], maxRecordCount:1000, supportsPagination:false },
                 //{ layerID:4, fcPropName:'FC_TYP_CD', idPropName:'OBJECTID', outFields:['OBJECTID','FC_TYP_CD','RTE_1_CLSS_CD'], roadTypeMap:{Fw:[1],Ew:[2],MH:[3],mH:[4],PS:[5,6],St:[7]}, zoomLevels:[], maxRecordCount:1000, supportsPagination:false },
@@ -991,7 +991,7 @@
             information: { Source: 'NCDOT', Permission: 'Visible to R3+' },
             getWhereClause: function (context) {
                 if (context.mapContext.zoom < 4) {
-                    var clause = '(' + context.layer.fcPropName + " < 7 OR RTE_1_CLSS_CD IN ('I','FED','NC','RMP','US'))";
+                    var clause = '(' + context.layer.fcPropName + " < 7 OR RouteClass IN ('I','FED','NC','RMP','US'))";
                     return clause;
                 } else {
                     return null;
@@ -1020,18 +1020,17 @@
             },
             getHwySys: function (feature) {
                 var hwySys;
-                switch (feature.attributes.RTE_1_CLSS_CD) {
-                    case 'I':
+                switch (feature.attributes.RouteClass) {
+                    case '1':
                         hwySys = 'interstate';
                         break;
-                    case 'FED':
-                    case 'US':
+                    case '2':
                         hwySys = 'us';
                         break;
-                    case 'NC':
+                    case '3':
                         hwySys = 'state';
                         break;
-                    case 'RMP':
+                    case '80':
                         hwySys = 'ramp';
                         break;
                     default:
