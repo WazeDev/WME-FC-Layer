@@ -560,7 +560,7 @@
         },
         KS: {
             baseUrl: 'http://wfs.ksdot.org/arcgis_web_adaptor/rest/services/Transportation/',
-            defaultColors: { Fw: '#ff00c5', Ew: '#149ece', MH: '#149ece', mH: '#4ce600', PS: '#cfae0e', St: '#eeeeee' },
+            defaultColors: { Fw: '#ff00c5', Ew: '#4f33df', MH: '#149ece', mH: '#4ce600', PS: '#cfae0e', St: '#eeeeee' },
             zoomSettings: { maxOffset: [30, 15, 8, 4, 2, 1, 1, 1, 1, 1], excludeRoadTypes: [['St'], ['St'], ['St'], ['St'], [], [], [], [], [], [], []] },
             fcMapLayers: [
                 {
@@ -568,12 +568,8 @@
                     roadTypeMap: { Fw: [1], MH: [2, 3], mH: [4], PS: [5, 6], St: [7] }, maxRecordCount: 1000, supportsPagination: false
                 },
                 {
-                    layerID: 1, layerPath: 'National_Highway_System/MapServer/', idPropName: 'OBJECTID', fcPropName: 'FUN_CLASS_CD', outFields: ['FUN_CLASS_CD', 'OBJECTID', 'PREFIX', 'ACCESS_CONTROL'],
-                    roadTypeMap: { Fw: [1], MH: [2, 3], mH: [4], PS: [5, 6], St: [7] }, maxRecordCount: 1000, supportsPagination: false
-                },
-                {
                     layerID: 0, layerPath: 'State_System/MapServer/', idPropName: 'OBJECTID', fcPropName: 'FUN_CLASS_CD', outFields: ['FUN_CLASS_CD', 'OBJECTID', 'PREFIX', 'ACCESS_CONTROL'],
-                    roadTypeMap: { Fw: [1], MH: [2, 3], mH: [4], PS: [5, 6], St: [7] }, maxRecordCount: 1000, supportsPagination: false
+                    roadTypeMap: { Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5, 6], St: [7] }, maxRecordCount: 1000, supportsPagination: false
                 }
             ],
             information: { Source: 'KDOT', Permission: 'Visible to R4+ or R3-AM' },
@@ -588,12 +584,9 @@
                 var attr = feature.attributes;
                 var fc = parseInt(attr[layer.fcPropName]);
                 var roadPrefix = attr.PREFIX;
-                var isFw = parseInt(attr.ACCESS_CONTROL) === 1;
                 var isUS = roadPrefix === 'U';
                 var isState = roadPrefix === 'K';
-                if (isFw) {
-                    fc = 1;
-                } else if (fc > 3 && isUS) {
+                if ((fc > 3 && isUS) || (fc === 2 && parseInt(attr.ACCESS_CONTROL) !== 1)) {
                     fc = 3;
                 } else if (fc > 4 && isState) {
                     fc = 4;
@@ -1531,7 +1524,7 @@
             defaultColors: { Fw: '#ff00c5', Ew: '#ff00c5', MH: '#149ece', mH: '#4ce600', PS: '#cfae0e', St: '#eeeeee' },
             zoomSettings: { maxOffset: [30, 15, 8, 4, 2, 1, 1, 1, 1, 1], excludeRoadTypes: [['St'], ['St'], ['St'], ['St'], [], [], [], [], [], [], []] },
             fcMapLayers: [
-                { layerID: 11, fcPropName: 'NAT_FUNCTIONAL_CLASS', idPropName: 'OBJECTID', outFields: ['OBJECTID', 'NAT_FUNCTIONAL_CLASS', 'ROUTE_ID'], maxRecordCount: 1000, supportsPagination: true, roadTypeMap: { Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5, 6], St: [7] } }
+                { layerID: 24, fcPropName: 'NAT_FUNCTIONAL_CLASS', idPropName: 'OBJECTID', outFields: ['OBJECTID', 'NAT_FUNCTIONAL_CLASS', 'ROUTE_ID'], maxRecordCount: 1000, supportsPagination: true, roadTypeMap: { Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5, 6], St: [7] } }
             ],
             information: { Source: 'WV DOT', Permission: 'Visible to R4+ or R3-AM' },
             getWhereClause: function (context) {
