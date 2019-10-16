@@ -9,7 +9,7 @@
 // // ==UserScript==
 // @name         WME FC Layer
 // @namespace    https://greasyfork.org/users/45389
-// @version      2019.09.19.001
+// @version      2019.10.02.001
 // @description  Adds a Functional Class layer for states that publish ArcGIS FC data.
 // @author       MapOMatic
 // @include      /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
@@ -1526,7 +1526,8 @@
             fcMapLayers: [
                 { layerID: 24, fcPropName: 'NAT_FUNCTIONAL_CLASS', idPropName: 'OBJECTID', outFields: ['OBJECTID', 'NAT_FUNCTIONAL_CLASS', 'ROUTE_ID'], maxRecordCount: 1000, supportsPagination: true, roadTypeMap: { Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5, 6], St: [7] } }
             ],
-            information: { Source: 'WV DOT', Permission: 'Visible to R4+ or R3-AM' },
+            information: { Source: 'WV DOT'},
+            isPermitted: function () { return true; },
             getWhereClause: function (context) {
                 if (context.mapContext.zoom < 4) {
                     return context.layer.fcPropName + ' NOT IN (9,19)';
