@@ -9,7 +9,7 @@
 // // ==UserScript==
 // @name         WME FC Layer
 // @namespace    https://greasyfork.org/users/45389
-// @version      2019.10.02.001
+// @version      2020.03.07.001
 // @description  Adds a Functional Class layer for states that publish ArcGIS FC data.
 // @author       MapOMatic
 // @include      /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
@@ -461,7 +461,7 @@
             }
         },
         IL: {
-            baseUrl: 'http://ags10s1.dot.illinois.gov/ArcGIS/rest/services/IRoads/IRoads_53/MapServer/',
+            baseUrl: 'http://ags10s1.dot.illinois.gov/ArcGIS/rest/services/IRoads/IRoads_64/MapServer/',
             supportsPagination: false,
             defaultColors: { Fw: '#ff00c5', Ew: '#ff00c5', MH: '#149ece', mH: '#4ce600', PS: '#cfae0e', St: '#eeeeee', CH: '#ff5e0e' },
             zoomSettings: { maxOffset: [30, 15, 8, 4, 2, 1, 1, 1, 1, 1] },
