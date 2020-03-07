@@ -9,7 +9,7 @@
 // // ==UserScript==
 // @name         WME FC Layer
 // @namespace    https://greasyfork.org/users/45389
-// @version      2019.10.02.001
+// @version      2020.02.22.001
 // @description  Adds a Functional Class layer for states that publish ArcGIS FC data.
 // @author       MapOMatic
 // @include      /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
@@ -933,13 +933,13 @@
                 return _stateSettings.global.getRoadTypeFromFC(fc, layer);
             }
         },
-        NY: {//https://gis3.dot.ny.gov/arcgis/rest/services/Basemap/MapServer/21
-            baseUrl: 'https://gis3.dot.ny.gov/arcgis/rest/services/',
+        NY: {//https://gis.dot.ny.gov/hostingny/rest/services/Basemap/MapServer/21
+            baseUrl: 'https://gis.dot.ny.gov/hostingny/rest/services',
             defaultColors: { Fw: '#ff00c5', Ew: '#5f33df', MH: '#149ece', mH: '#4ce600', PS: '#cfae0e', St: '#eeeeee' },
             zoomSettings: { maxOffset: [30, 15, 8, 4, 2, 1, 1, 1, 1, 1] },
             fcMapLayers: [
                 {
-                    layerID: 'FC/MapServer/1', fcPropName: 'FUNC_CLASS', idPropName: 'OBJECTID', outFields: ['OBJECTID', 'FUNC_CLASS', 'SEGMENT_NAME', 'ROUTE_NO'], roadTypeMap: { Fw: [1, 11], Ew: [2, 12], MH: [4, 14], mH: [6, 16], PS: [7, 8, 17, 18] },
+                    layerID: '/Geocortex/FC/MapServer/1', fcPropName: 'FUNC_CLASS', idPropName: 'OBJECTID', outFields: ['OBJECTID', 'FUNC_CLASS', 'SEGMENT_NAME', 'ROUTE_NO'], roadTypeMap: { Fw: [1, 11], Ew: [2, 12], MH: [4, 14], mH: [6, 16], PS: [7, 8, 17, 18] },
                     maxRecordCount: 1000, supportsPagination: false
                 },
                 { layerID: 'Basemap/MapServer/21', idPropName: 'OBJECTID', outFields: ['OBJECTID', 'SHIELD'], maxRecordCount: 1000, supportsPagination: false }
