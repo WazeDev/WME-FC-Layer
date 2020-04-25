@@ -46,7 +46,7 @@
 // @connect      nd.gov
 // @connect      oh.us
 // @connect      or.us
-// @connect      pa.gov
+// @connect      penndot.gov
 // @connect      sd.gov
 // @connect      shelbycountytn.gov
 // @connect      utah.gov
@@ -1164,13 +1164,13 @@
             }
         },
         PA: {
-            baseUrl: 'https://www.pdarcgissvr.pa.gov/penndotgis/rest/services/PennShare/PennShare/MapServer/',
+            baseUrl: 'https://gis.penndot.gov/arcgis/rest/services/opendata/roadwayadmin/MapServer/',
             supportsPagination: false,
             defaultColors: { Fw: '#ff00c5', Ew: '#4f33df', MH: '#149ece', mH: '#4ce600', PS: '#cfae0e', St: '#eeeeee' },
             zoomSettings: { maxOffset: [30, 15, 8, 4, 2, 1, 1, 1, 1, 1], excludeRoadTypes: [['St'], ['St'], ['St'], ['St'], [], [], [], [], [], [], []] },
             fcMapLayers: [
                 {
-                    layerID: 3, features: new Map(), fcPropName: 'FUNC_CLS', idPropName: 'MSLINK', outFields: ['MSLINK', 'FUNC_CLS'],
+                    layerID: 0, features: new Map(), fcPropName: 'FUNC_CLS', idPropName: 'MSLINK', outFields: ['MSLINK', 'FUNC_CLS'],
                     maxRecordCount: 1000, supportsPagination: false, roadTypeMap: { Fw: ['01', '11'], Ew: ['12'], MH: ['02', '14'], mH: ['06', '16'], PS: ['07', '08', '17'], St: ['09', '19'] }
                 }
             ],
