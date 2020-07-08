@@ -1,6 +1,5 @@
 /* global W */
-/* global Promise */
-/* global OL */
+/* global OpenLayers */
 /* global I18n */
 /* global unsafeWindow */
 /* global GM_info */
@@ -9,7 +8,7 @@
 // // ==UserScript==
 // @name         WME FC Layer
 // @namespace    https://greasyfork.org/users/45389
-// @version      2020.04.29.001
+// @version      2020.07.08.001
 // @description  Adds a Functional Class layer for states that publish ArcGIS FC data.
 // @author       MapOMatic
 // @include      /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
@@ -359,7 +358,7 @@
             fetchAllFC: false,
             fcMapLayers: [
                 {
-                    layerID: 0, fcPropName: 'FUNCLASS', idPropName: 'OBJECTID', outFields: ['OBJECTID', 'FUNCLASS'], maxRecordCount: 1000, supportsPagination: false,
+                    layerID: 0, fcPropName: 'FUNCLASS', idPropName: 'FID', outFields: ['FID', 'FUNCLASS'], maxRecordCount: 1000, supportsPagination: false,
                     roadTypeMap: { Fw: ['01', '11'], Ew: ['02', '12'], MH: ['04', '14'], mH: ['06', '16'], PS: ['07', '08', '17', '18'] }
                 }
             ],
@@ -1822,9 +1821,9 @@
             var newPoint = null;
             var lastPoint = null;
             path.forEach(function (point) {
-                pointList.push(new OL.Geometry.Point(point[0], point[1]));
+                pointList.push(new OpenLayers.Geometry.Point(point[0], point[1]));
             });
-            var vectorFeature = new OL.Feature.Vector(new OL.Geometry.LineString(pointList), attr);
+            var vectorFeature = new OpenLayers.Feature.Vector(new OpenLayers.Geometry.LineString(pointList), attr);
             vectors.push(vectorFeature);
         });
 
@@ -2001,7 +2000,7 @@
             },
             getStrokeWidth: function () { return getLineWidth(); }
         };
-        var defaultStyle = new OL.Style({
+        var defaultStyle = new OpenLayers.Style({
             strokeColor: '${color}', //'#00aaff',
             strokeDashstyle: "solid",
             strokeOpacity: 1.0,
@@ -2009,16 +2008,16 @@
             graphicZIndex: '${zIndex}'
         });
 
-        var selectStyle = new OL.Style({
+        var selectStyle = new OpenLayers.Style({
             //strokeOpacity: 1.0,
             strokeColor: '#000000'
         });
 
-        _mapLayer = new OL.Layer.Vector("FC Layer", {
+        _mapLayer = new OpenLayers.Layer.Vector("FC Layer", {
             uniqueName: "__FCLayer",
             displayInLayerSwitcher: false,
             rendererOptions: { zIndexing: true },
-            styleMap: new OL.StyleMap({
+            styleMap: new OpenLayers.StyleMap({
                 'default': defaultStyle,
                 'select': selectStyle
             })
