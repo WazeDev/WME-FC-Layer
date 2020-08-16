@@ -8,7 +8,7 @@
 // // ==UserScript==
 // @name         WME FC Layer
 // @namespace    https://greasyfork.org/users/45389
-// @version      2020.08.15.001
+// @version      2020.08.16.001
 // @description  Adds a Functional Class layer for states that publish ArcGIS FC data.
 // @author       MapOMatic
 // @include      /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
@@ -994,7 +994,11 @@
                 var roadType;
                 switch (this.getHwySys(feature)) {
                     case 'interstate':
-                        roadType = 'Fw';
+                        if (fc <= 2 || !this.isBusinessRoute(feature)) {
+                            roadType = 'Fw';
+                        } else {
+                            roadType = 'MH';
+                        }
                         break;
                     case 'us':
                         if (fc <= 2) {
@@ -1006,7 +1010,15 @@
                         }
                         break;
                     case 'state':
-                        roadType = fc === 2 ? 'Ew' : (fc === 3 ? 'MH' : 'mH');
+                        if (fc <= 2) {
+                            roadType = 'Ew';
+                        } else if (fc === 3) {
+                            roadType = 'MH';
+                        } else if (fc === 4 || !this.isBusinessRoute(feature)) {
+                            roadType = 'mH';
+                        } else {
+                            roadType = 'PS';
+                        }
                         break;
                     case 'ramp':
                         roadType = 'Rmp';
