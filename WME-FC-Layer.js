@@ -8,7 +8,7 @@
 // // ==UserScript==
 // @name         WME FC Layer
 // @namespace    https://greasyfork.org/users/45389
-// @version      2020.08.16.001
+// @version      2020.08.17.001
 // @description  Adds a Functional Class layer for states that publish ArcGIS FC data.
 // @author       MapOMatic
 // @include      /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
@@ -519,7 +519,7 @@
             }
         },
         IA: {
-            baseUrl: 'https://gis.iowadot.gov/public/rest/services/RAMS/Road_Network/MapServer/',
+            baseUrl: 'https://gis.iowadot.gov/agshost/rest/services/RAMS/Road_Network/FeatureServer/',
             defaultColors: { Fw: '#ff00c5', Ew: '#149ece', MH: '#149ece', mH: '#4ce600', PS: '#cfae0e', St: '#eeeeee', PSGr: '#cc6533', StGr: '#e99cb6' },
             zoomSettings: { maxOffset: [30, 15, 8, 4, 2, 1, 1, 1, 1, 1], excludeRoadTypes: [['St'], ['St'], ['St'], ['St'], [], [], [], [], [], [], []] },
             fcMapLayers: [
