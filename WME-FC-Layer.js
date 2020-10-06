@@ -8,7 +8,7 @@
 // // ==UserScript==
 // @name         WME FC Layer
 // @namespace    https://greasyfork.org/users/45389
-// @version      2020.08.22.001
+// @version      2020.10.05.001
 // @description  Adds a Functional Class layer for states that publish ArcGIS FC data.
 // @author       MapOMatic
 // @include      /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
@@ -1545,7 +1545,7 @@
             defaultColors: { Fw: '#ff00c5', Ew: '#ff00c5', MH: '#149ece', mH: '#4ce600', PS: '#cfae0e', St: '#eeeeee' },
             zoomSettings: { maxOffset: [30, 15, 8, 4, 2, 1, 1, 1, 1, 1], excludeRoadTypes: [['St'], ['St'], ['St'], ['St'], [], [], [], [], [], [], []] },
             fcMapLayers: [
-                { layerID: 24, fcPropName: 'NAT_FUNCTIONAL_CLASS', idPropName: 'OBJECTID', outFields: ['OBJECTID', 'NAT_FUNCTIONAL_CLASS', 'ROUTE_ID'], maxRecordCount: 1000, supportsPagination: true, roadTypeMap: { Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5, 6], St: [7] } }
+                { layerID: 1, fcPropName: 'F_System', idPropName: 'OBJECTID', outFields: ['OBJECTID', 'F_System', 'RouteID'], maxRecordCount: 1000, supportsPagination: true, roadTypeMap: { Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5, 6], St: [7] } }
             ],
             information: { Source: 'WV DOT' },
             isPermitted: function () { return true; },
@@ -1568,7 +1568,7 @@
                     else if (fcCode === 6 || fcCode === 16) fc = 4;
                     else if (fcCode === 7 || fcCode === 17 || fcCode === 8 || fcCode === 18) fc = 5;
                     else fc = 7;
-                    var id = feature.attributes.ROUTE_ID;
+                    var id = feature.attributes.RouteID;
                     var prefix = id.substr(2, 1);
                     var isInterstate = false;
                     var isUS = false;
