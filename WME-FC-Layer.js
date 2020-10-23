@@ -252,7 +252,7 @@
                     roadTypeMap: { Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5, 6], St: [7] }, maxRecordCount: 1000, supportsPagination: false
                 }
             ],
-            isPermitted: function () { return _r >= 4; },
+            isPermitted: function () { return _r >= 3; },
             information: {
                 Source: 'CDOT', Permission: 'Visible to R4+',
                 Description: 'Please consult with a state manager before making any changes to road types based on the data presented.'
