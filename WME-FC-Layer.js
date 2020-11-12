@@ -8,7 +8,7 @@
 // // ==UserScript==
 // @name         WME FC Layer
 // @namespace    https://greasyfork.org/users/45389
-// @version      2020.10.22.001
+// @version      2020.11.12.001
 // @description  Adds a Functional Class layer for states that publish ArcGIS FC data.
 // @author       MapOMatic
 // @include      /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
@@ -254,7 +254,7 @@
             ],
             isPermitted: function () { return _r >= 3; },
             information: {
-                Source: 'CDOT', Permission: 'Visible to R4+',
+                Source: 'CDOT', Permission: 'Visible to R3+',
                 Description: 'Please consult with a state manager before making any changes to road types based on the data presented.'
             },
             getWhereClause: function (context) {
