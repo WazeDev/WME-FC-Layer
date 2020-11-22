@@ -254,7 +254,7 @@
             ],
             isPermitted: function () { return _r >= 3; },
             information: {
-                Source: 'CDOT', Permission: 'Visible to R4+',
+                Source: 'CDOT', Permission: 'Visible to R3+',
                 Description: 'Please consult with a state manager before making any changes to road types based on the data presented.'
             },
             getWhereClause: function (context) {
