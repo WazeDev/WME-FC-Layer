@@ -8,7 +8,7 @@
 // // ==UserScript==
 // @name         WME FC Layer
 // @namespace    https://greasyfork.org/users/45389
-// @version      2020.11.26.001
+// @version      2020.12.18.001
 // @description  Adds a Functional Class layer for states that publish ArcGIS FC data.
 // @author       MapOMatic
 // @include      /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
@@ -171,13 +171,13 @@
             }
         },
         AZ: {
-            baseUrl: 'https://gis.azdot.gov/gis/rest/services/AGOL/FunClass_NHS/MapServer/',
+            baseUrl: 'https://services6.arcgis.com/jTQSeSIplkoqFMZe/ArcGIS/rest/services/FunctionalClass/FeatureServer/',
             defaultColors: { Fw: '#ff00c5', Ew: '#ff00c5', MH: '#149ece', mH: '#4ce600', PS: '#cfae0e', St: '#eeeeee' },
             zoomSettings: { maxOffset: [30, 15, 8, 4, 2, 1, 1, 1, 1, 1] },
             fcMapLayers: [
                 {
-                    layerID: 8, fcPropName: 'FunctionalClass', idPropName: 'OBJECTID',
-                    outFields: ['OBJECTID', 'FunctionalClass', 'RouteId'],
+                    layerID: 1, fcPropName: 'FuncCode', idPropName: 'OBJECTID',
+                    outFields: ['OBJECTID', 'FuncCode'],
                     roadTypeMap: { Fw: [1, 11], Ew: [2, 3, 12], MH: [4, 14], mH: [6, 16], PS: [7, 17, 8, 18], St: [] }, maxRecordCount: 1000, supportsPagination: false
                 }
             ],
@@ -186,23 +186,30 @@
                 return context.layer.fcPropName + ' NOT IN (9, 19)';
             },
             getFeatureRoadType: function (feature, layer) {
-                var roadID = feature.attributes.RouteId.trim().replace(/  +/g, ' ');
-                var roadNum = parseInt(roadID.substring(2, 5));
-                var fc = parseInt(feature.attributes[layer.fcPropName]);
-                fc = (fc === 2) ? 4 : fc % 10;
-                var azIH = [8, 10, 11, 17, 19, 40]; // Interstate hwys in AZ
-                var isUS = RegExp(/^U\D\d{3}\b/).test(roadID);
-                var isState = RegExp(/^S\D\d{3}\b/).test(roadID);
-                var isBiz = RegExp(/^SB\d{3}\b/).test(roadID);
-                if (fc > 4 && isState && azIH.includes(roadNum) && isBiz) {
-                    fc = 4;
-                } else if (fc > 4 && isUS) {
-                    fc = isBiz ? 6 : 4;
-                } else if (fc > 6 && isState) {
-                    fc = isBiz ? 7 : 6;
+                if (layer.getFeatureRoadType) {
+                    return layer.getFeatureRoadType(feature);
+                } else {
+                    return _stateSettings.global.getFeatureRoadType(feature, layer);
                 }
-                return _stateSettings.global.getRoadTypeFromFC(fc, layer);
             }
+            // getFeatureRoadType: function (feature, layer) {
+            //     var roadID = feature.attributes.RouteId.trim().replace(/  +/g, ' ');
+            //     var roadNum = parseInt(roadID.substring(2, 5));
+            //     var fc = parseInt(feature.attributes[layer.fcPropName]);
+            //     fc = (fc === 2) ? 4 : fc % 10;
+            //     var azIH = [8, 10, 11, 17, 19, 40]; // Interstate hwys in AZ
+            //     var isUS = RegExp(/^U\D\d{3}\b/).test(roadID);
+            //     var isState = RegExp(/^S\D\d{3}\b/).test(roadID);
+            //     var isBiz = RegExp(/^SB\d{3}\b/).test(roadID);
+            //     if (fc > 4 && isState && azIH.includes(roadNum) && isBiz) {
+            //         fc = 4;
+            //     } else if (fc > 4 && isUS) {
+            //         fc = isBiz ? 6 : 4;
+            //     } else if (fc > 6 && isState) {
+            //         fc = isBiz ? 7 : 6;
+            //     }
+            //     return _stateSettings.global.getRoadTypeFromFC(fc, layer);
+            // }
         },
         AR: {
             baseUrl: 'https://gis.arkansas.gov/arcgis/rest/services/FEATURESERVICES/Transportation/FeatureServer/',
