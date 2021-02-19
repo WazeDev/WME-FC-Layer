@@ -8,7 +8,7 @@
 // // ==UserScript==
 // @name         WME FC Layer
 // @namespace    https://greasyfork.org/users/45389
-// @version      2020.12.18.002
+// @version      2021.02.19.001
 // @description  Adds a Functional Class layer for states that publish ArcGIS FC data.
 // @author       MapOMatic
 // @include      /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
@@ -2009,12 +2009,6 @@
         }
     }
 
-    function onModeChanged(model, modeId, context) {
-        if (!modeId || modeId === 1) {
-            initUserPanel();
-        }
-    }
-
     function showScriptInfoAlert() {
         /* Check version and alert on update */
         if (_alertUpdate && _scriptVersion !== _settings.lastVersion) {
@@ -2201,7 +2195,6 @@
             return target.replace(new RegExp(search, 'g'), replacement);
         };
         initGui();
-        W.app.modeController.model.bind('change:mode', onModeChanged);
         W.prefs.on("change:isImperial", function () { initUserPanel(); loadSettingsFromStorage(); });
         fetchAllFC();
         log('Initialized.', 0);
