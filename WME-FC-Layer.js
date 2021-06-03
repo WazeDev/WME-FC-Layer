@@ -217,7 +217,7 @@
             zoomSettings: { maxOffset: [30, 15, 8, 4, 2, 1, 1, 1, 1, 1], excludeRoadTypes: [[], [], [], [], [], [], [], [], [], [], []] },
             fcMapLayers: [
                 {
-                    layerID: 8, fcPropName: 'FunctionalClass', idPropName: 'OBJECTID', outFields: ['OBJECTID', 'FunctionalClass', 'AH_Route', 'AH_Section'],
+                    layerID: 8, fcPropName: 'functionalclass', idPropName: 'objectid', outFields: ['objectid', 'functionalclass', 'ah_route', 'ah_section'],
                     roadTypeMap: { Fw: [1, 2], Ew: [], MH: [3], mH: [4], PS: [5, 6], St: [7] }, maxRecordCount: 1000, supportsPagination: false
                 }
             ],
@@ -228,11 +228,11 @@
             getFeatureRoadType: function (feature, layer) {
                 var attr = feature.attributes;
                 var fc = parseInt(attr[layer.fcPropName]);
-                var roadID = parseInt(attr.AH_Route);
+                var roadID = parseInt(attr.ah_route);
                 var usHwys = [49, 59, 61, 62, 63, 64, 65, 67, 70, 71, 79, 82, 165, 167, 270, 271, 278, 371, 412, 425];
                 var isUS = usHwys.includes(roadID);
                 var isState = roadID < 613;
-                var isBiz = attr.AH_Section[attr.AH_Section.length - 1] === 'B';
+                var isBiz = attr.ah_section[attr.ah_section.length - 1] === 'B';
                 if (fc > 3 && isUS) {
                     fc = isBiz ? 4 : 3;
                 } else if (fc > 4 && isState) {
