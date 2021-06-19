@@ -8,7 +8,7 @@
 // // ==UserScript==
 // @name         WME FC Layer
 // @namespace    https://greasyfork.org/users/45389
-// @version      2021.06.03.001
+// @version      2021.06.20.001
 // @description  Adds a Functional Class layer for states that publish ArcGIS FC data.
 // @author       MapOMatic
 // @include      /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
@@ -1411,30 +1411,39 @@
             }
         },
         UT: {
-            baseUrl: 'https://maps.udot.utah.gov/arcgis/rest/services/Functional_Class/MapServer/',
+            baseUrl: 'https://maps.udot.utah.gov/randh/rest/services/ALRS_DT/Functional_Class/MapServer/',
             defaultColors: { Fw: '#ff00c5', Ew: '#4f33df', MH: '#149ece', mH: '#4ce600', PS: '#cfae0e', St: '#eeeeee' },
             zoomSettings: { maxOffset: [30, 15, 8, 4, 2, 1, 1, 1, 1, 1], excludeRoadTypes: [['St'], ['St'], ['St'], ['St'], [], [], [], [], [], [], []] },
             fcMapLayers: [
                 {
-                    layerID: 0, fcPropName: 'FC_CODE', idPropName: 'OBJECTID', outFields: ['*'/*'OBJECTID','FC_CODE'*/], roadTypeMap: { Fw: [1], Ew: [2, 20], MH: [3, 30], mH: [4, 40], PS: [5, 50, 6, 60], St: [7, 77] },
-                    maxRecordCount: 1000, supportsPagination: false
+                    layerID: 0, fcPropName: 'FUNCTIONAL_CLASS', idPropName: 'OBJECTID', outFields: ['OBJECTID','FUNCTIONAL_CLASS', 'ROUTE_ID'],
+                    roadTypeMap: { Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5, 6], St: [7] }, maxRecordCount: 1000, supportsPagination: false
                 }
             ],
-            information: { Source: 'TxDOT', Permission: 'Visible to R4+ or R3-AM' },
+            information: { Source: 'UDOT', Permission: 'Visible to R4+ or R3-AM' },
             getWhereClause: function (context) {
-                var clause = context.layer.fcPropName + '<=7';
-                if (context.mapContext.zoom < 4) {
-                    clause += ' OR ' + context.layer.fcPropName + '<7';
-                }
-                return clause;
+                // return null;
+                return context.layer.fcPropName + " NOT LIKE 'Proposed%'";
             },
             getFeatureRoadType: function (feature, layer) {
-                var routeId = feature.attributes.ROUTE_ID;
-                var fc = feature.attributes.FC_CODE;
-                if ([6, 40, 50, 89, 91, 163, 189, 191, 491].indexOf(routeId) > -1 && fc > 3) {
+                var attr = feature.attributes;
+                var fc = attr[layer.fcPropName];
+                var routeID = attr.ROUTE_ID;
+                var roadNum = parseInt(routeID.substring(0, 4));
+                switch (fc) {
+                    case 'Interstate': fc = 1; break;
+                    case 'Other Freeways and Expressways': fc = 2; break;
+                    case 'Other Principal Arterial': fc = 3; break;
+                    case 'Minor Arterial': fc = 4; break;
+                    case 'Major Collector': fc = 5; break
+                    case 'Minor Collector': fc = 6; break;
+                    default: fc = 7;
+                }
+                var re = /^(6|40|50|89|91|163|189|191|491)$/;
+                if (re.test(roadNum)) {
                     // US highway
                     fc = 3;
-                } else if (routeId <= 491 && fc > 4) {
+                } else if (roadNum <= 491 && fc > 4) {
                     // State highway
                     fc = 4;
                 }
