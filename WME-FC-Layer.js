@@ -1440,7 +1440,7 @@
                     default: fc = 7;
                 }
                 var re = /^(6|40|50|89|91|163|189|191|491)$/;
-                if (re.test(roadNum)) {
+                if (re.test(roadNum) && fc > 3) {
                     // US highway
                     fc = 3;
                 } else if (roadNum <= 491 && fc > 4) {
