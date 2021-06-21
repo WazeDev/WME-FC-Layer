@@ -171,32 +171,40 @@
             }
         },
         AZ: {
-            baseUrl: 'https://services6.arcgis.com/jTQSeSIplkoqFMZe/ArcGIS/rest/services/FunctionalClass/FeatureServer/',
+            baseUrl: 'https://services1.arcgis.com/XAiBIVuto7zeZj1B/arcgis/rest/services/ATIS_prod_gdb_1/FeatureServer/',
             defaultColors: { Fw: '#ff00c5', Ew: '#ff00c5', MH: '#149ece', mH: '#4ce600', PS: '#cfae0e', St: '#eeeeee' },
             zoomSettings: { maxOffset: [30, 15, 8, 4, 2, 1, 1, 1, 1, 1] },
             fcMapLayers: [
                 {
-                    layerID: 1, fcPropName: 'FuncCode', idPropName: 'OBJECTID',
-                    outFields: ['OBJECTID', 'FuncCode', 'OnRoad'],
-                    roadTypeMap: { Fw: [1, 11], Ew: [2, 3, 12], MH: [4, 14], mH: [6, 16], PS: [7, 17, 8, 18], St: [] }, maxRecordCount: 1000, supportsPagination: false
+                    layerID: 38, fcPropName: 'FunctionalClass', idPropName: 'OBJECTID',
+                    outFields: ['OBJECTID', 'FunctionalClass', 'RouteId'],
+                    roadTypeMap: { Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5, 6], St: [7] }, maxRecordCount: 1000, supportsPagination: false
                 }
             ],
             information: { Source: 'ADOT', Permission: 'Visible to R4+ or R3-AM' },
             getWhereClause: function (context) {
-                return context.layer.fcPropName + ' NOT IN (9, 19)';
+                return null;
             },
-            // getFeatureRoadType: function (feature, layer) {
-            //     if (layer.getFeatureRoadType) {
-            //         return layer.getFeatureRoadType(feature);
-            //     } else {
-            //         return _stateSettings.global.getFeatureRoadType(feature, layer);
-            //     }
-            // }
             getFeatureRoadType: function (feature, layer) {
-                var roadID = feature.attributes.OnRoad.trim().replace(/  +/g, ' ');
+                var attr = feature.attributes;
+                var roadID = attr.RouteId.trim().replace(/  +/g, ' ');
                 var roadNum = parseInt(roadID.substring(2, 5));
-                var fc = parseInt(feature.attributes[layer.fcPropName]);
-                fc = (fc === 2) ? 4 : fc % 10;
+                var fc = attr[layer.fcPropName];
+                switch (fc) {
+                    case 'Rural Principal Arterial - Interstate':
+                    case 'Urban Principal Arterial - Interstate': fc = 1; break;
+                    case 'Rural Principal Arterial - Other Fwys & Expwys':
+                    case 'Urban Principal Arterial - Other Fwys & Expwys': fc = 2; break;
+                    case 'Rural Principal Arterial - Other':
+                    case 'Urban Principal Arterial - Other': fc = 3; break;
+                    case 'Rural Minor Arterial':
+                    case 'Urban Minor Arterial': fc = 4; break;
+                    case 'Rural Major Collector':
+                    case 'Urban Major Collector': fc = 5; break;
+                    case 'Rural Minor Collector':
+                    case 'Urban Minor Collector': fc = 6; break;
+                    default: fc = 7;
+                }
                 var azIH = [8, 10, 11, 17, 19, 40]; // Interstate hwys in AZ
                 var isUS = RegExp(/^U\D\d{3}\b/).test(roadID);
                 var isState = RegExp(/^S\D\d{3}\b/).test(roadID);
