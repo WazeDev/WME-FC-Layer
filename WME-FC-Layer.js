@@ -8,7 +8,7 @@
 // // ==UserScript==
 // @name         WME FC Layer
 // @namespace    https://greasyfork.org/users/45389
-// @version      2021.06.20.001
+// @version      2021.08.11.001
 // @description  Adds a Functional Class layer for states that publish ArcGIS FC data.
 // @author       MapOMatic
 // @include      /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
@@ -686,7 +686,8 @@
                     roadTypeMap: { Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5, 6], St: [7] }, maxRecordCount: 1000, supportsPagination: false
                 }
             ],
-            information: { Source: 'MaineDOT', Permission: 'Visible to R4+ or R3-AM' },
+            information: { Source: 'MaineDOT', Permission: 'Visible to R2+' },
+            isPermitted: function () { return _r >= 2; },
             getWhereClause: function (context) {
                 if (context.mapContext.zoom < 4) {
                     return context.layer.fcPropName + "<>'Local'";
@@ -757,7 +758,8 @@
                     roadTypeMap: { Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5, 6], St: [7] }, maxRecordCount: 1000, supportsPagination: false
                 }
             ],
-            information: { Source: 'MDOT', Permission: 'Visible to R4+ or R3-AM' },
+            information: { Source: 'MDOT', Permission: 'Visible to R2+' },
+            isPermitted: function () { return _r >= 2; },
             getWhereClause: function (context) {
                 if (context.mapContext.zoom < 4) {
                     return context.layer.fcPropName + "<>'7'";
@@ -899,8 +901,8 @@
                     roadTypeMap: { Fw: [1], Ew: [2], MH: [2, 3], mH: [4], PS: [5, 6], St: [7, 0] }, maxRecordCount: 1000, supportsPagination: false
                 }
             ],
-            isPermitted: function () { return _r >= 3; },
-            information: { Source: 'NH GRANIT', Permission: 'Visible to R3+' },
+            isPermitted: function () { return _r >= 2; },
+            information: { Source: 'NH GRANIT', Permission: 'Visible to R2+' },
             getWhereClause: function (context) {
                 if (context.mapContext.zoom < 4) {
                     return context.layer.fcPropName + "<>7 AND " + context.layer.fcPropName + "<>0";
@@ -1234,8 +1236,8 @@
                     roadTypeMap: { Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5, 6], St: [7, 0] }, maxRecordCount: 1000, supportsPagination: false
                 }
             ],
-            isPermitted: function () { return _r >= 3; },
-            information: { Source: 'RIDOT', Permission: 'Visible to R3+' },
+            isPermitted: function () { return _r >= 2; },
+            information: { Source: 'RIDOT', Permission: 'Visible to R2+' },
             getWhereClause: function (context) {
                 return (context.mapContext.zoom < 4) ? context.layer.fcPropName + " NOT IN (7,0)" : null;
             },
@@ -1468,7 +1470,8 @@
                     roadTypeMap: { Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5, 6], St: [7] }, maxRecordCount: 1000, supportsPagination: false
                 }
             ],
-            information: { Source: 'TxDOT', Permission: 'Visible to R4+ or R3-AM' },
+            information: { Source: 'VTrans', Permission: 'Visible to R2+' },
+            isPermitted: function () { return _r >= 2; },
             getWhereClause: function (context) {
                 if (context.mapContext.zoom < 4) {
                     return context.layer.fcPropName + "<>7 AND " + context.layer.fcPropName + "<>0";
