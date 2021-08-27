@@ -8,7 +8,7 @@
 // // ==UserScript==
 // @name         WME FC Layer
 // @namespace    https://greasyfork.org/users/45389
-// @version      2021.08.11.001
+// @version      2021.08.27.001
 // @description  Adds a Functional Class layer for states that publish ArcGIS FC data.
 // @author       MapOMatic
 // @include      /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
@@ -132,7 +132,7 @@
             isPermitted: function () { return _r >= 3; },
             information: { Source: 'ALDOT', Permission: 'Visible to R3+', Description: 'Federal and State highways set to a minimum of mH.' },
             getWhereClause: function (context) {
-                if (context.mapContext.zoom < 4) {
+                if (context.mapContext.zoom < 16) {
                     return context.layer.fcPropName + "<>7";
                 } else {
                     return null;
@@ -156,7 +156,7 @@
             ],
             information: { Source: 'Alaska DOT&PF', Permission: 'Visible to R4+ or R3-AM', Description: 'Raw unmodified FC data.' },
             getWhereClause: function (context) {
-                if (context.mapContext.zoom < 4) {
+                if (context.mapContext.zoom < 16) {
                     return context.layer.fcPropName + "<>7";
                 } else {
                     return null;
@@ -273,7 +273,7 @@
                 Description: 'Please consult with a state manager before making any changes to road types based on the data presented.'
             },
             getWhereClause: function (context) {
-                if (context.mapContext.zoom < 4) {
+                if (context.mapContext.zoom < 16) {
                     return context.layer.fcPropName + "<>'7'";
                 } else {
                     return null;
@@ -327,7 +327,7 @@
             ],
             information: { Source: 'Delaware FirstMap', Permission: 'Visible to R4+ or R3-AM', Description: 'Raw unmodified FC data.' },
             getWhereClause: function (context) {
-                if (context.mapContext.zoom < 4) {
+                if (context.mapContext.zoom < 16) {
                     return context.layer.fcPropName + " <> 'Local'";
                 } else {
                     return null;
@@ -434,7 +434,7 @@
             ],
             information: { Source: 'HDOT', Permission: 'Visible to R4+ or R3-AM', Description: 'Raw unmodified FC data.' },
             getWhereClause: function (context) {
-                if (context.mapContext.zoom < 4) {
+                if (context.mapContext.zoom < 16) {
                     return context.layer.fcPropName + "<>7";
                 } else {
                     return null;
@@ -488,7 +488,7 @@
             isPermitted: function () { return _r >= 4; },
             information: { Source: 'IDOT', Permission: 'Visible to R4+' },
             getWhereClause: function (context) {
-                return context.mapContext.zoom < 4 ? "FC<>7" : null;
+                return context.mapContext.zoom < 16 ? "FC<>7" : null;
             },
             getFeatureRoadType: function (feature, layer) {
                 var attr = feature.attributes;
@@ -520,7 +520,7 @@
             information: { Source: 'INDOT', Description: 'Raw unmodified FC data.' },
             getWhereClause: function (context) {
                 var whereParts = ['TO_DATE IS NULL'];
-                if (context.mapContext.zoom < 4) {
+                if (context.mapContext.zoom < 16) {
                     whereParts += ' AND ' + context.layer.fcPropName + '<>7';
                 }
                 return whereParts;
@@ -547,7 +547,7 @@
             information: { Source: 'Iowa DOT', Permission: 'Visible to R4+ or R3-AM', Description: 'Additional colors denote unpaved PS and LS segements.' },
             getWhereClause: function (context) {
                 var theWhereClause = "FACILITY_TYPE<>'7'"; // Removed proposed roads
-                if (context.mapContext.zoom < 4) {
+                if (context.mapContext.zoom < 16) {
                     theWhereClause += " AND " + context.layer.fcPropName + "<>'7'";
                 }
                 return theWhereClause;
@@ -586,9 +586,10 @@
                     roadTypeMap: { Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5, 6], St: [7] }, maxRecordCount: 1000, supportsPagination: false
                 }
             ],
-            information: { Source: 'KDOT', Permission: 'Visible to R4+ or R3-AM' },
+            isPermitted: function () { return _r >= 3 || _isAM; },
+            information: { Source: 'KDOT', Permission: 'Visible to area managers' },
             getWhereClause: function (context) {
-                if (context.mapContext.zoom < 4) {
+                if (context.mapContext.zoom < 16) {
                     return context.layer.fcPropName + "<>'7'";
                 } else {
                     return null;
@@ -622,7 +623,7 @@
             isPermitted: function () { return true; },
             information: { Source: 'KYTC' },
             getWhereClause: function (context) {
-                if (context.mapContext.zoom < 4) {
+                if (context.mapContext.zoom < 16) {
                     return context.layer.fcPropName + "<>'7'";
                 } else {
                     return null;
@@ -654,7 +655,7 @@
             ],
             information: { Source: 'LaDOTD', Permission: 'Visible to R4+ or R3-AM' },
             getWhereClause: function (context) {
-                if (context.mapContext.zoom < 4) {
+                if (context.mapContext.zoom < 16) {
                     return context.layer.fcPropName + "<>'7'"; // OR State_Route LIKE 'US%' OR State_Route LIKE 'LA%'";
                 } else {
                     return null;
@@ -689,7 +690,7 @@
             information: { Source: 'MaineDOT', Permission: 'Visible to R2+' },
             isPermitted: function () { return _r >= 2; },
             getWhereClause: function (context) {
-                if (context.mapContext.zoom < 4) {
+                if (context.mapContext.zoom < 16) {
                     return context.layer.fcPropName + "<>'Local'";
                 } else {
                     return null;
@@ -728,7 +729,7 @@
             ],
             information: { Source: 'MDOT', Permission: 'Visible to R4+ or R3-AM' },
             getWhereClause: function (context) {
-                if (context.mapContext.zoom < 4) {
+                if (context.mapContext.zoom < 16) {
                     return "(FUNCTIONAL_CLASS < 7 OR ID_PREFIX IN('MD'))";
                 } else {
                     return null;
@@ -761,7 +762,7 @@
             information: { Source: 'MDOT', Permission: 'Visible to R2+' },
             isPermitted: function () { return _r >= 2; },
             getWhereClause: function (context) {
-                if (context.mapContext.zoom < 4) {
+                if (context.mapContext.zoom < 16) {
                     return context.layer.fcPropName + "<>'7'";
                 } else {
                     return null;
@@ -791,7 +792,7 @@
             isPermitted: function () { return true; },
             information: { Source: 'MDOT', Description: 'Raw unmodified FC data.' },
             getWhereClause: function (context) {
-                if (context.mapContext.zoom < 4) {
+                if (context.mapContext.zoom < 16) {
                     return context.layer.fcPropName + '<>7';
                 } else {
                     return null;
@@ -818,7 +819,7 @@
             isPermitted: function () { return _r >= 3 || (_r >= 2 && _isAM); },
             information: { Source: 'MoDOT', Permission: 'Visible to R3+ or R2-AM' },
             getWhereClause: function (context) {
-                if (context.mapContext.zoom < 1) {
+                if (context.mapContext.zoom < 13) {
                     return '1=0'; //WME very laggy at zoom 0
                 } else {
                     // Remove duplicate rows, but suss out interstate business loops
@@ -866,7 +867,7 @@
             isPermitted: function () { return _r >= 3; },
             information: { Source: 'MDT', Permission: 'Visible to R3+' },
             getWhereClause: function (context) {
-                if (context.mapContext.zoom < 4) {
+                if (context.mapContext.zoom < 16) {
                     return context.layer.fcPropName + "<>'LOCAL'";
                 } else {
                     return null;
@@ -904,7 +905,7 @@
             isPermitted: function () { return _r >= 2; },
             information: { Source: 'NH GRANIT', Permission: 'Visible to R2+' },
             getWhereClause: function (context) {
-                if (context.mapContext.zoom < 4) {
+                if (context.mapContext.zoom < 16) {
                     return context.layer.fcPropName + "<>7 AND " + context.layer.fcPropName + "<>0";
                 } else {
                     return null;
@@ -999,7 +1000,7 @@
             isPermitted: function () { return _r >= 3; },
             information: { Source: 'NCDOT', Permission: 'Visible to R3+' },
             getWhereClause: function (context) {
-                if (context.mapContext.zoom < 4) {
+                if (context.mapContext.zoom < 16) {
                     var clause = '(' + context.layer.fcPropName + " < 7 OR RouteClass IN ('I','FED','NC','RMP','US'))";
                     return clause;
                 } else {
@@ -1094,7 +1095,7 @@
             ],
             information: { Source: 'NDDOT', Permission: 'Visible to R4+ or R3-AM' },
             getWhereClause: function (context) {
-                if (context.mapContext.zoom < 4) {
+                if (context.mapContext.zoom < 16) {
                     if (context.layer.layerID !== 16) return context.layer.fcPropName + "<>'Local'";
                 } else {
                     return null;
@@ -1118,7 +1119,7 @@
             isPermitted: function () { return true; },
             information: { Source: 'ODOT' },
             getWhereClause: function (context) {
-                if (context.mapContext.zoom < 4) {
+                if (context.mapContext.zoom < 16) {
                     var clause = '(' + context.layer.fcPropName + " < 7 OR ROUTE_TYPE IN ('CR','SR','US'))";
                     return clause;
                 } else {
@@ -1149,7 +1150,7 @@
             ],
             information: { Source: 'ODOT', Permission: 'Visible to R4+ or R3-AM' },
             getWhereClause: function (context) {
-                if (context.mapContext.zoom < 4) {
+                if (context.mapContext.zoom < 16) {
                     return context.layer.fcPropName + " < 7 OR ODOTROUTECLASS IN ('U','S','I')";
                 } else {
                     return null;
@@ -1187,7 +1188,7 @@
             ],
             information: { Source: 'ODOT', Permission: 'Visible to R4+ or R3-AM', Description: 'Raw unmodified FC data.' },
             getWhereClause: function (context) {
-                if (context.mapContext.zoom < 4) {
+                if (context.mapContext.zoom < 16) {
                     return context.layer.fcPropName + " <> '7'";
                 } else {
                     return null;
@@ -1215,7 +1216,7 @@
             isPermitted: function () { return _r >= 4; },
             information: { Source: 'PennDOT', Permission: 'Visible to R4+', Description: 'Raw unmodified FC data.' },
             getWhereClause: function (context) {
-                return (context.mapContext.zoom < 4) ? context.layer.fcPropName + " NOT IN ('09','19')" : null;
+                return (context.mapContext.zoom < 16) ? context.layer.fcPropName + " NOT IN ('09','19')" : null;
             },
             getFeatureRoadType: function (feature, layer) {
                 if (layer.getFeatureRoadType) {
@@ -1239,7 +1240,7 @@
             isPermitted: function () { return _r >= 2; },
             information: { Source: 'RIDOT', Permission: 'Visible to R2+' },
             getWhereClause: function (context) {
-                return (context.mapContext.zoom < 4) ? context.layer.fcPropName + " NOT IN (7,0)" : null;
+                return (context.mapContext.zoom < 16) ? context.layer.fcPropName + " NOT IN (7,0)" : null;
             },
             getFeatureRoadType: function (feature, layer) {
                 var fc = parseInt(feature.attributes[layer.fcPropName]);
@@ -1307,7 +1308,7 @@
             }],
             information: { Source: 'SDDOT', Permission: 'Visible to R4+ or R3-AM', Description: 'Additional colors denote unpaved PS and LS segements.' },
             getWhereClause: function (context) {
-                if (context.mapContext.zoom < 4) {
+                if (context.mapContext.zoom < 16) {
                     return context.layer.fcPropName + " NOT IN (9,19)";
                 } else {
                     return null;
@@ -1356,7 +1357,7 @@
                 Description: 'Raw unmodified FC data for the Memphis and Nashville regions only.'
             },
             getWhereClause: function (context) {
-                if (context.mapContext.zoom < 4) {
+                if (context.mapContext.zoom < 16) {
                     return context.layer.fcPropName + ' NOT IN (0,7,9,19)';
                 } else {
                     return context.layer.fcPropName + ' <> 0';
@@ -1381,7 +1382,7 @@
             information: { Source: 'TxDOT', Permission: 'Visible to R2+' },
             getWhereClause: function (context) {
                 var where = " F_SYSTEM IS NOT NULL AND RTE_PRFX IS NOT NULL";
-                if (context.mapContext.zoom < 4) {
+                if (context.mapContext.zoom < 16) {
                     where += ' AND ' + context.layer.fcPropName + " <> 7";
                 }
                 return where;
@@ -1473,7 +1474,7 @@
             information: { Source: 'VTrans', Permission: 'Visible to R2+' },
             isPermitted: function () { return _r >= 2; },
             getWhereClause: function (context) {
-                if (context.mapContext.zoom < 4) {
+                if (context.mapContext.zoom < 16) {
                     return context.layer.fcPropName + "<>7 AND " + context.layer.fcPropName + "<>0";
                 } else {
                     return null;
@@ -1506,7 +1507,7 @@
             information: { Source: 'VDOT', Permission: 'Visible to R4+ or R3-AM' },
             srExceptions: [217, 302, 303, 305, 308, 310, 313, 314, 315, 317, 318, 319, 320, 321, 322, 323, 324, 325, 326, 327, 328, 329, 330, 331, 332, 333, 334, 335, 336, 339, 341, 342, 343, 344, 345, 346, 347, 348, 350, 353, 355, 357, 358, 361, 362, 363, 364, 365, 366, 367, 368, 369, 370, 371, 372, 373, 374, 375, 376, 377, 378, 379, 382, 383, 384, 385, 386, 387, 388, 389, 390, 391, 392, 393, 394, 396, 397, 398, 399, 785, 895],
             getWhereClause: function (context) {
-                if (context.mapContext.zoom < 4) {
+                if (context.mapContext.zoom < 16) {
                     return context.layer.fcPropName + '<>7';
                 } else {
                     //NOTE: As of 9/14/2016 there does not appear to be any US/SR/VA labeled routes with FC = 7.
@@ -1553,7 +1554,7 @@
             ],
             information: { Source: 'WSDOT', Permission: 'Visible to R4+ or R3-AM', Description: 'Raw unmodified FC data.' },
             getWhereClause: function (context) {
-                if (context.mapContext.zoom < 4) {
+                if (context.mapContext.zoom < 16) {
                     return context.layer.fcPropName + " <> 7";
                 } else {
                     return null;
@@ -1577,7 +1578,7 @@
             information: { Source: 'WV DOT' },
             isPermitted: function () { return true; },
             getWhereClause: function (context) {
-                if (context.mapContext.zoom < 4) {
+                if (context.mapContext.zoom < 16) {
                     return context.layer.fcPropName + ' NOT IN (9,19)';
                 } else {
                     return null;
@@ -1654,7 +1655,7 @@
             ],
             information: { Source: 'WYDOT', Permission: 'Visible to R4+ or R3-AM', Description: 'Minimum suggested FC.' },
             getWhereClause: function (context) {
-                if (context.mapContext.zoom < 4) {
+                if (context.mapContext.zoom < 16) {
                     return context.layer.fcPropName + " <> 'Local'";
                 } else {
                     return null;
@@ -1770,7 +1771,7 @@
     }
 
     function getLineWidth() {
-        return 12 * Math.pow(1.15, (W.map.getZoom() - 1));
+        return 12 * Math.pow(1.15, (W.map.getZoom() - 13));
     }
 
     function sortArray(array) {
