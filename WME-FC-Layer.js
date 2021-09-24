@@ -1834,7 +1834,7 @@
         } else if (queryType === 'paged') {
             // TODO
         } else {
-            url += '&returnGeometry=true&maxAllowableOffset=' + state.zoomSettings.maxOffset[zoom];
+            url += '&returnGeometry=true&maxAllowableOffset=' + state.zoomSettings.maxOffset[zoom - 12];
             url += '&outFields=' + encodeURIComponent(layer.outFields.join(','));
             if (queryType === 'idRange') {
                 var idPropName = context.layer.idPropName;
