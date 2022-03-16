@@ -1525,7 +1525,7 @@
             defaultColors: { Fw: '#ff00c5', Ew: '#ff00c5', MH: '#149ece', mH: '#4ce600', PS: '#cfae0e', St: '#eeeeee' },
             zoomSettings: { maxOffset: [30, 15, 8, 4, 2, 1, 1, 1, 1, 1], excludeRoadTypes: [['St'], ['St'], ['St'], ['St'], [], [], [], [], [], [], []] },
             fcMapLayers: [
-                { layerID: 0, fcPropName: 'FUNCTIONAL_CLASS_ID', idPropName: 'OBJECTID', outFields: ['OBJECTID', 'FUNCTIONAL_CLASS_ID', 'RTE_NM'], maxRecordCount: 2000, supportsPagination: true, roadTypeMap: { Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5, 6], St: [7] } },
+                { layerID: 0, fcPropName: 'STATE_FUNCT_CLASS_ID', idPropName: 'OBJECTID', outFields: ['OBJECTID', 'STATE_FUNCT_CLASS_ID', 'RTE_NM'], maxRecordCount: 2000, supportsPagination: true, roadTypeMap: { Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5, 6], St: [7] } },
                 { layerID: 1, fcPropName: 'STATE_FUNCT_CLASS_ID', idPropName: 'OBJECTID', outFields: ['OBJECTID', 'STATE_FUNCT_CLASS_ID', 'RTE_NM', 'ROUTE_NO'], maxRecordCount: 2000, supportsPagination: true, roadTypeMap: { Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5, 6], St: [7] } },
                 { layerID: 3, fcPropName: 'TMPD_FC', idPropName: 'OBJECTID', outFields: ['OBJECTID', 'TMPD_FC', 'RTE_NM'], maxRecordCount: 2000, supportsPagination: true, roadTypeMap: { Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5, 6], St: [7] } }
             ],
