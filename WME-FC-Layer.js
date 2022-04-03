@@ -8,7 +8,7 @@
 // // ==UserScript==
 // @name         WME FC Layer
 // @namespace    https://greasyfork.org/users/45389
-// @version      2021.11.30.001
+// @version      2022.03.16.001
 // @description  Adds a Functional Class layer for states that publish ArcGIS FC data.
 // @author       MapOMatic
 // @include      /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
@@ -312,6 +312,31 @@
                         (fips === 37 && (route === 'GRAND AV' || route === 'S H6'))) { fc = 3; }
                     else if (fips === 67 && route === 'BAYFIELDPAY') { fc = 4; }
                 }
+                return _stateSettings.global.getRoadTypeFromFC(fc, layer);
+            }
+        },
+        CT: {
+            baseUrl: 'https://services1.arcgis.com/FCaUeJ5SOVtImake/ArcGIS/rest/services/CTDOT_Roadway_Classification_and_Characteristic_Data/FeatureServer/',
+            defaultColors: { Fw: '#ff00c5', Ew: '#4f33df', MH: '#149ece', mH: '#4ce600', PS: '#cfae0e', St: '#eeeeee' },
+            zoomSettings: { maxOffset: [30, 15, 8, 4, 2, 1, 1, 1, 1, 1], excludeRoadTypes: [['St'], ['St'], ['St'], ['St'], [], [], [], [], [], [], []] },
+            fcMapLayers: [
+                {
+                    layerID: 3, fcPropName: 'FC_FC_CODE', idPropName: 'OBJECTID', outFields: ['OBJECTID', 'FC_FC_CODE'],
+                    roadTypeMap: { Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5, 6], St: [7] }, maxRecordCount: 1000, supportsPagination: false
+                }
+            ],
+            isPermitted: function () { return _r >= 3; },
+            information: { Source: 'CTDOT', Permission: 'Visible to R3+', Description: 'Federal and State highways set to a minimum of mH.' },
+            getWhereClause: function (context) {
+                if (context.mapContext.zoom < 16) {
+                    return context.layer.fcPropName + "<>7";
+                } else {
+                    return null;
+                }
+            },
+            getFeatureRoadType: function (feature, layer) {
+                var fc = parseInt(feature.attributes[layer.fcPropName]);
+                if (fc > 4 && feature.attributes.State_Sys === 'YES') { fc = 4; }
                 return _stateSettings.global.getRoadTypeFromFC(fc, layer);
             }
         },
