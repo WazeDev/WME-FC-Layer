@@ -918,7 +918,7 @@
             }
         },
         NH: {
-            baseUrl: 'https://nhgeodata.unh.edu/nhgeodata/rest/services/GRANITView/GV_BaseLayers/MapServer/',
+            baseUrl: 'https://nhgeodata.unh.edu/nhgeodata/rest/services/TN/RoadsForDOTViewer/MapServer/',
             defaultColors: { Fw: '#ff00c5', Ew: '#4f33df', MH: '#149ece', mH: '#4ce600', PS: '#cfae0e', St: '#eeeeee' },
             zoomSettings: { maxOffset: [30, 15, 8, 4, 2, 1, 1, 1, 1, 1], excludeRoadTypes: [[], [], [], [], [], [], [], [], [], [], []] },
             fcMapLayers: [
