@@ -8,7 +8,7 @@
 // // ==UserScript==
 // @name         WME FC Layer
 // @namespace    https://greasyfork.org/users/45389
-// @version      2022.06.10.001
+// @version      2022.06.22.001
 // @description  Adds a Functional Class layer for states that publish ArcGIS FC data.
 // @author       MapOMatic
 // @include      /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
@@ -341,12 +341,12 @@
             }
         },
         DE: {
-            baseUrl: 'https://firstmap.delaware.gov/arcgis/rest/services/Transportation/DE_FUNCTIONAL_CLASSIFICATION/MapServer/',
+            baseUrl: 'https://enterprise.firstmap.delaware.gov/arcgis/rest/services/Transportation/DE_Roadways_Main/FeatureServer/',
             defaultColors: { Fw: '#ff00c5', Ew: '#4f33df', MH: '#149ece', mH: '#4ce600', PS: '#cfae0e', St: '#eeeeee' },
             zoomSettings: { maxOffset: [30, 15, 8, 4, 2, 1, 1, 1, 1, 1], excludeRoadTypes: [['St'], ['St'], ['St'], ['St'], [], [], [], [], [], [], []] },
             fcMapLayers: [
                 {
-                    layerID: 0, fcPropName: 'VALUE_TEXT', idPropName: 'OBJECTID', outFields: ['OBJECTID', 'VALUE_TEXT'], maxRecordCount: 1000, supportsPagination: false,
+                    layerID: 16, fcPropName: 'VALUE_TEXT', idPropName: 'OBJECTID', outFields: ['OBJECTID', 'VALUE_TEXT'], maxRecordCount: 1000, supportsPagination: false,
                     roadTypeMap: { Fw: ['Interstate'], Ew: ['Other Expressways & Freeway'], MH: ['Other Principal Arterials'], mH: ['Minor Arterial'], PS: ['Major Collector', 'Minor Collector'], St: ['Local'] }
                 }
             ],
