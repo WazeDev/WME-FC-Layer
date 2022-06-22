@@ -8,7 +8,7 @@
 // // ==UserScript==
 // @name         WME FC Layer
 // @namespace    https://greasyfork.org/users/45389
-// @version      2022.04.05.001
+// @version      2022.06.10.001
 // @description  Adds a Functional Class layer for states that publish ArcGIS FC data.
 // @author       MapOMatic
 // @include      /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
@@ -918,12 +918,12 @@
             }
         },
         NH: {
-            baseUrl: 'https://nhgeodata.unh.edu/nhgeodata/rest/services/GRANITView/GV_BaseLayers/MapServer/',
+            baseUrl: 'https://nhgeodata.unh.edu/nhgeodata/rest/services/TN/RoadsForDOTViewer/MapServer/',
             defaultColors: { Fw: '#ff00c5', Ew: '#4f33df', MH: '#149ece', mH: '#4ce600', PS: '#cfae0e', St: '#eeeeee' },
             zoomSettings: { maxOffset: [30, 15, 8, 4, 2, 1, 1, 1, 1, 1], excludeRoadTypes: [[], [], [], [], [], [], [], [], [], [], []] },
             fcMapLayers: [
                 {
-                    layerID: 18, fcPropName: 'FUNCT_SYSTEM', idPropName: 'OBJECTID', outFields: ['OBJECTID', 'FUNCT_SYSTEM', 'STREET_ALIASES', 'TIER'],
+                    layerID: 0, fcPropName: 'FUNCT_SYSTEM', idPropName: 'OBJECTID', outFields: ['OBJECTID', 'FUNCT_SYSTEM', 'STREET_ALIASES', 'TIER'],
                     roadTypeMap: { Fw: [1], Ew: [2], MH: [2, 3], mH: [4], PS: [5, 6], St: [7, 0] }, maxRecordCount: 1000, supportsPagination: false
                 }
             ],
