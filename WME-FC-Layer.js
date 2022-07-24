@@ -1,14 +1,7 @@
-/* global W */
-/* global OpenLayers */
-/* global I18n */
-/* global unsafeWindow */
-/* global GM_info */
-/* global WazeWrap */
-
 // // ==UserScript==
 // @name         WME FC Layer
 // @namespace    https://greasyfork.org/users/45389
-// @version      2022.07.14.001
+// @version      2022.07.24.001
 // @description  Adds a Functional Class layer for states that publish ArcGIS FC data.
 // @author       MapOMatic
 // @include      /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
@@ -55,6 +48,13 @@
 // @connect      wyoroad.info
 // ==/UserScript==
 
+/* global W */
+/* global OpenLayers */
+/* global I18n */
+/* global unsafeWindow */
+/* global GM_info */
+/* global WazeWrap */
+
 /* eslint-disable */
 
 (function () {
@@ -79,6 +79,7 @@
     var _r;
     var _mapLayerZIndex = 334;
     var _betaIDs = [103400892];
+    var MIN_ZOOM_LEVEL = 11;
     var _statesHash = {
         'Alabama': 'AL', 'Alaska': 'AK', 'American Samoa': 'AS', 'Arizona': 'AZ', 'Arkansas': 'AR', 'California': 'CA', 'Colorado': 'CO', 'Connecticut': 'CT', 'Delaware': 'DE', 'District of Columbia': 'DC',
         'Federated States Of Micronesia': 'FM', 'Florida': 'FL', 'Georgia': 'GA', 'Guam': 'GU', 'Hawaii': 'HI', 'Idaho': 'ID', 'Illinois': 'IL', 'Indiana': 'IN', 'Iowa': 'IA', 'Kansas': 'KS',
@@ -1714,10 +1715,14 @@
         }
     };
 
-    function log(message, level) {
-        if (message && (!level || (level <= _debugLevel))) {
-            console.log('FC Layer: ', message);
-        }
+    function log(message) {
+        console.log('FC Layer: ', message);
+    }
+    function debugLog(message) {
+        console.debug('FC Layer: ', message);
+    }
+    function errorLog(message) {
+        console.error('FC Layer: ', message);
     }
 
     function dynamicSort(property) {
@@ -1791,7 +1796,7 @@
             _settings.lastVersion = _scriptVersion;
             _settings.layerVisible = _mapLayer.visibility;
             localStorage.setItem(_settingsStoreName, JSON.stringify(_settings));
-            log('Settings saved', 1);
+            // debugLog('Settings saved');
         }
     }
 
@@ -1875,7 +1880,7 @@
 
     function convertFcToRoadTypeVectors(feature, state, stateAbbr, layer, zoom) {
         var roadType = state.getFeatureRoadType(feature, layer);
-        log(feature, 3);
+        // debugLog(feature);
         var zIndex = _stateSettings.global.roadTypes.indexOf(roadType) * 100;
         var vectors = [];
         var lineFeatures = [];
@@ -1907,13 +1912,13 @@
 
     function fetchLayerFC(context) {
         var url = getUrl(context, 'idsOnly');
-        log(url, 2);
+        // debugLog(url);
         if (!context.parentContext.cancel) {
             return getAsync(url, context).bind(context).then(function (res) {
                 var ids = $.parseJSON(res.responseText);
                 if (!ids.objectIds) ids.objectIds = [];
                 sortArray(ids.objectIds);
-                log(ids, 2);
+                // debugLog(ids);
                 return ids;
             }).then(function (res) {
                 var context = this;
@@ -1928,15 +1933,15 @@
                         idRanges.push({ range: [res.objectIds[currentIndex], res.objectIds[nextIndex]], idFieldName: res.objectIdFieldName });
                         currentIndex = nextIndex + 1;
                     }
-                    log(context.layer.layerID, 2);
-                    log(idRanges, 2);
+                    // debugLog(context.layer.layerID);
+                    // debugLog(idRanges);
                 }
                 return idRanges;
             }).map(function (idRange) {
                 var context = this;
                 if (!context.parentContext.cancel) {
                     var url = getUrl(this, 'idRange', idRange);
-                    log(url, 2);
+                    // debugLog(url);
                     return getAsync(url, context).then(function (res) {
                         var context = res.context;
                         if (!context.parentContext.cancel) {
@@ -1945,7 +1950,7 @@
                             //     _mapLayer.removeAllFeatures();
                             // }
                             context.parentContext.callCount++;
-                            log('Feature Count=' + (features ? features.length : 0), 2);
+                            // debugLog('Feature Count=' + (features ? features.length : 0));
                             features = features ? features : [];
                             var vectors = [];
                             features.forEach(function (feature) {
@@ -1962,7 +1967,7 @@
                         }
                     });
                 } else {
-                    log('Async call cancelled', 1);
+                    // debugLog('Async call cancelled');
                 }
             });
         }
@@ -1989,58 +1994,64 @@
         $('#fc-loading-indicator').text('Loading FC...');
 
         var mapContext = { zoom: W.map.getZoom(), extent: W.map.getExtent() };
-        var contexts = [];
-        var parentContext = { callCount: 0,/*existingFcFeatureUniqueIds:{}, addedFcFeatureUniqueIds:[],*/ startTime: Date.now() };
-        // _mapLayer.features.forEach(function(vectorFeature) {
-        //     var fcFeatureUniqueId = vectorFeature.attributes.fcFeatureUniqueId;
-        //     var existingFcFeatureUniqueIdArray = parentContext.existingFcFeatureUniqueIds[fcFeatureUniqueId];
-        //     if (!existingFcFeatureUniqueIdArray) {
-        //         existingFcFeatureUniqueIdArray = [];
-        //         parentContext.existingFcFeatureUniqueIds[fcFeatureUniqueId] = existingFcFeatureUniqueIdArray;
-        //     }
-        //     existingFcFeatureUniqueIdArray.push(vectorFeature);
-        // });
-        if (_lastContext) _lastContext.cancel = true;
-        _lastContext = parentContext;
-        getVisibleStateAbbrs().forEach(function (stateAbbr) {
-            contexts.push({ parentContext: parentContext, stateAbbr: stateAbbr, mapContext: mapContext });
-        });
-        var map = Promise.map(contexts, function (context) {
-            return fetchStateFC(context);
-        }).bind(parentContext).then(function (statesVectorArrays) {
-            if (!this.cancel) {
-                _mapLayer.removeAllFeatures();
-                statesVectorArrays.forEach(function (vectorsArray) {
-                    vectorsArray.forEach(function (vectors) {
-                        vectors.forEach(function (vector) {
-                            vector.forEach(function (vectorFeature) {
-                                _mapLayer.addFeatures(vectorFeature);
+        console.log(mapContext.zoom);
+        if (mapContext.zoom > MIN_ZOOM_LEVEL) {
+            var contexts = [];
+            var parentContext = { callCount: 0,/*existingFcFeatureUniqueIds:{}, addedFcFeatureUniqueIds:[],*/ startTime: Date.now() };
+            // _mapLayer.features.forEach(function(vectorFeature) {
+            //     var fcFeatureUniqueId = vectorFeature.attributes.fcFeatureUniqueId;
+            //     var existingFcFeatureUniqueIdArray = parentContext.existingFcFeatureUniqueIds[fcFeatureUniqueId];
+            //     if (!existingFcFeatureUniqueIdArray) {
+            //         existingFcFeatureUniqueIdArray = [];
+            //         parentContext.existingFcFeatureUniqueIds[fcFeatureUniqueId] = existingFcFeatureUniqueIdArray;
+            //     }
+            //     existingFcFeatureUniqueIdArray.push(vectorFeature);
+            // });
+            if (_lastContext) _lastContext.cancel = true;
+            _lastContext = parentContext;
+            getVisibleStateAbbrs().forEach(function (stateAbbr) {
+                contexts.push({ parentContext: parentContext, stateAbbr: stateAbbr, mapContext: mapContext });
+            });
+            var map = Promise.map(contexts, function (context) {
+                return fetchStateFC(context);
+            }).bind(parentContext).then(function (statesVectorArrays) {
+                if (!this.cancel) {
+                    _mapLayer.removeAllFeatures();
+                    statesVectorArrays.forEach(function (vectorsArray) {
+                        vectorsArray.forEach(function (vectors) {
+                            vectors.forEach(function (vector) {
+                                vector.forEach(function (vectorFeature) {
+                                    _mapLayer.addFeatures(vectorFeature);
+                                });
                             });
                         });
                     });
-                });
-                //buildTable();
-                // for(var fcFeatureUniqueId in this.existingFcFeatureUniqueIds) {
-                //     if(this.addedFcFeatureUniqueIds.indexOf(fcFeatureUniqueId) === -1) {
-                //         if (!this.cancel) _mapLayer.removeFeatures(this.existingFcFeatureUniqueIds[fcFeatureUniqueId]);
-                //     }
-                // }
-                log('TOTAL RETRIEVAL TIME = ' + (Date.now() - parentContext.startTime), 1);
-                log(statesVectorArrays, 1);
-            }
-            return statesVectorArrays;
-        }).catch(function (e) {
-            $('#fc-loading-indicator').text('FC Error! (check console for details)');
-            log(e, 0);
-        }).finally(function () {
-            _fcCallCount -= 1;
-            if (_fcCallCount === 0) {
-                $('#fc-loading-indicator').text('');
-            }
-        });
+                    //buildTable();
+                    // for(var fcFeatureUniqueId in this.existingFcFeatureUniqueIds) {
+                    //     if(this.addedFcFeatureUniqueIds.indexOf(fcFeatureUniqueId) === -1) {
+                    //         if (!this.cancel) _mapLayer.removeFeatures(this.existingFcFeatureUniqueIds[fcFeatureUniqueId]);
+                    //     }
+                    // }
+                    // debugLog('TOTAL RETRIEVAL TIME = ' + (Date.now() - parentContext.startTime));
+                    // debugLog(statesVectorArrays);
+                }
+                return statesVectorArrays;
+            }).catch(function (e) {
+                $('#fc-loading-indicator').text('FC Error! (check console for details)');
+                errorLog(e);
+            }).finally(function () {
+                _fcCallCount -= 1;
+                if (_fcCallCount === 0) {
+                    $('#fc-loading-indicator').text('');
+                }
+            });
 
-        _fcCallCount += 1;
-        _lastPromise = map;
+            _fcCallCount += 1;
+            _lastPromise = map;
+        } else {
+            // if zoomed out too far, clear the layer
+            _mapLayer.removeAllFeatures();
+        }
     }
 
     function onLayerCheckboxChanged(checked) {
@@ -2108,7 +2119,7 @@
 
         var checkLayerZIndex = function () {
             if (_mapLayer.getZIndex() != _mapLayerZIndex) {
-                log("ADJUSTED FC LAYER Z-INDEX " + _mapLayerZIndex + ', ' + _mapLayer.getZIndex(), 1);
+                // ("ADJUSTED FC LAYER Z-INDEX " + _mapLayerZIndex + ', ' + _mapLayer.getZIndex());
                 _mapLayer.setZIndex(_mapLayerZIndex);
             }
         };
@@ -2243,7 +2254,7 @@
         initGui();
         W.prefs.on("change:isImperial", function () { initUserPanel(); loadSettingsFromStorage(); });
         fetchAllFC();
-        log('Initialized.', 0);
+        log('Initialized.');
     }
 
     function bootstrap() {
@@ -2253,17 +2264,17 @@
             W.model && W.model.states && W.model.states.getObjectArray().length &&
             W.map && W.loginManager.user &&
             WazeWrap.Ready) {
-            log('Initializing...', 0);
+            log('Initializing...');
 
             init();
         } else {
-            log('Bootstrap failed. Trying again...', 0);
+            log('Bootstrap failed. Trying again...');
             unsafeWindow.setTimeout(function () {
                 bootstrap();
             }, 1000);
         }
     }
 
-    log('Bootstrap...', 0);
+    log('Bootstrap...');
     bootstrap();
 })();
