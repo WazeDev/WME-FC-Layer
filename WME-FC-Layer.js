@@ -1,7 +1,7 @@
 // // ==UserScript==
 // @name         WME FC Layer
 // @namespace    https://greasyfork.org/users/45389
-// @version      2022.07.28.002
+// @version      2022.07.28.003
 // @description  Adds a Functional Class layer for states that publish ArcGIS FC data.
 // @author       MapOMatic
 // @include      /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
@@ -2482,15 +2482,17 @@ function fetchAllFC() {
 }
 
 function onLayerCheckboxChanged(checked) {
-    _mapLayer.setVisibility(checked);
+    setEnabled(checked);
+    //_mapLayer.setVisibility(checked);
 }
 
 function onLayerVisibilityChanged() {
-    _settings.layerVisible = _mapLayer.visibility;
-    saveSettingsToStorage();
-    if (_mapLayer.visibility) {
-        fetchAllFC();
-    }
+    setEnabled(_mapLayer.visibility);
+    // _settings.layerVisible = _mapLayer.visibility;
+    // saveSettingsToStorage();
+    // if (_mapLayer.visibility) {
+    //     fetchAllFC();
+    // }
 }
 
 function checkLayerZIndex() {
@@ -2560,6 +2562,16 @@ function onStateSelectionChanged() {
     fetchAllFC();
 }
 
+function setEnabled(value) {
+    _settings.layerVisible = value;
+    saveSettingsToStorage();
+    _mapLayer.setVisibility(value);
+    const color = value ? '#00bd00' : '#ccc';
+    $('span#fc-layer-power-btn').css({ color });
+    if (value) fetchAllFC();
+    $('#layer-switcher-item_fc_layer').prop('checked', value);
+}
+
 function initUserPanel() {
     const $tab = $('<li>').append($('<a>', { 'data-toggle': 'tab', href: '#sidepanel-fc-layer' }).text('FC'));
     const $panel = $('<div>', { class: 'tab-pane', id: 'sidepanel-fc-layer' });
@@ -2607,6 +2619,23 @@ function initUserPanel() {
     );
 
     $('#user-tabs > .nav-tabs').append($tab);
+    
+    // append the power button
+    if (!$('#fc-layer-power-btn').length) {
+        const color = _settings.layerVisible ? '#00bd00' : '#ccc';
+        $('a[href="#sidepanel-fc-layer"]').prepend(
+            $('<span>', {
+                class: 'fa fa-power-off',
+                id: 'fc-layer-power-btn',
+                style: `margin-right: 5px;cursor: pointer;color: ${color};font-size: 13px;`,
+                title: 'Toggle FC Layer'
+            }).click(evt => {
+                evt.stopPropagation();
+                setEnabled(!_settings.layerVisible);
+            })
+        );
+    }
+    
     $('#user-info > .flex-parent > .tab-content').append($panel);
     $('#fcl-state-select').change(onStateSelectionChanged);
     loadStateFCInfo();
