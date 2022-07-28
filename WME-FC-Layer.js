@@ -1,7 +1,7 @@
 // // ==UserScript==
 // @name         WME FC Layer
 // @namespace    https://greasyfork.org/users/45389
-// @version      2022.07.28.001
+// @version      2022.07.28.002
 // @description  Adds a Functional Class layer for states that publish ArcGIS FC data.
 // @author       MapOMatic
 // @include      /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
@@ -1745,15 +1745,27 @@ const STATE_SETTINGS = {
         zoomSettings: { maxOffset: [30, 15, 8, 4, 2, 1, 1, 1, 1, 1] },
         fcMapLayers: [
             {
-                layerPath: 'testuasiportal.shelbycountytn.gov/arcgis/rest/services/MPO/Webmap_2015_04_20_TMPO/MapServer/',
+                layerPath: 'comgis4.memphistn.gov/arcgis/rest/services/AGO_DPD/Memphis_MPO/FeatureServer/',
                 maxRecordCount: 1000,
                 supportsPagination: false,
-                layerID: 17,
-                fcPropName: 'FuncClass',
+                layerID: 4,
+                fcPropName: 'Functional_Classification',
                 idPropName: 'OBJECTID',
-                outFields: ['OBJECTID', 'FuncClass'],
+                outFields: ['OBJECTID', 'Functional_Classification'],
+                getWhereClause(context) {
+                    if (context.mapContext.zoom < 16) {
+                        return `${context.layer.fcPropName} NOT LIKE '%Local'`;
+                    }
+                    return null;
+                },
                 roadTypeMap: {
-                    Fw: [1, 11], Ew: [2, 12], MH: [4, 14], mH: [6, 16], PS: [7, 17], PS2: [8, 18], St: [9, 19]
+                    Fw: ['(Urban) Interstate', '(Rural) Interstate'],
+                    Ew: ['(Urban) Other Freeway or Expressway', '(Rural) Other Freeway or Expressway'],
+                    MH: ['(Urban) Other Principal Arterial', '(Rural) Other Principal Arterial'],
+                    mH: ['(Urban) Minor Arterial', '(Rural) Minor Arterial'],
+                    PS: ['(Urban) Major Collector', '(Rural) Major Collector'],
+                    PS2: ['(Urban) Minor Collector', '(Rural) Minor Collector'],
+                    St: ['(Urban) Local', '(Rural) Local']
                 }
             },
             {
@@ -1764,21 +1776,27 @@ const STATE_SETTINGS = {
                 fcPropName: 'FC_MPO',
                 idPropName: 'FID',
                 outFields: ['FID', 'FC_MPO'],
+                getWhereClause(context) {
+                    if (context.mapContext.zoom < 16) {
+                        return `${context.layer.fcPropName} NOT IN (0,7,9,19)`;
+                    }
+                    return `${context.layer.fcPropName} <> 0`;
+                },
                 roadTypeMap: {
                     Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5, 6], St: [7]
                 }
             }
         ],
         information: {
-            Source: 'Shelby County, Nashville Area MPO',
+            Source: 'Memphis, Nashville Area MPO',
             Permission: 'Visible to R4+ or R3-AM',
             Description: 'Raw unmodified FC data for the Memphis and Nashville regions only.'
         },
         getWhereClause(context) {
-            if (context.mapContext.zoom < 16) {
-                return `${context.layer.fcPropName} NOT IN (0,7,9,19)`;
+            if (context.layer.getWhereClause) {
+                return context.layer.getWhereClause(context);
             }
-            return `${context.layer.fcPropName} <> 0`;
+            return null;
         },
         getFeatureRoadType(feature, layer) {
             if (layer.getFeatureRoadType) {
@@ -2386,7 +2404,7 @@ function fetchLayerFC(context) {
         }).map(idRange => {
             if (!context.parentContext.cancel) {
                 const newUrl = getUrl(context, 'idRange', idRange);
-                // debugLog(url);
+                debugLog(url);
                 return getAsync(newUrl, context).then(res => {
                     if (!context.parentContext.cancel) {
                         let { features } = $.parseJSON(res.responseText);
