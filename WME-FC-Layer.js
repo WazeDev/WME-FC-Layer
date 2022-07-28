@@ -1,7 +1,7 @@
 // // ==UserScript==
 // @name         WME FC Layer
 // @namespace    https://greasyfork.org/users/45389
-// @version      2022.07.27.002
+// @version      2022.07.28.001
 // @description  Adds a Functional Class layer for states that publish ArcGIS FC data.
 // @author       MapOMatic
 // @include      /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
@@ -523,13 +523,13 @@ const STATE_SETTINGS = {
         fcMapLayers: [
             {
                 layerID: 48,
-                fcPropName: 'FUNCTIONALCLASS',
+                fcPropName: 'FHWAFUNCTIONALCLASS',
                 idPropName: 'OBJECTID',
-                outFields: ['OBJECTID', 'FUNCTIONALCLASS'],
+                outFields: ['OBJECTID', 'FHWAFUNCTIONALCLASS'],
                 maxRecordCount: 1000,
                 supportsPagination: false,
                 roadTypeMap: {
-                    Fw: ['Interstate'], Ew: ['Other Freeway and Expressway'], MH: ['Principal Arterial'], mH: ['Minor Arterial'], PS: ['Collector']
+                    Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5, 6], St: [7]
                 }
             }
         ],
