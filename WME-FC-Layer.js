@@ -654,12 +654,12 @@ const STATE_SETTINGS = {
         fetchAllFC: true,
         /* eslint-disable object-curly-newline */
         fcMapLayers: [
-            { layerID: 0, fcPropName: 'FCCODE', idPropName: 'OBJECTID', outFields: ['OBJECTID', 'FCCODE'], maxRecordCount: 1000, supportsPagination: false, roadTypeMap: { Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5, 6] } },
-            { layerID: 1, fcPropName: 'FCCODE', idPropName: 'OBJECTID', outFields: ['OBJECTID', 'FCCODE'], maxRecordCount: 1000, supportsPagination: false, roadTypeMap: { Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5, 6] } },
-            { layerID: 2, fcPropName: 'FCCODE', idPropName: 'OBJECTID', outFields: ['OBJECTID', 'FCCODE'], maxRecordCount: 1000, supportsPagination: false, roadTypeMap: { Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5, 6] } },
-            { layerID: 3, fcPropName: 'FCCODE', idPropName: 'OBJECTID', outFields: ['OBJECTID', 'FCCODE'], maxRecordCount: 1000, supportsPagination: false, roadTypeMap: { Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5, 6] } },
-            { layerID: 4, fcPropName: 'FCCODE', idPropName: 'OBJECTID', outFields: ['OBJECTID', 'FCCODE'], maxRecordCount: 1000, supportsPagination: false, roadTypeMap: { Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5, 6] } },
-            { layerID: 5, fcPropName: 'FCCODE', idPropName: 'OBJECTID', outFields: ['OBJECTID', 'FCCODE'], maxRecordCount: 1000, supportsPagination: false, roadTypeMap: { Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5, 6] } }
+            { layerID: 0, fcPropName: 'FunctionalClass', idPropName: 'OBJECTID', outFields: ['OBJECTID', 'FunctionalClass'], maxRecordCount: 1000, supportsPagination: false, roadTypeMap: { Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5, 6] } },
+            { layerID: 1, fcPropName: 'FunctionalClass', idPropName: 'OBJECTID', outFields: ['OBJECTID', 'FunctionalClass'], maxRecordCount: 1000, supportsPagination: false, roadTypeMap: { Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5, 6] } },
+            { layerID: 2, fcPropName: 'FunctionalClass', idPropName: 'OBJECTID', outFields: ['OBJECTID', 'FunctionalClass'], maxRecordCount: 1000, supportsPagination: false, roadTypeMap: { Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5, 6] } },
+            { layerID: 3, fcPropName: 'FunctionalClass', idPropName: 'OBJECTID', outFields: ['OBJECTID', 'FunctionalClass'], maxRecordCount: 1000, supportsPagination: false, roadTypeMap: { Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5, 6] } },
+            { layerID: 4, fcPropName: 'FunctionalClass', idPropName: 'OBJECTID', outFields: ['OBJECTID', 'FunctionalClass'], maxRecordCount: 1000, supportsPagination: false, roadTypeMap: { Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5, 6] } },
+            { layerID: 5, fcPropName: 'FunctionalClass', idPropName: 'OBJECTID', outFields: ['OBJECTID', 'FunctionalClass'], maxRecordCount: 1000, supportsPagination: false, roadTypeMap: { Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5, 6] } }
         ],
         /* eslint-enable object-curly-newline */
         information: { Source: 'ITD', Permission: 'Visible to R4+ or R3-AM', Description: 'Raw unmodified FC data.' },
@@ -2483,7 +2483,6 @@ function fetchAllFC() {
 
 function onLayerCheckboxChanged(checked) {
     setEnabled(checked);
-    //_mapLayer.setVisibility(checked);
 }
 
 function onLayerVisibilityChanged() {
@@ -2619,7 +2618,7 @@ function initUserPanel() {
     );
 
     $('#user-tabs > .nav-tabs').append($tab);
-    
+
     // append the power button
     if (!$('#fc-layer-power-btn').length) {
         const color = _settings.layerVisible ? '#00bd00' : '#ccc';
@@ -2635,7 +2634,7 @@ function initUserPanel() {
             })
         );
     }
-    
+
     $('#user-info > .flex-parent > .tab-content').append($panel);
     $('#fcl-state-select').change(onStateSelectionChanged);
     loadStateFCInfo();
