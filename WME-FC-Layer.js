@@ -922,7 +922,7 @@ const STATE_SETTINGS = {
         zoomSettings: { maxOffset: [30, 15, 8, 4, 2, 1, 1, 1, 1, 1], excludeRoadTypes: [['St'], ['St'], ['St'], ['St'], [], [], [], [], [], [], []] },
         fcMapLayers: [
             {
-                layerID: 811,
+                layerID: 1015,
                 fcPropName: 'fedfunccls',
                 idPropName: 'objectid',
                 outFields: ['objectid', 'fedfunccls', 'prirtename'],
@@ -933,8 +933,8 @@ const STATE_SETTINGS = {
                 supportsPagination: false
             }
         ],
-        information: { Source: 'MaineDOT', Permission: 'Visible to R2+' },
-        isPermitted() { return _r >= 2; },
+        information: { Source: 'MaineDOT', Permission: 'Visible to R4+ or R3-AM' },
+        isPermitted() { return _r >= 4 || (_r === 3 && _isAM); },
         getWhereClause(context) {
             if (context.mapContext.zoom < 16) {
                 return `${context.layer.fcPropName}<>'Local'`;
@@ -1126,7 +1126,7 @@ const STATE_SETTINGS = {
         }
     },
     MT: {
-        baseUrl: 'https://app.mdt.mt.gov/arcgis/rest/services/Standard/ROUTES/MapServer/',
+        baseUrl: 'https://app.mdt.mt.gov/arcgis/rest/services/Standard/FUNCTIONAL_CLASS/MapServer/',
         defaultColors: {
             Fw: '#ff00c5', Ew: '#4f33df', MH: '#149ece', mH: '#4ce600', PS: '#cfae0e', St: '#eeeeee'
         },
@@ -1134,28 +1134,72 @@ const STATE_SETTINGS = {
         fcMapLayers: [
             {
                 layerID: 0,
-                fcPropName: 'FC',
+                fcPropName: 'FUNC_CLASS',
                 idPropName: 'OBJECTID',
-                utFields: ['OBJECTID', 'FC', 'SIGN_ROUTE', 'ROUTE_NAME'],
+                outFields: ['OBJECTID', 'FUNC_CLASS', 'SIGN_ROUTE', 'ROUTE_NAME'],
                 roadTypeMap: {
-                    Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5, 6], St: [7]
+                    Fw: ['1-Interstate']
                 },
                 maxRecordCount: 1000,
                 supportsPagination: false
             },
             {
                 layerID: 1,
-                fcPropName: 'FC',
+                fcPropName: 'FUNC_CLASS',
                 idPropName: 'OBJECTID',
-                outFields: ['OBJECTID', 'FC', 'SIGN_ROUTE', 'ROUTE_NAME'],
+                outFields: ['OBJECTID', 'FUNC_CLASS', 'SIGN_ROUTE', 'ROUTE_NAME'],
                 roadTypeMap: {
-                    Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5, 6], St: [7]
+                    MH: ['3-Principal Arterial - Other']
+                },
+                maxRecordCount: 1000,
+                supportsPagination: false
+            },
+            {
+                layerID: 2,
+                fcPropName: 'FUNC_CLASS',
+                idPropName: 'OBJECTID',
+                outFields: ['OBJECTID', 'FUNC_CLASS', 'SIGN_ROUTE', 'ROUTE_NAME'],
+                roadTypeMap: {
+                    mH: ['4-Minor Arterial']
+                },
+                maxRecordCount: 1000,
+                supportsPagination: false
+            },
+            {
+                layerID: 3,
+                fcPropName: 'FUNC_CLASS',
+                idPropName: 'OBJECTID',
+                outFields: ['OBJECTID', 'FUNC_CLASS', 'SIGN_ROUTE', 'ROUTE_NAME'],
+                roadTypeMap: {
+                    PS: ['5-Major Collector']
+                },
+                maxRecordCount: 1000,
+                supportsPagination: false
+            },
+            {
+                layerID: 4,
+                fcPropName: 'FUNC_CLASS',
+                idPropName: 'OBJECTID',
+                outFields: ['OBJECTID', 'FUNC_CLASS', 'SIGN_ROUTE', 'ROUTE_NAME'],
+                roadTypeMap: {
+                    PS: ['6-Minor Collector']
+                },
+                maxRecordCount: 1000,
+                supportsPagination: false
+            },
+            {
+                layerID: 5,
+                fcPropName: 'FUNC_CLASS',
+                idPropName: 'OBJECTID',
+                outFields: ['OBJECTID', 'FUNC_CLASS', 'SIGN_ROUTE', 'ROUTE_NAME'],
+                roadTypeMap: {
+                    St: ['7-Local']
                 },
                 maxRecordCount: 1000,
                 supportsPagination: false
             }
         ],
-        isPermitted() { return _r >= 3; },
+        isPermitted() { /* return _r >= 3; */ return false; },
         information: { Source: 'MDT', Permission: 'Visible to R3+' },
         getWhereClause(context) {
             if (context.mapContext.zoom < 16) {
@@ -1164,22 +1208,16 @@ const STATE_SETTINGS = {
             return null;
         },
         getFeatureRoadType(feature, layer) {
-            let fc = feature.attributes.FC;
-            switch (fc) {
-                case 'PRINCIPAL ARTERIAL - INTERSTATE': fc = 1; break;
-                case 'PRINCIPAL ARTERIAL - NON-INTERSTATE': fc = 3; break;
-                case 'MINOR ARTERIAL': fc = 4; break;
-                case 'MAJOR COLLECTOR':
-                case 'MINOR COLLECTOR': fc = 5; break;
-                default: fc = 7;
-            }
-            let roadID = feature.attributes.SIGN_ROUTE;
-            if (!roadID) { roadID = feature.attributes.ROUTE_NAME; }
+            let rt = STATE_SETTINGS.global.getFeatureRoadType(feature, layer);
+            const roadID = feature.attributes.SIGN_ROUTE || feature.attributes.ROUTE_NAME;
             const isUS = RegExp(/^US \d+/).test(roadID);
-            const isState = RegExp(/^MONTANA \d+|ROUTE \d+|S \d{3}\b/).test(roadID);
-            if (fc > 3 && isUS) fc = 3;
-            else if (fc > 4 && isState) fc = 4;
-            return STATE_SETTINGS.global.getRoadTypeFromFC(fc, layer);
+            const isState = RegExp(/^MONTANA \d+|ROUTE \d+|S-\d{3}\b/).test(roadID);
+            if (isUS && ['St', 'PS', 'mH'].includes(rt)) {
+                rt = 'MH';
+            } else if (isState && ['St', 'PS'].includes(rt)) {
+                rt = 'mH';
+            }
+            return rt;
         }
     },
     NH: {
