@@ -1,7 +1,7 @@
 // // ==UserScript==
 // @name         WME FC Layer
 // @namespace    https://greasyfork.org/users/45389
-// @version      2022.08.04.001
+// @version      2022.08.24.001
 // @description  Adds a Functional Class layer for states that publish ArcGIS FC data.
 // @author       MapOMatic
 // @include      /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
@@ -30,6 +30,7 @@
 // @connect      maine.gov
 // @connect      md.gov
 // @connect      ma.us
+// @connect      nv.gov
 // @connect      state.mi.us
 // @connect      modot.org
 // @connect      mt.gov
@@ -1218,6 +1219,38 @@ const STATE_SETTINGS = {
                 rt = 'mH';
             }
             return rt;
+        }
+    },
+    NV: {
+        baseUrl: 'https://gis.dot.nv.gov/rhgis/rest/services/GeoHub/FSystem/MapServer/',
+        defaultColors: {
+            Fw: '#ff00c5', Ew: '#4f33df', MH: '#149ece', mH: '#4ce600', PS: '#cfae0e', St: '#eeeeee'
+        },
+        zoomSettings: { maxOffset: [30, 15, 8, 4, 2, 1, 1, 1, 1, 1], excludeRoadTypes: [[], [], [], [], [], [], [], [], [], [], []] },
+        fcMapLayers: [
+            {
+                layerID: 0,
+                fcPropName: 'FSystem',
+                idPropName: 'OBJECTID',
+                outFields: ['OBJECTID', 'FSystem'],
+                roadTypeMap: {
+                    Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5, 6], St: [7]
+                },
+                maxRecordCount: 1000,
+                supportsPagination: false
+            }
+        ],
+        isPermitted() { return ['mapomatic', 'turbomkt', 'tonestertm', 'geopgeop'].includes(_uName.toLowerCase()); },
+        information: { Source: 'NDOT', Permission: '?' },
+        getWhereClause(context) {
+            if (context.mapContext.zoom < 16) {
+                return `${context.layer.fcPropName}<>7`;
+            }
+            return null;
+        },
+        getFeatureRoadType(feature, layer) {
+            const fc = parseInt(feature.attributes[layer.fcPropName], 10);
+            return STATE_SETTINGS.global.getRoadTypeFromFC(fc, layer);
         }
     },
     NH: {
