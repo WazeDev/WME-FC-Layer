@@ -1,7 +1,7 @@
-// // ==UserScript==
+// ==UserScript==
 // @name         WME FC Layer
 // @namespace    https://greasyfork.org/users/45389
-// @version      2022.08.24.001
+// @version      2022.09.06.001
 // @description  Adds a Functional Class layer for states that publish ArcGIS FC data.
 // @author       MapOMatic
 // @include      /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
@@ -1200,7 +1200,7 @@ const STATE_SETTINGS = {
                 supportsPagination: false
             }
         ],
-        isPermitted() { /* return _r >= 3; */ return false; },
+        isPermitted() { /* return _r >= 3; */ return ['mapomatic', 'bobc455'].includes(_uName.toLowerCase()); },
         information: { Source: 'MDT', Permission: 'Visible to R3+' },
         getWhereClause(context) {
             if (context.mapContext.zoom < 16) {
@@ -1214,8 +1214,10 @@ const STATE_SETTINGS = {
             const isUS = RegExp(/^US \d+/).test(roadID);
             const isState = RegExp(/^MONTANA \d+|ROUTE \d+|S-\d{3}\b/).test(roadID);
             if (isUS && ['St', 'PS', 'mH'].includes(rt)) {
+                log('FC UPGRADE: ' + roadID + ' from ' + rt + ' to ' + 'MH');
                 rt = 'MH';
             } else if (isState && ['St', 'PS'].includes(rt)) {
+                log('FC UPGRADE: ' + roadID + ' from ' + rt + ' to ' + 'mH');
                 rt = 'mH';
             }
             return rt;
