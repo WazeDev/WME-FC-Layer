@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME FC Layer
 // @namespace    https://greasyfork.org/users/45389
-// @version      2022.09.06.001
+// @version      2022.09.09.001
 // @description  Adds a Functional Class layer for states that publish ArcGIS FC data.
 // @author       MapOMatic
 // @include      /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
@@ -1211,7 +1211,7 @@ const STATE_SETTINGS = {
         getFeatureRoadType(feature, layer) {
             let rt = STATE_SETTINGS.global.getFeatureRoadType(feature, layer);
             const roadID = feature.attributes.SIGN_ROUTE || feature.attributes.ROUTE_NAME;
-            const isUS = RegExp(/^US \d+/).test(roadID);
+            const isUS = RegExp(/^US[ -]?\d+/).test(roadID);
             const isState = RegExp(/^MONTANA \d+|ROUTE \d+|S-\d{3}\b/).test(roadID);
             if (isUS && ['St', 'PS', 'mH'].includes(rt)) {
                 log('FC UPGRADE: ' + roadID + ' from ' + rt + ' to ' + 'MH');
