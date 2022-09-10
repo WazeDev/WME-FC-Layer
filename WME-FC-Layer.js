@@ -1,10 +1,11 @@
 // ==UserScript==
 // @name         WME FC Layer
 // @namespace    https://greasyfork.org/users/45389
-// @version      2022.09.09.001
+// @version      2022.09.10.001
 // @description  Adds a Functional Class layer for states that publish ArcGIS FC data.
 // @author       MapOMatic
-// @include      /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
+// @match         *://*.waze.com/*editor*
+// @exclude       *://*.waze.com/user/editor*
 // @license      GNU GPLv3
 // @contributionURL https://github.com/WazeDev/Thank-The-Authors
 // @require      https://greasyfork.org/scripts/39002-bluebird/code/Bluebird.js?version=255146
@@ -1214,10 +1215,10 @@ const STATE_SETTINGS = {
             const isUS = RegExp(/^US[ -]?\d+/).test(roadID);
             const isState = RegExp(/^MONTANA \d+|ROUTE \d+|S-\d{3}\b/).test(roadID);
             if (isUS && ['St', 'PS', 'mH'].includes(rt)) {
-                log('FC UPGRADE: ' + roadID + ' from ' + rt + ' to ' + 'MH');
+                log(`FC UPGRADE: ${roadID} from ${rt} to MH`); // TODO - remove this when testing is finished (9/10/2022)
                 rt = 'MH';
             } else if (isState && ['St', 'PS'].includes(rt)) {
-                log('FC UPGRADE: ' + roadID + ' from ' + rt + ' to ' + 'mH');
+                log(`FC UPGRADE: ${roadID} from ${rt} to mH`); // TODO - remove this when testing is finished (9/10/2022)
                 rt = 'mH';
             }
             return rt;
