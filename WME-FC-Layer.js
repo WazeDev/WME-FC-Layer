@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME FC Layer
 // @namespace    https://greasyfork.org/users/45389
-// @version      2022.09.10.001
+// @version      2022.09.26.001
 // @description  Adds a Functional Class layer for states that publish ArcGIS FC data.
 // @author       MapOMatic
 // @match         *://*.waze.com/*editor*
@@ -344,7 +344,7 @@ const STATE_SETTINGS = {
                 supportsPagination: false
             }
         ],
-        isPermitted() { return ['mapomatic', 'turbomkt', 'tonestertm'].includes(_uName.toLowerCase()); },
+        isPermitted() { return ['mapomatic', 'turbomkt', 'tonestertm', 'ottonomy', 'jemay'].includes(_uName.toLowerCase()); },
         information: { Source: 'Caltrans', Permission: 'Visible to ?', Description: '' },
         getWhereClause(context) {
             if (context.mapContext.zoom < 16) {
