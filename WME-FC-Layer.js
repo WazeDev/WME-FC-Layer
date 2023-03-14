@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME FC Layer
 // @namespace    https://greasyfork.org/users/45389
-// @version      2022.09.26.001
+// @version      2022.03.14.001
 // @description  Adds a Functional Class layer for states that publish ArcGIS FC data.
 // @author       MapOMatic
 // @match         *://*.waze.com/*editor*
@@ -31,6 +31,7 @@
 // @connect      maine.gov
 // @connect      md.gov
 // @connect      ma.us
+// @connect      mn.us
 // @connect      nv.gov
 // @connect      state.mi.us
 // @connect      modot.org
@@ -676,18 +677,18 @@ const STATE_SETTINGS = {
         }
     },
     IL: {
-        baseUrl: 'http://ags10s1.dot.illinois.gov/ArcGIS/rest/services/IRoads/IRoads_64/MapServer/',
+        baseUrl: 'https://gis1.dot.illinois.gov/arcgis/rest/services/AdministrativeData/FunctionalClass/MapServer/',
         supportsPagination: false,
         defaultColors: {
-            Fw: '#ff00c5', Ew: '#ff00c5', MH: '#149ece', mH: '#4ce600', PS: '#cfae0e', St: '#eeeeee', CH: '#ff5e0e'
+            Fw: '#ff00c5', Ew: '#ff00c5', MH: '#149ece', mH: '#4ce600', PS: '#cfae0e', St: '#eeeeee',
         },
         zoomSettings: { maxOffset: [30, 15, 8, 4, 2, 1, 1, 1, 1, 1] },
         fcMapLayers: [
             {
-                layerID: 3,
+                layerID: 0,
                 idPropName: 'OBJECTID',
                 fcPropName: 'FC',
-                outFields: ['FC', 'MRK_RT_TYP', 'CH', 'OBJECTID'],
+                outFields: ['FC'],
                 roadTypeMap: {
                     Fw: ['1'], Ew: ['2'], MH: ['3'], mH: ['4'], PS: ['5', '6'], St: ['7']
                 },
@@ -696,18 +697,15 @@ const STATE_SETTINGS = {
             }
         ],
         isPermitted() { return _r >= 4; },
-        information: { Source: 'IDOT', Permission: 'Visible to R4+' },
+        information: { Source: 'IDOT', Permission: 'Visible to R4+', Description: 'Raw unmodified FC data.' },
         getWhereClause(context) {
             return context.mapContext.zoom < 16 ? 'FC<>7' : null;
         },
         getFeatureRoadType(feature, layer) {
-            const attr = feature.attributes;
-            let fc = attr.FC;
-            const type = attr.MRK_RT_TYP;
-            if (fc > 3 && type === 'U') fc = 3; // US Route
-            else if (fc > 4 && type === 'S') fc = 4; // State Route
-            else if (fc > 6 && attr.CH !== '0000') fc = 6; // County Route
-            return STATE_SETTINGS.global.getRoadTypeFromFC(fc, layer);
+            if (layer.getFeatureRoadType) {
+                return layer.getFeatureRoadType(feature);
+            }
+            return STATE_SETTINGS.global.getFeatureRoadType(feature, layer);
         }
     },
     IN: {
@@ -1060,6 +1058,40 @@ const STATE_SETTINGS = {
         ],
         isPermitted() { return true; },
         information: { Source: 'MDOT', Description: 'Raw unmodified FC data.' },
+        getWhereClause(context) {
+            if (context.mapContext.zoom < 16) {
+                return `${context.layer.fcPropName}<>7`;
+            }
+            return null;
+        },
+        getFeatureRoadType(feature, layer) {
+            if (layer.getFeatureRoadType) {
+                return layer.getFeatureRoadType(feature);
+            }
+            return STATE_SETTINGS.global.getFeatureRoadType(feature, layer);
+        }
+    },
+    MN: {
+        baseUrl: 'https://dotapp9.dot.state.mn.us/lrs/rest/services/emma/emma_op/MapServer/',
+        defaultColors: {
+            Fw: '#ff00c5', Ew: '#149ece', MH: '#149ece', mH: '#4ce600', PS: '#cfae0e', St: '#eeeeee'
+        },
+        zoomSettings: { maxOffset: [30, 15, 8, 4, 2, 1, 1, 1, 1, 1], excludeRoadTypes: [['St'], ['St'], ['St'], ['St'], [], [], [], [], [], [], []] },
+        fcMapLayers: [
+            {
+                layerID: 13,
+                idPropName: 'OBJECTID',
+                fcPropName: 'FUNCTIONAL_CLASS',
+                outFields: ['FUNCTIONAL_CLASS', 'ROUTE_ID'],
+                roadTypeMap: {
+                    Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5, 6], St: [7]
+                },
+                maxRecordCount: 1000,
+                supportsPagination: false
+            }
+        ],
+        isPermitted() { return true; },
+        information: { Source: 'MnDOT', Description: 'Raw unmodified FC data.' },
         getWhereClause(context) {
             if (context.mapContext.zoom < 16) {
                 return `${context.layer.fcPropName}<>7`;
