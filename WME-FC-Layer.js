@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME FC Layer
 // @namespace    https://greasyfork.org/users/45389
-// @version      2023.03.22.001
+// @version      2023.05.03.001
 // @description  Adds a Functional Class layer for states that publish ArcGIS FC data.
 // @author       MapOMatic
 // @match         *://*.waze.com/*editor*
@@ -10,6 +10,7 @@
 // @contributionURL https://github.com/WazeDev/Thank-The-Authors
 // @require      https://greasyfork.org/scripts/39002-bluebird/code/Bluebird.js?version=255146
 // @require      https://greasyfork.org/scripts/24851-wazewrap/code/WazeWrap.js
+// @connect      greasyfork.org
 // @grant        GM_xmlhttpRequest
 // @connect      arcgis.com
 // @connect      arkansas.gov
@@ -62,7 +63,9 @@
 
     const SETTINGS_STORE_NAME = 'wme_fc_layer';
     const DEBUG = false;
+    const SCRIPT_NAME = GM_info.script.name;
     const SCRIPT_VERSION = GM_info.script.version;
+    const DOWNLOAD_URL = 'https://greasyfork.org/scripts/369633-wme-fc-layer/code/WME%20FC%20Layer.user.js';
     let _mapLayer = null;
     let _isAM = false;
     let _uid;
@@ -2768,6 +2771,16 @@
         initUserPanel();
     }
 
+    function loadScriptUpdateMonitor() {
+        try {
+            const updateMonitor = new WazeWrap.Alerts.ScriptUpdateMonitor(SCRIPT_NAME, SCRIPT_VERSION, DOWNLOAD_URL, GM_xmlhttpRequest);
+            updateMonitor.start();
+        } catch (ex) {
+            // Report, but don't stop if ScriptUpdateMonitor fails.
+            console.error('WMEPH:', ex);
+        }
+    }
+
     function init() {
         if (DEBUG && Promise.config) {
             Promise.config({
@@ -2790,6 +2803,8 @@
         _r = u.rank + 1;
         _isAM = u.isAreaManager;
         _uName = u.userName;
+
+        loadScriptUpdateMonitor();
         loadSettingsFromStorage();
         initGui();
         fetchAllFC();
