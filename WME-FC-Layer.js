@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME FC Layer
 // @namespace    https://greasyfork.org/users/45389
-// @version      2023.05.03.002
+// @version      2023.05.30.002
 // @description  Adds a Functional Class layer for states that publish ArcGIS FC data.
 // @author       MapOMatic
 // @match         *://*.waze.com/*editor*
@@ -924,10 +924,10 @@
             zoomSettings: { maxOffset: [30, 15, 8, 4, 2, 1, 1, 1, 1, 1], excludeRoadTypes: [['St'], ['St'], ['St'], ['St'], [], [], [], [], [], [], []] },
             fcMapLayers: [
                 {
-                    layerID: 1015,
+                    layerID: 1049,
                     fcPropName: 'fedfunccls',
                     idPropName: 'objectid',
-                    outFields: ['objectid', 'fedfunccls', 'prirtename'],
+                    outFields: ['objectid', 'fedfunccls'],
                     roadTypeMap: {
                         Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5, 6], St: [7]
                     },
@@ -947,12 +947,12 @@
                 const attr = feature.attributes;
                 let fc = attr[layer.fcPropName];
                 switch (fc) {
-                    case 'Princ art interstate': fc = 1; break;
-                    case 'Princ art other f&e': fc = 2; break;
-                    case 'Other princ arterial': fc = 3; break;
-                    case 'Minor arterial': fc = 4; break;
-                    case 'Major/urb collector':
-                    case 'Minor collector': fc = 5; break;
+                    case 'Interstate': fc = 1; break;
+                    case 'Other Freeway or Expressway': fc = 2; break;
+                    case 'Other Principal Arterial': fc = 3; break;
+                    case 'Minor Arterial': fc = 4; break;
+                    case 'Major Collector':
+                    case 'Minor Collector': fc = 5; break;
                     default: fc = 7;
                 }
                 const route = attr.prirtename;
