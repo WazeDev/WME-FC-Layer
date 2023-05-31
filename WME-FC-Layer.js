@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME FC Layer
 // @namespace    https://greasyfork.org/users/45389
-// @version      2023.05.30.002
+// @version      2023.05.31.001
 // @description  Adds a Functional Class layer for states that publish ArcGIS FC data.
 // @author       MapOMatic
 // @match         *://*.waze.com/*editor*
@@ -924,10 +924,10 @@
             zoomSettings: { maxOffset: [30, 15, 8, 4, 2, 1, 1, 1, 1, 1], excludeRoadTypes: [['St'], ['St'], ['St'], ['St'], [], [], [], [], [], [], []] },
             fcMapLayers: [
                 {
-                    layerID: 1049,
+                    layerID: 976,
                     fcPropName: 'fedfunccls',
                     idPropName: 'objectid',
-                    outFields: ['objectid', 'fedfunccls'],
+                    outFields: ['objectid', 'fedfunccls', 'prirtename'],
                     roadTypeMap: {
                         Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5, 6], St: [7]
                     },
