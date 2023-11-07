@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME FC Layer
 // @namespace    https://greasyfork.org/users/45389
-// @version      2023.08.24.001
+// @version      2023.11.05.001
 // @description  Adds a Functional Class layer for states that publish ArcGIS FC data.
 // @author       MapOMatic
 // @match         *://*.waze.com/*editor*
@@ -711,7 +711,7 @@
             }
         },
         IN: {
-            baseUrl: 'https://gis.in.gov/arcgis/rest/services/DOT/INDOT_LTAP/FeatureServer/',
+            baseUrl: 'https://gis.indot.in.gov/ro/rest/services/DOT/INDOT_LTAP/MapServer/',
             supportsPagination: false,
             overrideUrl: '1Sbwc7e6BfHpZWSTfU3_1otXGSxHrdDYcbn7fOf1VjpA',
             defaultColors: {
