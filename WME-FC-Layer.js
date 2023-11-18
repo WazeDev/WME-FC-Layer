@@ -711,7 +711,7 @@
             }
         },
         IN: {
-            baseUrl: 'https://gis.in.gov/arcgis/rest/services/DOT/INDOT_LTAP/FeatureServer/',
+            baseUrl: 'https://gis.indot.in.gov/ro/rest/services/DOT/INDOT_LTAP/MapServer/',
             supportsPagination: false,
             overrideUrl: '1Sbwc7e6BfHpZWSTfU3_1otXGSxHrdDYcbn7fOf1VjpA',
             defaultColors: {
