@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME FC Layer
 // @namespace    https://greasyfork.org/users/45389
-// @version      2023.08.24.001
+// @version      2023.11.18.001
 // @description  Adds a Functional Class layer for states that publish ArcGIS FC data.
 // @author       MapOMatic
 // @match         *://*.waze.com/*editor*
@@ -72,7 +72,7 @@
     let _uName;
     let _settings = {};
     let _r;
-    const MAP_LAYER_Z_INDEX = 335;
+    const MAP_LAYER_Z_INDEX = 375;
     const BETA_IDS = [103400892];
     const MIN_ZOOM_LEVEL = 11;
     const STATES_HASH = {
