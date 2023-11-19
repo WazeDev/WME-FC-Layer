@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME FC Layer
 // @namespace    https://greasyfork.org/users/45389
-// @version      2023.11.18.001
+// @version      2023.11.18.002
 // @description  Adds a Functional Class layer for states that publish ArcGIS FC data.
 // @author       MapOMatic
 // @match         *://*.waze.com/*editor*
@@ -778,8 +778,8 @@
                 const attr = feature.attributes;
                 let fc = parseInt(attr[layer.fcPropName], 10);
                 const isFw = attr.ACCESS_CONTROL === 1;
-                const isUS = '^STATE OF IOWA, US'.test(attr.STATE_ROUTE_NAME_1);
-                const isState = '^STATE OF IOWA, IA'.test(attr.STATE_ROUTE_NAME_1);
+                const isUS = /^STATE OF IOWA, US/.test(attr.STATE_ROUTE_NAME_1);
+                const isState = /^STATE OF IOWA, IA/.test(attr.STATE_ROUTE_NAME_1);
                 if (isFw) fc = 1;
                 else if (fc > 3 && isUS) fc = 3;
                 else if (fc > 4 && isState) fc = 4;
