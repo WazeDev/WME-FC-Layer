@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME FC Layer
 // @namespace    https://greasyfork.org/users/45389
-// @version      2024.02.10.001
+// @version      2024.02.24.001
 // @description  Adds a Functional Class layer for states that publish ArcGIS FC data.
 // @author       MapOMatic
 // @match         *://*.waze.com/*editor*
@@ -2196,10 +2196,10 @@
             zoomSettings: { maxOffset: [30, 15, 8, 4, 2, 1, 1, 1, 1, 1], excludeRoadTypes: [['St'], ['St'], ['St'], ['St'], [], [], [], [], [], [], []] },
             fcMapLayers: [
                 {
-                    layerID: 1,
-                    fcPropName: 'F_System',
+                    layerID: 2,
+                    fcPropName: 'NAT_FUNCTIONAL_CLASS',
                     idPropName: 'OBJECTID',
-                    outFields: ['OBJECTID', 'F_System', 'RouteID'],
+                    outFields: ['OBJECTID', 'NAT_FUNCTIONAL_CLASS', 'ROUTE_ID'],
                     maxRecordCount: 1000,
                     supportsPagination: true,
                     roadTypeMap: {
@@ -2227,7 +2227,7 @@
                 else if (fcCode === 6 || fcCode === 16) fc = 4;
                 else if (fcCode === 7 || fcCode === 17 || fcCode === 8 || fcCode === 18) fc = 5;
                 else fc = 7;
-                const id = feature.attributes.RouteID;
+                const id = feature.attributes.ROUTE_ID;
                 const prefix = id.substr(2, 1);
                 const isInterstate = prefix === '1';
                 const isUS = prefix === '2';
