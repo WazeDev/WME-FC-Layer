@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME FC Layer
 // @namespace    https://greasyfork.org/users/45389
-// @version      2024.02.24.001
+// @version      2024.03.20.001
 // @description  Adds a Functional Class layer for states that publish ArcGIS FC data.
 // @author       MapOMatic
 // @match         *://*.waze.com/*editor*
@@ -792,29 +792,47 @@
             zoomSettings: { maxOffset: [30, 15, 8, 4, 2, 1, 1, 1, 1, 1], excludeRoadTypes: [['St'], ['St'], ['St'], ['St'], [], [], [], [], [], [], []] },
             fcMapLayers: [
                 {
-                    layerID: 0,
-                    layerPath: 'Non_State_System/MapServer/',
-                    idPropName: 'ID2',
-                    fcPropName: 'FUNCLASS',
-                    outFields: ['FUNCLASS', 'ID2', 'ROUTE_ID'],
+                    layerID: 3,
+                    layerPath: 'Functional_Classification/MapServer/',
+                    idPropName: 'Id',
+                    fcPropName: 'FunctionalClassification',
+                    outFields: ['FunctionalClassification', 'Id'],
                     roadTypeMap: {
                         Fw: [1], MH: [2, 3], mH: [4], PS: [5, 6], St: [7]
                     },
                     maxRecordCount: 1000,
                     supportsPagination: false
-                },
-                {
-                    layerID: 0,
-                    layerPath: 'State_System/MapServer/',
-                    idPropName: 'OBJECTID',
-                    fcPropName: 'FUN_CLASS_CD',
-                    outFields: ['FUN_CLASS_CD', 'OBJECTID', 'PREFIX', 'ACCESS_CONTROL'],
-                    roadTypeMap: {
-                        Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5, 6], St: [7]
-                    },
-                    maxRecordCount: 1000,
-                    supportsPagination: false
-                }
+                }// ,
+
+                // 2024-03-20 (mapomatic) The "non-state system" layer was removed from the KS server,
+                // so we're forced to use the function_classification layer (above) which doesn't include
+                // any metadata for US/state road designations. I'm leaving the old layers commented below
+                // in case they're of use in the future.
+
+                // {
+                //     layerID: 0,
+                //     layerPath: 'Non_State_System/MapServer/',
+                //     idPropName: 'ID2',
+                //     fcPropName: 'FUNCLASS',
+                //     outFields: ['FUNCLASS', 'ID2', 'ROUTE_ID'],
+                //     roadTypeMap: {
+                //         Fw: [1], MH: [2, 3], mH: [4], PS: [5, 6], St: [7]
+                //     },
+                //     maxRecordCount: 1000,
+                //     supportsPagination: false
+                // },
+                // {
+                //     layerID: 0,
+                //     layerPath: 'State_System/MapServer/',
+                //     idPropName: 'OBJECTID',
+                //     fcPropName: 'FUN_CLASS_CD',
+                //     outFields: ['FUN_CLASS_CD', 'OBJECTID', 'PREFIX', 'ACCESS_CONTROL'],
+                //     roadTypeMap: {
+                //         Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5, 6], St: [7]
+                //     },
+                //     maxRecordCount: 1000,
+                //     supportsPagination: false
+                // }
             ],
             isPermitted() { return _r >= 3 || _isAM; },
             information: { Source: 'KDOT', Permission: 'Visible to area managers' },
