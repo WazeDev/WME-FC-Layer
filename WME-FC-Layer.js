@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME FC Layer
 // @namespace    https://greasyfork.org/users/45389
-// @version      2024.03.20.001
+// @version      2024.04.26.001
 // @description  Adds a Functional Class layer for states that publish ArcGIS FC data.
 // @author       MapOMatic
 // @match         *://*.waze.com/*editor*
@@ -1988,7 +1988,7 @@
             }
         },
         UT: {
-            baseUrl: 'https://maps.udot.utah.gov/randh/rest/services/ALRS_DT/Functional_Class/MapServer/',
+            baseUrl: 'https://roads.udot.utah.gov/server/rest/services/Public/Functional_Class/MapServer/0',
             defaultColors: {
                 Fw: '#ff00c5', Ew: '#4f33df', MH: '#149ece', mH: '#4ce600', PS: '#cfae0e', St: '#eeeeee'
             },
@@ -1998,7 +1998,7 @@
                     layerID: 0,
                     fcPropName: 'FUNCTIONAL_CLASS',
                     idPropName: 'OBJECTID',
-                    outFields: ['OBJECTID', 'FUNCTIONAL_CLASS', 'ROUTE_ID'],
+                    outFields: ['OBJECTID', 'FUNCTIONAL_CLASS', 'route_id'],
                     roadTypeMap: {
                         Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5, 6], St: [7]
                     },
@@ -2013,7 +2013,7 @@
             getFeatureRoadType(feature, layer) {
                 const attr = feature.attributes;
                 let fc = attr[layer.fcPropName];
-                const routeID = attr.ROUTE_ID;
+                const routeID = attr.route_id;
                 const roadNum = parseInt(routeID.substring(0, 4), 10);
                 switch (fc) {
                     case 'Interstate': fc = 1; break;
