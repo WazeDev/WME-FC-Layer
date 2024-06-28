@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME FC Layer
 // @namespace    https://greasyfork.org/users/45389
-// @version      2024.04.26.001
+// @version      2024.06.28.000
 // @description  Adds a Functional Class layer for states that publish ArcGIS FC data.
 // @author       MapOMatic
 // @match         *://*.waze.com/*editor*
@@ -937,10 +937,10 @@
             zoomSettings: { maxOffset: [30, 15, 8, 4, 2, 1, 1, 1, 1, 1], excludeRoadTypes: [['St'], ['St'], ['St'], ['St'], [], [], [], [], [], [], []] },
             fcMapLayers: [
                 {
-                    layerID: 976,
+                    layerID: 1024,
                     fcPropName: 'fedfunccls',
                     idPropName: 'objectid',
-                    outFields: ['objectid', 'fedfunccls', 'prirtename'],
+                    outFields: ['objectid', 'fedfunccls'],
                     roadTypeMap: {
                         Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5, 6], St: [7]
                     },
@@ -968,12 +968,13 @@
                     case 'Minor Collector': fc = 5; break;
                     default: fc = 7;
                 }
-                const route = attr.prirtename;
-                const isUS = /^US \d/.test(route);
-                const isState = /^ST RTE \d/.test(route);
-                const isBiz = (isUS && /(1B|1BS)$/.test(route)) || (isState && /(15B|24B|25B|137B)$/.test(route));
-                if (fc > 3 && isUS) fc = isBiz ? 4 : 3;
-                else if (fc > 4 && isState) fc = isBiz ? 5 : 4;
+                // 2024-6-28 (mapomatic) MaineDOT removed the prirtename field so we can't "upgrade" FC anymore.
+                // const route = attr.prirtename;
+                // const isUS = /^US \d/.test(route);
+                // const isState = /^ST RTE \d/.test(route);
+                // const isBiz = (isUS && /(1B|1BS)$/.test(route)) || (isState && /(15B|24B|25B|137B)$/.test(route));
+                // if (fc > 3 && isUS) fc = isBiz ? 4 : 3;
+                // else if (fc > 4 && isState) fc = isBiz ? 5 : 4;
                 return STATE_SETTINGS.global.getRoadTypeFromFC(fc, layer);
             }
         },
