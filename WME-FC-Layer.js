@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME FC Layer
 // @namespace    https://greasyfork.org/users/45389
-// @version      2024.07.10.000
+// @version      2024.07.10.001
 // @description  Adds a Functional Class layer for states that publish ArcGIS FC data.
 // @author       MapOMatic
 // @match         *://*.waze.com/*editor*
@@ -73,7 +73,7 @@
     let _uName;
     let _settings = {};
     let _r;
-    const MAP_LAYER_Z_INDEX = 2059;
+    let MAP_LAYER_Z_INDEX;
     const BETA_IDS = [103400892];
     const MIN_ZOOM_LEVEL = 11;
     const STATES_HASH = {
@@ -2657,6 +2657,7 @@
         _mapLayer.setVisibility(_settings.layerVisible);
 
         W.map.addLayer(_mapLayer);
+        MAP_LAYER_Z_INDEX = W.map.roadLayer.getZIndex() - 3;
         _mapLayer.setZIndex(MAP_LAYER_Z_INDEX);
         WazeWrap.Interface.AddLayerCheckbox('Display', 'FC Layer', _settings.layerVisible, onLayerCheckboxChanged);
         // Hack to fix layer zIndex.  Some other code is changing it sometimes but I have not been able to figure out why.
