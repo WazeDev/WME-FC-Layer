@@ -2795,7 +2795,7 @@
     }
 
     function init() {
-        sdk = getWmeSdk({ scriptId: SCRIPT_NAME, scriptName: SCRIPT_NAME });
+        sdk = getWmeSdk({ scriptId: 'wmeFCLayer', scriptName: SCRIPT_NAME });
         loadScriptUpdateMonitor();
 
         if (DEBUG && Promise.config) {
