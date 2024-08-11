@@ -58,6 +58,7 @@
 /* global OpenLayers */
 /* global I18n */
 /* global WazeWrap */
+/* global getWmeSdk */
 
 (function main() {
     'use strict';
@@ -69,12 +70,11 @@
     const DOWNLOAD_URL = 'https://greasyfork.org/scripts/369633-wme-fc-layer/code/WME%20FC%20Layer.user.js';
     let _mapLayer = null;
     let _isAM = false;
-    let _uid;
     let _uName;
     let _settings = {};
     let _r;
+    let sdk;
     let MAP_LAYER_Z_INDEX;
-    const BETA_IDS = [103400892];
     const MIN_ZOOM_LEVEL = 11;
     const STATES_HASH = {
         Alabama: 'AL',
@@ -157,9 +157,6 @@
                 return Object.keys(layer.roadTypeMap).find(rt => layer.roadTypeMap[rt].indexOf(fc) !== -1);
             },
             isPermitted(stateAbbr) {
-                if (BETA_IDS.indexOf(_uid) !== -1) {
-                    return true;
-                }
                 const state = STATE_SETTINGS[stateAbbr];
                 if (state.isPermitted) return state.isPermitted();
                 return (_r >= 3 && _isAM) || (_r >= 4);
@@ -2798,6 +2795,7 @@
     }
 
     function init() {
+        sdk = getWmeSdk({ scriptId: SCRIPT_NAME, scriptName: SCRIPT_NAME });
         loadScriptUpdateMonitor();
 
         if (DEBUG && Promise.config) {
@@ -2816,11 +2814,10 @@
             });
         }
 
-        const u = W.loginManager.user;
-        _uid = u.getID();
-        _r = u.getRank() + 1;
-        _isAM = u.attributes.isAreaManager;
-        _uName = u.getUsername();
+        const u = sdk.State.userInfo;
+        _r = u.rank + 1;
+        _isAM = u.isAreaManager;
+        _uName = u.userName;
 
         loadSettingsFromStorage();
         initGui();
@@ -2828,13 +2825,21 @@
         log('Initialized.');
     }
 
-    function bootstrap() {
+    function onWmeReady(tries = 0) {
+        if (tries === 40) return; // give up
         if (WazeWrap.Ready) {
             log('Initializing...');
             init();
         } else {
-            log('Bootstrap failed. Trying again...');
-            unsafeWindow.setTimeout(bootstrap, 1000);
+            setTimeout(onWmeReady, 500, ++tries);
+        }
+    }
+
+    function bootstrap() {
+        if (window.getWmeSdk) {
+            onWmeReady();
+        } else {
+            document.addEventListener('wme-ready', onWmeReady, { once: true });
         }
     }
 
