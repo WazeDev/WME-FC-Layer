@@ -10,6 +10,7 @@
 // @contributionURL https://github.com/WazeDev/Thank-The-Authors
 // @require      https://greasyfork.org/scripts/39002-bluebird/code/Bluebird.js?version=255146
 // @require      https://greasyfork.org/scripts/24851-wazewrap/code/WazeWrap.js
+// @require      https://cdn.jsdelivr.net/npm/@turf/turf@7/turf.min.js
 // @connect      greasyfork.org
 // @grant        GM_xmlhttpRequest
 // @connect      arcgis.com
@@ -55,10 +56,9 @@
 // ==/UserScript==
 
 /* global W */
-/* global OpenLayers */
-/* global I18n */
 /* global WazeWrap */
 /* global getWmeSdk */
+/* global turf */
 
 (function main() {
     'use strict';
@@ -68,6 +68,7 @@
     const SCRIPT_NAME = GM_info.script.name;
     const SCRIPT_VERSION = GM_info.script.version;
     const DOWNLOAD_URL = 'https://greasyfork.org/scripts/369633-wme-fc-layer/code/WME%20FC%20Layer.user.js';
+    const LAYER_NAME = 'FC Layer';
     let _mapLayer = null;
     let _isAM = false;
     let _uName;
@@ -855,7 +856,7 @@
             baseUrl: 'https://maps.kytc.ky.gov/arcgis/rest/services/BaseMap/System/MapServer/',
             supportsPagination: false,
             defaultColors: {
-                Fw: '#ff00c5', Ew: '#ff00c5', MH: '#149ece', mH: '#4ce600', PS: '#cfae0e', St: '#eeeeee'
+                Fw: '#ffaac5', Ew: '#ff00c5', MH: '#149ece', mH: '#4ce600', PS: '#cfae0e', St: '#eeeeee'
             },
             zoomSettings: { maxOffset: [30, 15, 8, 4, 2, 1, 1, 1, 1, 1] },
             fcMapLayers: [
@@ -1595,10 +1596,10 @@
             information: { Source: 'ODOT' },
             getWhereClause(context) {
                 if (context.mapContext.zoom < 16) {
-                    const clause = `(${context.layer.fcPropName} < 7 OR ROUTE_TYPE IN ('CR','SR','US'))`;
+                    const clause = `(${context.layer.fcPropName} < 7 OR ROUTE_TYPE IN ('CR','SR','US')) AND ${context.layer.fcPropName} IS NOT NULL`;
                     return clause;
                 }
-                return null;
+                return `${context.layer.fcPropName} IS NOT NULL`;
             },
             getFeatureRoadType(feature, layer) {
                 let fc = feature.attributes[layer.fcPropName];
@@ -2393,14 +2394,11 @@
     function saveSettingsToStorage() {
         if (localStorage) {
             _settings.lastVersion = SCRIPT_VERSION;
+            // SDK: visibility requested
             _settings.layerVisible = _mapLayer.visibility;
             localStorage.setItem(SETTINGS_STORE_NAME, JSON.stringify(_settings));
             // debugLog('Settings saved');
         }
-    }
-
-    function getLineWidth() {
-        return 12 * (1.15 ** (W.map.getZoom() - 13));
     }
 
     function sortArray(array) {
@@ -2409,6 +2407,7 @@
 
     function getVisibleStateAbbrs() {
         const visibleStates = [];
+        // SDK: submitted to getAll states
         W.model.states.getObjectArray().forEach(state => {
             const stateAbbr = STATES_HASH[state.attributes.name];
             const { activeStateAbbr } = _settings;
@@ -2446,8 +2445,17 @@
         const { state } = context;
 
         const whereParts = [];
+        const mercatorExtentLeftBottom = turf.toMercator([extent[0], extent[1]]);
+        const mercatorExtentRightTop = turf.toMercator([extent[2], extent[3]]);
         const geometry = {
-            xmin: extent.left, ymin: extent.bottom, xmax: extent.right, ymax: extent.top, spatialReference: { wkid: 102100, latestWkid: 3857 }
+            xmin: mercatorExtentLeftBottom[0],
+            ymin: mercatorExtentLeftBottom[1],
+            xmax: mercatorExtentRightTop[0],
+            ymax: mercatorExtentRightTop[1],
+            spatialReference: {
+                wkid: 102100,
+                latestWkid: 3857
+            }
         };
         const geometryStr = JSON.stringify(geometry);
         const stateWhereClause = state.getWhereClause(context);
@@ -2477,19 +2485,17 @@
         const { state, stateAbbr, layer } = context;
         const roadType = state.getFeatureRoadType(feature, layer);
         // debugLog(feature);
-        const zIndex = STATE_SETTINGS.global.roadTypes.indexOf(roadType) * 100;
         const attr = {
             state: stateAbbr,
             layerID: layer.layerID,
             roadType,
-            dotAttributes: $.extend({}, feature.attributes),
-            color: state.defaultColors[roadType],
-            strokeWidth: getLineWidth,
-            zIndex
+            color: state.defaultColors[roadType]
         };
+
         const vectors = feature.geometry.paths.map(path => {
-            const pointList = path.map(pt => new OpenLayers.Geometry.Point(pt[0], pt[1]));
-            return new OpenLayers.Feature.Vector(new OpenLayers.Geometry.LineString(pointList), attr);
+            const line = turf.toWgs84(turf.lineString(path, attr));
+            line.id = 0;
+            return line;
         });
 
         return vectors;
@@ -2532,7 +2538,7 @@
                             // debugLog('Feature Count=' + (features ? features.length : 0));
                             features = features || [];
                             return features.map(feature => convertFcToRoadTypeVectors(feature, context))
-                                .filter(vector => !(vector[0].attributes.roadType === 'St' && _settings.hideStreet));
+                                .filter(feature => !(feature[0].properties.roadType === 'St' && _settings.hideStreet));
                         }
                         return null;
                     });
@@ -2557,12 +2563,13 @@
     let _lastContext = null;
     let _fcCallCount = 0;
     function fetchAllFC() {
+        // SDK: visibility requested
         if (!_mapLayer.visibility) return;
 
         if (_lastPromise) { _lastPromise.cancel(); }
         $('#fc-loading-indicator').text('Loading FC...');
 
-        const mapContext = { zoom: W.map.getZoom(), extent: W.map.getExtent() };
+        const mapContext = { zoom: sdk.Map.getZoomLevel(), extent: sdk.Map.getMapExtent() };
         if (mapContext.zoom > MIN_ZOOM_LEVEL) {
             const parentContext = { callCount: 0, startTime: Date.now() };
 
@@ -2571,12 +2578,17 @@
             const contexts = getVisibleStateAbbrs().map(stateAbbr => ({ parentContext, stateAbbr, mapContext }));
             const map = Promise.map(contexts, ctx => fetchStateFC(ctx)).then(statesVectorArrays => {
                 if (!parentContext.cancel) {
+                    // SDK: requested
                     _mapLayer.removeAllFeatures();
                     statesVectorArrays.forEach(vectorsArray => {
                         vectorsArray.forEach(vectors => {
                             vectors.forEach(vector => {
-                                vector.forEach(vectorFeature => {
-                                    _mapLayer.addFeatures(vectorFeature);
+                                vector.forEach(array => {
+                                    array.forEach(feature => {
+                                        // TODO: use global const for layer name
+                                        sdk.Map.addFeatureToLayer({ layerName: LAYER_NAME, feature });
+                                        // _mapLayer.addFeatures(feature);
+                                    });
                                 });
                             });
                         });
@@ -2622,46 +2634,64 @@
     }
 
     function initLayer() {
-        const defaultStyle = new OpenLayers.Style({
-            strokeColor: '${color}', // '#00aaff',
-            strokeDashstyle: 'solid',
-            strokeOpacity: 1.0,
-            strokeWidth: '${strokeWidth}',
-            graphicZIndex: '${zIndex}'
+        const styleRules = [
+            {
+                style: {
+                    strokeColor: 'black',
+                    strokeDashstyle: 'solid',
+                    strokeOpacity: 1.0,
+                    strokeWidth: '15'
+                }
+            }
+        ];
+        for (let zoom = 12; zoom < 22; zoom++) {
+            styleRules.push({
+                // eslint-disable-next-line no-loop-func
+                predicate: () => sdk.Map.getZoomLevel() === zoom,
+                style: {
+                    strokeWidth: 12 * (1.15 ** (zoom - 13))
+                }
+            });
+        }
+        Object.values(STATE_SETTINGS)
+            .filter(state => !!state.defaultColors)
+            .forEach(state => Object.values(state.defaultColors)
+                .forEach(color => {
+                    if (!styleRules.some(rule => rule.style.strokeColor === color)) {
+                        styleRules.push({
+                            predicate: props => props.color === color,
+                            style: { strokeColor: color }
+                        });
+                    }
+                }));
+
+        // SDK: zIndexing doesn't do anything because the layers don't support it yet. FR submitted.
+        // May end up needed to create separate layers for each zIndex.
+        STATE_SETTINGS.global.roadTypes.forEach((roadType, index) => {
+            styleRules.push({
+                predicate: props => props.roadType === roadType,
+                style: { graphicZIndex: index * 100 }
+            });
+        });
+        sdk.Map.addLayer({
+            layerName: LAYER_NAME,
+            styleRules
         });
 
-        const selectStyle = new OpenLayers.Style({
-            // strokeOpacity: 1.0,
-            strokeColor: '#000000'
-        });
-
-        _mapLayer = new OpenLayers.Layer.Vector('FC Layer', {
-            uniqueName: '__FCLayer',
-            displayInLayerSwitcher: false,
-            rendererOptions: { zIndexing: true },
-            styleMap: new OpenLayers.StyleMap({
-                default: defaultStyle,
-                select: selectStyle
-            })
-        });
-
+        // SDK: Remove the _mapLayer object eventually...
+        [_mapLayer] = W.map.getLayersByName(LAYER_NAME);
         _mapLayer.setOpacity(0.5);
-
-        I18n.translations[I18n.locale].layers.name.__FCLayer = 'FC Layer';
-
-        _mapLayer.displayInLayerSwitcher = true;
         _mapLayer.events.register('visibilitychanged', null, onLayerVisibilityChanged);
         _mapLayer.setVisibility(_settings.layerVisible);
 
-        W.map.addLayer(_mapLayer);
         MAP_LAYER_Z_INDEX = W.map.roadLayer.getZIndex() - 3;
         _mapLayer.setZIndex(MAP_LAYER_Z_INDEX);
         WazeWrap.Interface.AddLayerCheckbox('Display', 'FC Layer', _settings.layerVisible, onLayerCheckboxChanged);
         // Hack to fix layer zIndex.  Some other code is changing it sometimes but I have not been able to figure out why.
         // It may be that the FC layer is added to the map before some Waze code loads the base layers and forces other layers higher. (?)
-
         setInterval(checkLayerZIndex, 200);
 
+        // SDK: event requested
         W.map.events.register('moveend', W.map, () => {
             fetchAllFC();
             return true;
@@ -2671,6 +2701,7 @@
     function onHideStreetsClicked() {
         _settings.hideStreet = $(this).is(':checked');
         saveSettingsToStorage();
+        // SDK: removeAllFeatures requested
         _mapLayer.removeAllFeatures();
         fetchAllFC();
     }
@@ -2685,6 +2716,7 @@
     function setEnabled(value) {
         _settings.layerVisible = value;
         saveSettingsToStorage();
+        // SDK: visibility function requested
         _mapLayer.setVisibility(value);
         const color = value ? '#00bd00' : '#ccc';
         $('span#fc-layer-power-btn').css({ color });
