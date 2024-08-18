@@ -2481,7 +2481,7 @@
         return url;
     }
 
-    function convertFcToRoadTypeVectors(feature, context) {
+    function convertFcToRoadTypeLineStrings(feature, context) {
         const { state, stateAbbr, layer } = context;
         const roadType = state.getFeatureRoadType(feature, layer);
         // debugLog(feature);
@@ -2492,13 +2492,13 @@
             color: state.defaultColors[roadType]
         };
 
-        const vectors = feature.geometry.paths.map(path => {
+        const lineStrings = feature.geometry.paths.map(path => {
             const line = turf.toWgs84(turf.lineString(path, attr));
             line.id = 0;
             return line;
         });
 
-        return vectors;
+        return lineStrings;
     }
 
     function fetchLayerFC(context) {
@@ -2537,7 +2537,7 @@
                             context.parentContext.callCount++;
                             // debugLog('Feature Count=' + (features ? features.length : 0));
                             features = features || [];
-                            return features.map(feature => convertFcToRoadTypeVectors(feature, context))
+                            return features.map(feature => convertFcToRoadTypeLineStrings(feature, context))
                                 .filter(feature => !(feature[0].properties.roadType === 'St' && _settings.hideStreet));
                         }
                         return null;
@@ -2576,25 +2576,24 @@
             if (_lastContext) _lastContext.cancel = true;
             _lastContext = parentContext;
             const contexts = getVisibleStateAbbrs().map(stateAbbr => ({ parentContext, stateAbbr, mapContext }));
-            const map = Promise.map(contexts, ctx => fetchStateFC(ctx)).then(statesVectorArrays => {
+            const map = Promise.map(contexts, ctx => fetchStateFC(ctx)).then(statesLineStringArrays => {
                 if (!parentContext.cancel) {
                     // SDK: requested
                     _mapLayer.removeAllFeatures();
-                    statesVectorArrays.forEach(vectorsArray => {
-                        vectorsArray.forEach(vectors => {
-                            vectors.forEach(vector => {
-                                vector.forEach(array => {
-                                    array.forEach(feature => {
-                                        // TODO: use global const for layer name
+                    // TODO: Handle all the arrays better...
+                    statesLineStringArrays.forEach(stateLineStringsArray => {
+                        stateLineStringsArray.forEach(lineStringsArray1 => {
+                            lineStringsArray1.forEach(lineStringsArray2 => {
+                                lineStringsArray2.forEach(lineStringsArray3 => {
+                                    lineStringsArray3.forEach(feature => {
                                         sdk.Map.addFeatureToLayer({ layerName: LAYER_NAME, feature });
-                                        // _mapLayer.addFeatures(feature);
                                     });
                                 });
                             });
                         });
                     });
                 }
-                return statesVectorArrays;
+                return statesLineStringArrays;
             }).catch(e => {
                 $('#fc-loading-indicator').text('FC Error! (check console for details)');
                 errorLog(e);
