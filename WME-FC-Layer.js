@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME FC Layer
 // @namespace    https://greasyfork.org/users/45389
-// @version      2024.07.10.001
+// @version      2024.08.18.000
 // @description  Adds a Functional Class layer for states that publish ArcGIS FC data.
 // @author       MapOMatic
 // @match         *://*.waze.com/*editor*
@@ -2565,7 +2565,7 @@
         if (_lastPromise) { _lastPromise.cancel(); }
         $('#fc-loading-indicator').text('Loading FC...');
 
-        const mapContext = { zoom: W.map.getZoom(), extent: W.map.getExtent() };
+        const mapContext = { zoom: W.map.getZoom(), extent: getOLMapExtent() };
         if (mapContext.zoom > MIN_ZOOM_LEVEL) {
             const parentContext = { callCount: 0, startTime: Date.now() };
 
@@ -2602,6 +2602,15 @@
             // if zoomed out too far, clear the layer
             _mapLayer.removeAllFeatures();
         }
+    }
+
+    function getOLMapExtent() {
+        let extent = W.map.getExtent();
+        if (Array.isArray(extent)) {
+            extent = new OpenLayers.Bounds(extent);
+            extent.transform('EPSG:4326', 'EPSG:3857');
+        }
+        return extent;
     }
 
     function onLayerCheckboxChanged(checked) {
