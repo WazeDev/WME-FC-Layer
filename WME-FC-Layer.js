@@ -1122,18 +1122,33 @@
                 return STATE_SETTINGS.global.getFeatureRoadType(feature, layer);
             }
         },
+
+        // 2024-09-08 - This is all I could find for MO. It's Fed Aid routes, which doesn't include
+        // all func class roads and I have no idea if it's kept up to date. So I'm not releasing it.
+        // There are static func class PDF maps on MoDOT's site.
         MO: {
-            baseUrl: 'http://mapping.modot.org/external/rest/services/BaseMap/TmsUtility/MapServer/',
+            baseUrl: 'https://mapping.modot.org/arcgis/rest/services/BusinessInt/FedAidRoutes/MapServer/',
             defaultColors: {
                 Fw: '#ff00c5', Ew: '#4f33df', MH: '#149ece', mH: '#4ce600', PS: '#cfae0e', St: '#eeeeee'
             },
             zoomSettings: { maxOffset: [30, 15, 8, 4, 2, 1, 1, 1, 1, 1], excludeRoadTypes: [['St'], ['St'], ['St'], ['St'], [], [], [], [], [], [], []] },
             fcMapLayers: [
                 {
-                    layerID: 5,
+                    layerID: 0,
                     fcPropName: 'FUNC_CLASS_NAME',
                     idPropName: 'SS_PAVEMENT_ID',
-                    outFields: ['SS_PAVEMENT_ID', 'FUNC_CLASS_NAME', 'TRAVELWAY_DESG', 'TRAVELWAY_NAME', 'ACCESS_CAT_NAME'],
+                    outFields: ['SS_PAVEMENT_ID', 'FUNC_CLASS_NAME', 'TRAVELWAY_DESG', 'TRAVELWAY_NAME'],
+                    roadTypeMap: {
+                        Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5, 6], St: [7]
+                    },
+                    maxRecordCount: 1000,
+                    supportsPagination: false
+                },
+                {
+                    layerID: 1,
+                    fcPropName: 'FUNC_CLASS_NAME',
+                    idPropName: 'SS_PAVEMENT_ID',
+                    outFields: ['SS_PAVEMENT_ID', 'FUNC_CLASS_NAME', 'TRAVELWAY_DESG', 'TRAVELWAY_NAME'],
                     roadTypeMap: {
                         Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5, 6], St: [7]
                     },
@@ -1144,11 +1159,12 @@
             isPermitted() { return _r >= 3 || (_r >= 2 && _isAM); },
             information: { Source: 'MoDOT', Permission: 'Visible to R3+ or R2-AM' },
             getWhereClause(context) {
+                // return null;
                 if (context.mapContext.zoom < 13) {
                     return '1=0'; // WME very laggy at zoom 0
                 }
                 // Remove duplicate rows, but suss out interstate business loops
-                return "FUNC_CLASS_NAME <> ' ' AND (TRAVELWAY_ID = CNTL_TW_ID OR (TRAVELWAY_ID <> CNTL_TW_ID AND TRAVELWAY_DESG = 'LP'))";
+                return "FUNC_CLASS_NAME <> ' '"; // AND (TRAVELWAY_ID = TW_OWNER_ID OR (TRAVELWAY_ID <> TW_OWNER_ID AND TRAVELWAY_DESG = 'LP'))";
             },
             getFeatureRoadType(feature, layer) {
                 const attr = feature.attributes;
@@ -1170,7 +1186,7 @@
                 const isSup = rtType === 'RT';
                 const isBiz = ['BU', 'SP'].includes(rtType) || /BUSINESS .+ \d/.test(route);
                 const isUSBiz = isBiz && usHwys.includes(route);
-                if ((fc === 2 && attr.ACCESS_CAT_NAME !== 'FULL') || (fc > 3 && isUS)) fc = 3;
+                if (/* (fc === 2 && attr.ACCESS_CAT_NAME !== 'FULL') || */(fc > 3 && isUS)) fc = 3;
                 else if (fc > 4 && (isState || isUSBiz)) fc = 4;
                 else if (fc > 6 && (isSup || isBiz)) fc = 6;
                 return STATE_SETTINGS.global.getRoadTypeFromFC(fc, layer);
