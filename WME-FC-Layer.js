@@ -63,17 +63,18 @@
 (function main() {
     'use strict';
 
-    const SETTINGS_STORE_NAME = 'wme_fc_layer';
-    const DEBUG = false;
-    const SCRIPT_NAME = GM_info.script.name;
-    const SCRIPT_VERSION = GM_info.script.version;
-    const DOWNLOAD_URL = 'https://greasyfork.org/scripts/369633-wme-fc-layer/code/WME%20FC%20Layer.user.js';
-    const LAYER_NAME = 'FC Layer';
-    let _mapLayer = null;
-    let _isAM = false;
-    let _uName;
-    let _settings = {};
-    let _r;
+    const settingsStoreName = 'wme_fc_layer';
+    const debug = false;
+    const scriptName = GM_info.script.name;
+    const scriptId = 'wmeFCLayer';
+    const scriptVersion = GM_info.script.version;
+    const downloadUrl = 'https://greasyfork.org/scripts/369633-wme-fc-layer/code/WME%20FC%20Layer.user.js';
+    const layerName = 'FC Layer';
+    let mapLayer;
+    let isAM = false;
+    let userName;
+    let settings = {};
+    let rank;
     let sdk;
     let MAP_LAYER_Z_INDEX;
     const MIN_ZOOM_LEVEL = 11;
@@ -160,7 +161,7 @@
             isPermitted(stateAbbr) {
                 const state = STATE_SETTINGS[stateAbbr];
                 if (state.isPermitted) return state.isPermitted();
-                return (_r >= 3 && _isAM) || (_r >= 4);
+                return (rank >= 3 && isAM) || (rank >= 4);
             },
             getMapLayer(stateAbbr, layerID) {
                 let returnValue;
@@ -191,7 +192,7 @@
                     supportsPagination: false
                 }
             ],
-            isPermitted() { return _r >= 3; },
+            isPermitted() { return rank >= 3; },
             information: { Source: 'ALDOT', Permission: 'Visible to R3+', Description: 'Federal and State highways set to a minimum of mH.' },
             getWhereClause(context) {
                 if (context.mapContext.zoom < 16) {
@@ -346,7 +347,7 @@
                     supportsPagination: false
                 }
             ],
-            isPermitted() { return ['mapomatic', 'turbomkt', 'tonestertm', 'ottonomy', 'jemay'].includes(_uName.toLowerCase()); },
+            isPermitted() { return ['mapomatic', 'turbomkt', 'tonestertm', 'ottonomy', 'jemay'].includes(userName.toLowerCase()); },
             information: { Source: 'Caltrans', Permission: 'Visible to ?', Description: '' },
             getWhereClause(context) {
                 if (context.mapContext.zoom < 16) {
@@ -400,7 +401,7 @@
                     supportsPagination: false
                 }
             ],
-            isPermitted() { return _r >= 3; },
+            isPermitted() { return rank >= 3; },
             information: {
                 Source: 'CDOT',
                 Permission: 'Visible to R3+',
@@ -467,7 +468,7 @@
                     supportsPagination: false
                 }
             ],
-            isPermitted() { return _r >= 3; },
+            isPermitted() { return rank >= 3; },
             information: { Source: 'CTDOT', Permission: 'Visible to R3+', Description: 'Federal and State highways set to a minimum of mH.' },
             getWhereClause(context) {
                 if (context.mapContext.zoom < 16) {
@@ -692,7 +693,7 @@
                     supportsPagination: false
                 }
             ],
-            isPermitted() { return _r >= 4; },
+            isPermitted() { return rank >= 4; },
             information: { Source: 'IDOT', Permission: 'Visible to R4+', Description: 'Raw unmodified FC data.' },
             getWhereClause(context) {
                 return context.mapContext.zoom < 16 ? 'FC<>7' : null;
@@ -833,7 +834,7 @@
                 //     supportsPagination: false
                 // }
             ],
-            isPermitted() { return _r >= 3 || _isAM; },
+            isPermitted() { return rank >= 3 || isAM; },
             information: { Source: 'KDOT', Permission: 'Visible to area managers' },
             getWhereClause(context) {
                 if (context.mapContext.zoom < 16) {
@@ -948,7 +949,7 @@
                 }
             ],
             information: { Source: 'MaineDOT', Permission: 'Visible to R4+ or R3-AM' },
-            isPermitted() { return _r >= 4 || (_r === 3 && _isAM); },
+            isPermitted() { return rank >= 4 || (rank === 3 && isAM); },
             getWhereClause(context) {
                 if (context.mapContext.zoom < 16) {
                     return `${context.layer.fcPropName}<>'Local'`;
@@ -1034,7 +1035,7 @@
                 }
             ],
             information: { Source: 'MDOT', Permission: 'Visible to R2+' },
-            isPermitted() { return _r >= 2; },
+            isPermitted() { return rank >= 2; },
             getWhereClause(context) {
                 if (context.mapContext.zoom < 16) {
                     return `${context.layer.fcPropName}<>'7'`;
@@ -1139,7 +1140,7 @@
                     supportsPagination: false
                 }
             ],
-            isPermitted() { return _r >= 3 || (_r >= 2 && _isAM); },
+            isPermitted() { return rank >= 3 || (rank >= 2 && isAM); },
             information: { Source: 'MoDOT', Permission: 'Visible to R3+ or R2-AM' },
             getWhereClause(context) {
                 if (context.mapContext.zoom < 13) {
@@ -1248,7 +1249,7 @@
                     supportsPagination: false
                 }
             ],
-            isPermitted() { /* return _r >= 3; */ return ['mapomatic', 'bobc455'].includes(_uName.toLowerCase()); },
+            isPermitted() { /* return _r >= 3; */ return ['mapomatic', 'bobc455'].includes(userName.toLowerCase()); },
             information: { Source: 'MDT', Permission: 'Visible to R3+' },
             getWhereClause(context) {
                 if (context.mapContext.zoom < 16) {
@@ -1262,10 +1263,8 @@
                 const isUS = /^US[ -]?\d+/.test(roadID);
                 const isState = /^MONTANA \d+|ROUTE \d+|S-\d{3}\b/.test(roadID);
                 if (isUS && ['St', 'PS', 'mH'].includes(rt)) {
-                    log(`FC UPGRADE: ${roadID} from ${rt} to MH`); // TODO - remove this when testing is finished (9/10/2022)
                     rt = 'MH';
                 } else if (isState && ['St', 'PS'].includes(rt)) {
-                    log(`FC UPGRADE: ${roadID} from ${rt} to mH`); // TODO - remove this when testing is finished (9/10/2022)
                     rt = 'mH';
                 }
                 return rt;
@@ -1290,7 +1289,7 @@
                     supportsPagination: false
                 }
             ],
-            isPermitted() { return ['mapomatic', 'turbomkt', 'tonestertm', 'geopgeop'].includes(_uName.toLowerCase()); },
+            isPermitted() { return ['mapomatic', 'turbomkt', 'tonestertm', 'geopgeop'].includes(userName.toLowerCase()); },
             information: { Source: 'NDOT', Permission: '?' },
             getWhereClause(context) {
                 if (context.mapContext.zoom < 16) {
@@ -1322,7 +1321,7 @@
                     supportsPagination: false
                 }
             ],
-            isPermitted() { return _r >= 2; },
+            isPermitted() { return rank >= 2; },
             information: { Source: 'NH GRANIT', Permission: 'Visible to R2+' },
             getWhereClause(context) {
                 if (context.mapContext.zoom < 16) {
@@ -1447,7 +1446,7 @@
                     supportsPagination: false
                 }
             ],
-            isPermitted() { return _r >= 3; },
+            isPermitted() { return rank >= 3; },
             information: { Source: 'NCDOT', Permission: 'Visible to R3+' },
             getWhereClause(context) {
                 if (context.mapContext.zoom < 16) {
@@ -1720,7 +1719,7 @@
                     }
                 }
             ],
-            isPermitted() { return _r >= 4; },
+            isPermitted() { return rank >= 4; },
             information: { Source: 'PennDOT', Permission: 'Visible to R4+', Description: 'Raw unmodified FC data.' },
             getWhereClause(context) {
                 return (context.mapContext.zoom < 16) ? `${context.layer.fcPropName} NOT IN ('09','19')` : null;
@@ -1752,7 +1751,7 @@
                     supportsPagination: false
                 }
             ],
-            isPermitted() { return _r >= 2; },
+            isPermitted() { return rank >= 2; },
             information: { Source: 'RIDOT', Permission: 'Visible to R2+' },
             getWhereClause(context) {
                 return (context.mapContext.zoom < 16) ? `${context.layer.fcPropName} NOT IN (7,0)` : null;
@@ -1786,7 +1785,7 @@
                     }
                 }
             ],
-            isPermitted() { return _r >= 4; },
+            isPermitted() { return rank >= 4; },
             information: { Source: 'SCDOT', Permission: 'Visible to R4+' },
             getWhereClause() {
                 return null;
@@ -1945,7 +1944,7 @@
                     }
                 }
             ],
-            isPermitted() { return _r >= 2; },
+            isPermitted() { return rank >= 2; },
             information: { Source: 'TxDOT', Permission: 'Visible to R2+' },
             getWhereClause(context) {
                 let where = ' F_SYSTEM IS NOT NULL AND RTE_PRFX IS NOT NULL';
@@ -2055,7 +2054,7 @@
                 }
             ],
             information: { Source: 'VTrans', Permission: 'Visible to R2+' },
-            isPermitted() { return _r >= 2; },
+            isPermitted() { return rank >= 2; },
             getWhereClause(context) {
                 if (context.mapContext.zoom < 16) {
                     return `${context.layer.fcPropName}<>7 AND ${context.layer.fcPropName}<>0`;
@@ -2378,26 +2377,22 @@
     }
 
     function loadSettingsFromStorage() {
-        const loadedSettings = $.parseJSON(localStorage.getItem(SETTINGS_STORE_NAME));
+        const storedSettings = $.parseJSON(localStorage.getItem(settingsStoreName)) || {};
         const defaultSettings = {
             lastVersion: null,
             layerVisible: true,
             activeStateAbbr: 'ALL',
             hideStreet: false
         };
-        _settings = loadedSettings || defaultSettings;
-        Object.keys(defaultSettings).filter(prop => !_settings.hasOwnProperty(prop)).forEach(prop => {
-            _settings[prop] = defaultSettings[prop];
-        });
+        settings = { ...defaultSettings, ...storedSettings };
     }
 
     function saveSettingsToStorage() {
         if (localStorage) {
-            _settings.lastVersion = SCRIPT_VERSION;
-            // SDK: visibility requested
-            _settings.layerVisible = _mapLayer.visibility;
-            localStorage.setItem(SETTINGS_STORE_NAME, JSON.stringify(_settings));
-            // debugLog('Settings saved');
+            settings.lastVersion = scriptVersion;
+            // In case the layer is turned off some other way...
+            settings.layerVisible = sdk.Map.isLayerVisible({ layerName });
+            localStorage.setItem(settingsStoreName, JSON.stringify(settings));
         }
     }
 
@@ -2405,17 +2400,13 @@
         array.sort((a, b) => { if (a < b) return -1; if (a > b) return 1; return 0; });
     }
 
-    function getVisibleStateAbbrs() {
-        const visibleStates = [];
-        // SDK: submitted to getAll states
-        W.model.states.getObjectArray().forEach(state => {
-            const stateAbbr = STATES_HASH[state.attributes.name];
-            const { activeStateAbbr } = _settings;
-            if (STATE_SETTINGS[stateAbbr] && STATE_SETTINGS.global.isPermitted(stateAbbr) && (!activeStateAbbr || activeStateAbbr === 'ALL' || activeStateAbbr === stateAbbr)) {
-                visibleStates.push(stateAbbr);
-            }
-        });
-        return visibleStates;
+    function getVisibleStateAbbreviations() {
+        const { activeStateAbbr } = settings;
+        return sdk.DataModel.States.getAll()
+            .map(state => STATES_HASH[state.name])
+            .filter(stateAbbr => STATE_SETTINGS[stateAbbr]
+                && STATE_SETTINGS.global.isPermitted(stateAbbr)
+                && (!activeStateAbbr || activeStateAbbr === 'ALL' || activeStateAbbr === stateAbbr));
     }
 
     function getAsync(url, context) {
@@ -2538,7 +2529,7 @@
                             // debugLog('Feature Count=' + (features ? features.length : 0));
                             features = features || [];
                             return features.map(feature => convertFcToRoadTypeLineStrings(feature, context))
-                                .filter(feature => !(feature[0].properties.roadType === 'St' && _settings.hideStreet));
+                                .filter(feature => !(feature[0].properties.roadType === 'St' && settings.hideStreet));
                         }
                         return null;
                     });
@@ -2563,8 +2554,7 @@
     let _lastContext = null;
     let _fcCallCount = 0;
     function fetchAllFC() {
-        // SDK: visibility requested
-        if (!_mapLayer.visibility) return;
+        if (!sdk.Map.isLayerVisible({ layerName })) return;
 
         if (_lastPromise) { _lastPromise.cancel(); }
         $('#fc-loading-indicator').text('Loading FC...');
@@ -2575,18 +2565,17 @@
 
             if (_lastContext) _lastContext.cancel = true;
             _lastContext = parentContext;
-            const contexts = getVisibleStateAbbrs().map(stateAbbr => ({ parentContext, stateAbbr, mapContext }));
+            const contexts = getVisibleStateAbbreviations().map(stateAbbr => ({ parentContext, stateAbbr, mapContext }));
             const map = Promise.map(contexts, ctx => fetchStateFC(ctx)).then(statesLineStringArrays => {
                 if (!parentContext.cancel) {
-                    // SDK: requested
-                    _mapLayer.removeAllFeatures();
+                    sdk.Map.removeAllFeaturesFromLayer({ layerName });
                     // TODO: Handle all the arrays better...
                     statesLineStringArrays.forEach(stateLineStringsArray => {
                         stateLineStringsArray.forEach(lineStringsArray1 => {
                             lineStringsArray1.forEach(lineStringsArray2 => {
                                 lineStringsArray2.forEach(lineStringsArray3 => {
                                     lineStringsArray3.forEach(feature => {
-                                        sdk.Map.addFeatureToLayer({ layerName: LAYER_NAME, feature });
+                                        sdk.Map.addFeatureToLayer({ layerName, feature });
                                     });
                                 });
                             });
@@ -2608,36 +2597,23 @@
             _lastPromise = map;
         } else {
             // if zoomed out too far, clear the layer
-            _mapLayer.removeAllFeatures();
+            sdk.Map.removeAllFeaturesFromLayer({ layerName });
         }
-    }
-
-    function getOLMapExtent() {
-        let extent = W.map.getExtent();
-        if (Array.isArray(extent)) {
-            extent = new OpenLayers.Bounds(extent);
-            extent.transform('EPSG:4326', 'EPSG:3857');
-        }
-        return extent;
     }
 
     function onLayerCheckboxChanged(checked) {
         setEnabled(checked);
     }
 
-    function onLayerVisibilityChanged() {
-        setEnabled(_mapLayer.visibility);
-        // _settings.layerVisible = _mapLayer.visibility;
-        // saveSettingsToStorage();
-        // if (_mapLayer.visibility) {
-        //     fetchAllFC();
-        // }
-    }
-
     function checkLayerZIndex() {
-        if (_mapLayer.getZIndex() !== MAP_LAYER_Z_INDEX) {
-            // ("ADJUSTED FC LAYER Z-INDEX " + _mapLayerZIndex + ', ' + _mapLayer.getZIndex());
-            _mapLayer.setZIndex(MAP_LAYER_Z_INDEX);
+        // SDK: zindex not supported yet
+        try {
+            if (mapLayer.getZIndex() !== MAP_LAYER_Z_INDEX) {
+                // ("ADJUSTED FC LAYER Z-INDEX " + mapLayerZIndex + ', ' + mapLayer.getZIndex());
+                mapLayer.setZIndex(MAP_LAYER_Z_INDEX);
+            }
+        } catch {
+            // ignore this hack if it crashes
         }
     }
 
@@ -2682,50 +2658,52 @@
             });
         });
         sdk.Map.addLayer({
-            layerName: LAYER_NAME,
+            layerName,
             styleRules
         });
 
-        // SDK: Remove the _mapLayer object eventually...
-        [_mapLayer] = W.map.getLayersByName(LAYER_NAME);
-        _mapLayer.setOpacity(0.5);
-        _mapLayer.events.register('visibilitychanged', null, onLayerVisibilityChanged);
-        _mapLayer.setVisibility(_settings.layerVisible);
+        sdk.Map.setLayerOpacity({ layerName, opacity: 0.5 });
+        sdk.Map.setLayerVisibility({ layerName, visibility: settings.layerVisible });
 
+        // SDK: This is to make sure the layer visibility is saved. Originally was an event
+        // handler to detect layer visibility changed, but that's not available in the SDK yet.
+        window.addEventListener('beforeunload', () => saveSettingsToStorage);
+
+        // SDK: Remove the mapLayer object eventually...
+        [mapLayer] = W.map.getLayersByName(layerName);
+
+        // SDK: zindex not supported yet
         MAP_LAYER_Z_INDEX = W.map.roadLayer.getZIndex() - 3;
-        _mapLayer.setZIndex(MAP_LAYER_Z_INDEX);
-        WazeWrap.Interface.AddLayerCheckbox('Display', 'FC Layer', _settings.layerVisible, onLayerCheckboxChanged);
+        mapLayer.setZIndex(MAP_LAYER_Z_INDEX);
+
+        WazeWrap.Interface.AddLayerCheckbox('Display', 'FC Layer', settings.layerVisible, onLayerCheckboxChanged);
+
         // Hack to fix layer zIndex.  Some other code is changing it sometimes but I have not been able to figure out why.
         // It may be that the FC layer is added to the map before some Waze code loads the base layers and forces other layers higher. (?)
         setInterval(checkLayerZIndex, 200);
 
-        // SDK: event requested
-        W.map.events.register('moveend', W.map, () => {
-            fetchAllFC();
-            return true;
-        }, true);
+        sdk.Events.on('wme-map-move', fetchAllFC);
     }
 
     function onHideStreetsClicked() {
-        _settings.hideStreet = $(this).is(':checked');
+        settings.hideStreet = $(this).is(':checked');
         saveSettingsToStorage();
-        // SDK: removeAllFeatures requested
-        _mapLayer.removeAllFeatures();
+        sdk.Map.removeAllFeaturesFromLayer({ layerName });
         fetchAllFC();
     }
 
     function onStateSelectionChanged() {
-        _settings.activeStateAbbr = this.value;
+        settings.activeStateAbbr = this.value;
         saveSettingsToStorage();
         loadStateFCInfo();
         fetchAllFC();
     }
 
     function setEnabled(value) {
-        _settings.layerVisible = value;
+        sdk.Map.setLayerVisibility({ layerName, visibility: value });
+        settings.layerVisible = value;
         saveSettingsToStorage();
-        // SDK: visibility function requested
-        _mapLayer.setVisibility(value);
+
         const color = value ? '#00bd00' : '#ccc';
         $('span#fc-layer-power-btn').css({ color });
         if (value) fetchAllFC();
@@ -2736,12 +2714,7 @@
         const $tab = $('<li>').append($('<a>', { 'data-toggle': 'tab', href: '#sidepanel-fc-layer' }).text('FC'));
         const $panel = $('<div>', { class: 'tab-pane', id: 'sidepanel-fc-layer' });
         const $stateSelect = $('<select>', { id: 'fcl-state-select', class: 'form-control disabled', style: 'disabled' }).append($('<option>', { value: 'ALL' }).text('All'));
-        // $stateSelect.change(function(evt) {
-        //     _settings.activeStateAbbr = evt.target.value;
-        //     saveSettingsToStorage();
-        //     _mapLayer.removeAllFeatures();
-        //     fetchAllFC();
-        // });
+
         Object.keys(STATE_SETTINGS).forEach(stateAbbr => {
             if (stateAbbr !== 'global') {
                 $stateSelect.append($('<option>', { value: stateAbbr }).text(reverseStatesHash(stateAbbr)));
@@ -2749,10 +2722,10 @@
         });
 
         const $hideStreet = $('<div>', { id: 'fcl-hide-street-container', class: 'controls-container' })
-            .append($('<input>', { type: 'checkbox', name: 'fcl-hide-street', id: 'fcl-hide-street' }).prop('checked', _settings.hideStreet).click(onHideStreetsClicked))
+            .append($('<input>', { type: 'checkbox', name: 'fcl-hide-street', id: 'fcl-hide-street' }).prop('checked', settings.hideStreet).click(onHideStreetsClicked))
             .append($('<label>', { for: 'fcl-hide-street' }).text('Hide local street highlights'));
 
-        $stateSelect.val(_settings.activeStateAbbr ? _settings.activeStateAbbr : 'ALL');
+        $stateSelect.val(settings.activeStateAbbr ? settings.activeStateAbbr : 'ALL');
 
         $panel.append(
             $('<div>', { class: 'form-group' }).append(
@@ -2770,7 +2743,7 @@
 
         $panel.append(
             $('<div>', { style: 'margin-top:10px;font-size:10px;color:#999999;' })
-                .append($('<div>').text(`version ${SCRIPT_VERSION}`))
+                .append($('<div>').text(`version ${scriptVersion}`))
                 .append(
                     $('<div>').append(
                         $('<a>', { href: '#' /* , target:'__blank' */ }).text('Discussion Forum (currently n/a)')
@@ -2782,7 +2755,7 @@
 
         // append the power button
         if (!$('#fc-layer-power-btn').length) {
-            const color = _settings.layerVisible ? '#00bd00' : '#ccc';
+            const color = settings.layerVisible ? '#00bd00' : '#ccc';
             $('a[href="#sidepanel-fc-layer"]').prepend(
                 $('<span>', {
                     class: 'fa fa-power-off',
@@ -2791,7 +2764,7 @@
                     title: 'Toggle FC Layer'
                 }).click(evt => {
                     evt.stopPropagation();
-                    setEnabled(!_settings.layerVisible);
+                    setEnabled(!settings.layerVisible);
                 })
             );
         }
@@ -2803,8 +2776,8 @@
 
     function loadStateFCInfo() {
         $('#fcl-state-info').empty();
-        if (STATE_SETTINGS[_settings.activeStateAbbr]) {
-            const stateInfo = STATE_SETTINGS[_settings.activeStateAbbr].information;
+        if (STATE_SETTINGS[settings.activeStateAbbr]) {
+            const stateInfo = STATE_SETTINGS[settings.activeStateAbbr].information;
             const $panelStateInfo = $('<dl>');
             Object.keys(stateInfo).forEach(propertyName => {
                 $panelStateInfo.append($('<dt>', { style: 'margin-top:1em;color:#777777' }).text(propertyName))
@@ -2826,19 +2799,18 @@
 
     function loadScriptUpdateMonitor() {
         try {
-            const updateMonitor = new WazeWrap.Alerts.ScriptUpdateMonitor(SCRIPT_NAME, SCRIPT_VERSION, DOWNLOAD_URL, GM_xmlhttpRequest);
+            const updateMonitor = new WazeWrap.Alerts.ScriptUpdateMonitor(scriptName, scriptVersion, downloadUrl, GM_xmlhttpRequest);
             updateMonitor.start();
         } catch (ex) {
             // Report, but don't stop if ScriptUpdateMonitor fails.
-            console.error(`${SCRIPT_NAME}:`, ex);
+            console.error(`${scriptName}:`, ex);
         }
     }
 
     function init() {
-        sdk = getWmeSdk({ scriptId: 'wmeFCLayer', scriptName: SCRIPT_NAME });
         loadScriptUpdateMonitor();
 
-        if (DEBUG && Promise.config) {
+        if (debug && Promise.config) {
             Promise.config({
                 warnings: true,
                 longStackTraces: true,
@@ -2854,10 +2826,10 @@
             });
         }
 
-        const u = sdk.State.userInfo;
-        _r = u.rank + 1;
-        _isAM = u.isAreaManager;
-        _uName = u.userName;
+        const u = sdk.State.getUserInfo();
+        rank = u.rank + 1;
+        isAM = u.isAreaManager;
+        userName = u.userName;
 
         loadSettingsFromStorage();
         initGui();
@@ -2865,24 +2837,40 @@
         log('Initialized.');
     }
 
-    function onWmeReady(tries = 0) {
-        if (tries === 40) return; // give up
-        if (WazeWrap.Ready) {
-            log('Initializing...');
-            init();
-        } else {
-            setTimeout(onWmeReady, 500, ++tries);
-        }
+    function wazeWrapReady() {
+        return new Promise(resolve => {
+            (function checkWazeWrapReady(tries = 0) {
+                if (WazeWrap.Ready) {
+                    resolve();
+                } else if (tries < 1000) {
+                    setTimeout(checkWazeWrapReady, 200, ++tries);
+                }
+            })();
+        });
     }
 
-    function bootstrap() {
-        if (window.getWmeSdk) {
-            onWmeReady();
-        } else {
-            document.addEventListener('wme-ready', onWmeReady, { once: true });
-        }
+    function wmeReady() {
+        sdk = getWmeSdk({ scriptName, scriptId });
+        return new Promise(resolve => {
+            if (sdk.State.isReady()) resolve();
+            sdk.Events.once('wme-ready').then(resolve);
+        });
     }
 
-    log('Bootstrap...');
+    async function bootstrap() {
+        // SDK: Remove this when SDK_INITIALIZED is fixed
+        if (!window.SDK_INITIALIZED) {
+            window.SDK_INITIALIZED = new Promise(resolve => {
+                document.body.addEventListener('sdk-initialized', () => resolve());
+            });
+        }
+        // --------
+
+        await window.SDK_INITIALIZED;
+        await wmeReady();
+        await wazeWrapReady();
+        init();
+    }
+
     bootstrap();
 })();
