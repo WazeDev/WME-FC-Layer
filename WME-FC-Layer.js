@@ -11,6 +11,7 @@
 // @require      https://greasyfork.org/scripts/39002-bluebird/code/Bluebird.js?version=255146
 // @require      https://greasyfork.org/scripts/24851-wazewrap/code/WazeWrap.js
 // @require      https://cdn.jsdelivr.net/npm/@turf/turf@7/turf.min.js
+// @require      https://update.greasyfork.org/scripts/509664/WME%20Utils%20-%20Bootstrap.js
 // @connect      greasyfork.org
 // @grant        GM_xmlhttpRequest
 // @connect      arcgis.com
@@ -57,10 +58,10 @@
 
 /* global W */
 /* global WazeWrap */
-/* global getWmeSdk */
 /* global turf */
+/* global bootstrap */
 
-(function main() {
+(async function main() {
     'use strict';
 
     const settingsStoreName = 'wme_fc_layer';
@@ -2797,19 +2798,7 @@
         initUserPanel();
     }
 
-    function loadScriptUpdateMonitor() {
-        try {
-            const updateMonitor = new WazeWrap.Alerts.ScriptUpdateMonitor(scriptName, scriptVersion, downloadUrl, GM_xmlhttpRequest);
-            updateMonitor.start();
-        } catch (ex) {
-            // Report, but don't stop if ScriptUpdateMonitor fails.
-            console.error(`${scriptName}:`, ex);
-        }
-    }
-
     function init() {
-        loadScriptUpdateMonitor();
-
         if (debug && Promise.config) {
             Promise.config({
                 warnings: true,
@@ -2837,40 +2826,14 @@
         log('Initialized.');
     }
 
-    function wazeWrapReady() {
-        return new Promise(resolve => {
-            (function checkWazeWrapReady(tries = 0) {
-                if (WazeWrap.Ready) {
-                    resolve();
-                } else if (tries < 1000) {
-                    setTimeout(checkWazeWrapReady, 200, ++tries);
-                }
-            })();
-        });
-    }
-
-    function wmeReady() {
-        sdk = getWmeSdk({ scriptName, scriptId });
-        return new Promise(resolve => {
-            if (sdk.State.isReady()) resolve();
-            sdk.Events.once('wme-ready').then(resolve);
-        });
-    }
-
-    async function bootstrap() {
-        // SDK: Remove this when SDK_INITIALIZED is fixed
-        if (!window.SDK_INITIALIZED) {
-            window.SDK_INITIALIZED = new Promise(resolve => {
-                document.body.addEventListener('sdk-initialized', () => resolve());
-            });
+    sdk = await bootstrap({
+        scriptName,
+        scriptId,
+        scriptUpdateMonitor: {
+            scriptVersion,
+            downloadUrl
         }
-        // --------
+    });
 
-        await window.SDK_INITIALIZED;
-        await wmeReady();
-        await wazeWrapReady();
-        init();
-    }
-
-    bootstrap();
+    init();
 })();
