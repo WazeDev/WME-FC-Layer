@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME FC Layer
 // @namespace    https://greasyfork.org/users/45389
-// @version      2024.08.18.000
+// @version      2024.10.05.000
 // @description  Adds a Functional Class layer for states that publish ArcGIS FC data.
 // @author       MapOMatic
 // @match         *://*.waze.com/*editor*
@@ -1868,13 +1868,13 @@
             zoomSettings: { maxOffset: [30, 15, 8, 4, 2, 1, 1, 1, 1, 1] },
             fcMapLayers: [
                 {
-                    layerPath: 'comgis4.memphistn.gov/arcgis/rest/services/AGO_DPD/Memphis_MPO/FeatureServer/',
+                    layerPath: 'services2.arcgis.com/nf3p7v7Zy4fTOh6M/ArcGIS/rest/services/Road_Segment/FeatureServer/',
                     maxRecordCount: 1000,
                     supportsPagination: false,
-                    layerID: 4,
-                    fcPropName: 'Functional_Classification',
+                    layerID: 0,
+                    fcPropName: 'FUNC_CLASS',
                     idPropName: 'OBJECTID',
-                    outFields: ['OBJECTID', 'Functional_Classification'],
+                    outFields: ['OBJECTID', 'FUNC_CLASS'],
                     getWhereClause(context) {
                         if (context.mapContext.zoom < 16) {
                             return `${context.layer.fcPropName} NOT LIKE '%Local'`;
@@ -1882,33 +1882,57 @@
                         return null;
                     },
                     roadTypeMap: {
-                        Fw: ['(Urban) Interstate', '(Rural) Interstate'],
-                        Ew: ['(Urban) Other Freeway or Expressway', '(Rural) Other Freeway or Expressway'],
-                        MH: ['(Urban) Other Principal Arterial', '(Rural) Other Principal Arterial'],
-                        mH: ['(Urban) Minor Arterial', '(Rural) Minor Arterial'],
-                        PS: ['(Urban) Major Collector', '(Rural) Major Collector'],
-                        PS2: ['(Urban) Minor Collector', '(Rural) Minor Collector'],
-                        St: ['(Urban) Local', '(Rural) Local']
+                        Fw: ['Urban Interstate', 'Rural Interstate'],
+                        Ew: ['Urban Freeway or Expressway', 'Rural Freeway or Expressway'],
+                        MH: ['Urban Other Principal Arterial', 'Rural Other Principal Arterial'],
+                        mH: ['Urban Minor Arterial', 'Rural Minor Arterial'],
+                        PS: ['Urban Major Collector', 'Rural Major Collector'],
+                        PS2: ['Urban Minor Collector', 'Rural Minor Collector'],
+                        St: ['Urban Local', 'Rural Local']
                     }
-                },
-                {
-                    layerPath: 'services3.arcgis.com/pXGyp7DHTIE4RXOJ/ArcGIS/rest/services/Functional_Classification/FeatureServer/',
-                    maxRecordCount: 1000,
-                    supportsPagination: false,
-                    layerID: 0,
-                    fcPropName: 'FC_MPO',
-                    idPropName: 'FID',
-                    outFields: ['FID', 'FC_MPO'],
-                    getWhereClause(context) {
-                        if (context.mapContext.zoom < 16) {
-                            return `${context.layer.fcPropName} NOT IN (0,7,9,19)`;
-                        }
-                        return `${context.layer.fcPropName} <> 0`;
-                    },
-                    roadTypeMap: {
-                        Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5, 6], St: [7]
-                    }
-                }
+                } // ,
+                // {
+                //     layerPath: 'comgis4.memphistn.gov/arcgis/rest/services/AGO_DPD/Memphis_MPO/FeatureServer/',
+                //     maxRecordCount: 1000,
+                //     supportsPagination: false,
+                //     layerID: 4,
+                //     fcPropName: 'Functional_Classification',
+                //     idPropName: 'OBJECTID',
+                //     outFields: ['OBJECTID', 'Functional_Classification'],
+                //     getWhereClause(context) {
+                //         if (context.mapContext.zoom < 16) {
+                //             return `${context.layer.fcPropName} NOT LIKE '%Local'`;
+                //         }
+                //         return null;
+                //     },
+                //     roadTypeMap: {
+                //         Fw: ['(Urban) Interstate', '(Rural) Interstate'],
+                //         Ew: ['(Urban) Other Freeway or Expressway', '(Rural) Other Freeway or Expressway'],
+                //         MH: ['(Urban) Other Principal Arterial', '(Rural) Other Principal Arterial'],
+                //         mH: ['(Urban) Minor Arterial', '(Rural) Minor Arterial'],
+                //         PS: ['(Urban) Major Collector', '(Rural) Major Collector'],
+                //         PS2: ['(Urban) Minor Collector', '(Rural) Minor Collector'],
+                //         St: ['(Urban) Local', '(Rural) Local']
+                //     }
+                // },
+                // {
+                //     layerPath: 'services3.arcgis.com/pXGyp7DHTIE4RXOJ/ArcGIS/rest/services/Functional_Classification/FeatureServer/',
+                //     maxRecordCount: 1000,
+                //     supportsPagination: false,
+                //     layerID: 0,
+                //     fcPropName: 'FC_MPO',
+                //     idPropName: 'FID',
+                //     outFields: ['FID', 'FC_MPO'],
+                //     getWhereClause(context) {
+                //         if (context.mapContext.zoom < 16) {
+                //             return `${context.layer.fcPropName} NOT IN (0,7,9,19)`;
+                //         }
+                //         return `${context.layer.fcPropName} <> 0`;
+                //     },
+                //     roadTypeMap: {
+                //         Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5, 6], St: [7]
+                //     }
+                // }
             ],
             information: {
                 Source: 'Memphis, Nashville Area MPO',
