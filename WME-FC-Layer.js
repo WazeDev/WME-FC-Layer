@@ -66,17 +66,15 @@
 
     const settingsStoreName = 'wme_fc_layer';
     const debug = false;
-    const scriptName = GM_info.script.name;
-    const scriptId = 'wmeFCLayer';
     const scriptVersion = GM_info.script.version;
     const downloadUrl = 'https://greasyfork.org/scripts/369633-wme-fc-layer/code/WME%20FC%20Layer.user.js';
+    const sdk = await bootstrap({ scriptUpdateMonitor: { downloadUrl } });
     const layerName = 'FC Layer';
     let mapLayer;
     let isAM = false;
     let userName;
     let settings = {};
     let rank;
-    let sdk;
     let MAP_LAYER_Z_INDEX;
     const MIN_ZOOM_LEVEL = 11;
     const STATES_HASH = {
@@ -2404,7 +2402,6 @@
     function loadSettingsFromStorage() {
         const storedSettings = $.parseJSON(localStorage.getItem(settingsStoreName)) || {};
         const defaultSettings = {
-            lastVersion: null,
             layerVisible: true,
             activeStateAbbr: 'ALL',
             hideStreet: false
@@ -2414,7 +2411,6 @@
 
     function saveSettingsToStorage() {
         if (localStorage) {
-            settings.lastVersion = scriptVersion;
             // In case the layer is turned off some other way...
             settings.layerVisible = sdk.Map.isLayerVisible({ layerName });
             localStorage.setItem(settingsStoreName, JSON.stringify(settings));
@@ -2849,15 +2845,6 @@
         fetchAllFC();
         log('Initialized.');
     }
-
-    sdk = await bootstrap({
-        scriptName,
-        scriptId,
-        scriptUpdateMonitor: {
-            scriptVersion,
-            downloadUrl
-        }
-    });
 
     init();
 })();
