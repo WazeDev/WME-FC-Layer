@@ -52,8 +52,6 @@
 // @connect      wa.gov
 // @connect      wv.gov
 // @connect      wyoroad.info
-// @downloadURL https://update.greasyfork.org/scripts/369633/WME%20FC%20Layer.user.js
-// @updateURL https://update.greasyfork.org/scripts/369633/WME%20FC%20Layer.meta.js
 // ==/UserScript==
 
 /* global W */
