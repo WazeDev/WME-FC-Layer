@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME FC Layer
 // @namespace    https://greasyfork.org/users/45389
-// @version      2024.10.05.000
+// @version      2024.10.08.000
 // @description  Adds a Functional Class layer for states that publish ArcGIS FC data.
 // @author       MapOMatic
 // @match         *://*.waze.com/*editor*
@@ -52,6 +52,8 @@
 // @connect      wa.gov
 // @connect      wv.gov
 // @connect      wyoroad.info
+// @downloadURL https://update.greasyfork.org/scripts/369633/WME%20FC%20Layer.user.js
+// @updateURL https://update.greasyfork.org/scripts/369633/WME%20FC%20Layer.meta.js
 // ==/UserScript==
 
 /* global W */
@@ -2474,7 +2476,7 @@
 
         const whereParts = [];
         const geometry = {
-            xmin: extent.left, ymin: extent.bottom, xmax: extent.right, ymax: extent.top, spatialReference: { wkid: 102100, latestWkid: 3857 }
+            xmin: extent[0], ymin: extent[1], xmax: extent[2], ymax: extent[3], spatialReference: { wkid: 4326 }
         };
         const geometryStr = JSON.stringify(geometry);
         const stateWhereClause = state.getWhereClause(context);
@@ -2589,7 +2591,7 @@
         if (_lastPromise) { _lastPromise.cancel(); }
         $('#fc-loading-indicator').text('Loading FC...');
 
-        const mapContext = { zoom: W.map.getZoom(), extent: getOLMapExtent() };
+        const mapContext = { zoom: W.map.getZoom(), extent: W.map.getExtent() };
         if (mapContext.zoom > MIN_ZOOM_LEVEL) {
             const parentContext = { callCount: 0, startTime: Date.now() };
 
@@ -2628,14 +2630,14 @@
         }
     }
 
-    function getOLMapExtent() {
-        let extent = W.map.getExtent();
-        if (Array.isArray(extent)) {
-            extent = new OpenLayers.Bounds(extent);
-            extent.transform('EPSG:4326', 'EPSG:3857');
-        }
-        return extent;
-    }
+//    function getOLMapExtent() {
+//        let extent = W.map.getExtent();
+//        if (Array.isArray(extent)) {
+//            extent = new OpenLayers.Bounds(extent);
+//            extent.transform('EPSG:4326', 'EPSG:3857');
+//        }
+//        return extent;
+//    }
 
     function onLayerCheckboxChanged(checked) {
         setEnabled(checked);
