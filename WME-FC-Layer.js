@@ -2731,9 +2731,8 @@
         $('#layer-switcher-item_fc_layer').prop('checked', value);
     }
 
-    function initUserPanel() {
-        const $tab = $('<li>').append($('<a>', { 'data-toggle': 'tab', href: '#sidepanel-fc-layer' }).text('FC'));
-        const $panel = $('<div>', { class: 'tab-pane', id: 'sidepanel-fc-layer' });
+    async function initUserPanel() {
+        const $panel = $('<div>');
         const $stateSelect = $('<select>', { id: 'fcl-state-select', class: 'form-control disabled', style: 'disabled' }).append($('<option>', { value: 'ALL' }).text('All'));
 
         Object.keys(STATE_SETTINGS).forEach(stateAbbr => {
@@ -2772,12 +2771,14 @@
                 )
         );
 
-        $('#user-tabs > .nav-tabs').append($tab);
+        const { tabLabel, tabPane } = await sdk.Sidebar.registerScriptTab();
+        $(tabLabel).text('FC');
+        $(tabPane).append($panel);
 
         // append the power button
         if (!$('#fc-layer-power-btn').length) {
             const color = settings.layerVisible ? '#00bd00' : '#ccc';
-            $('a[href="#sidepanel-fc-layer"]').prepend(
+            $(tabLabel).prepend(
                 $('<span>', {
                     class: 'fa fa-power-off',
                     id: 'fc-layer-power-btn',
@@ -2790,7 +2791,6 @@
             );
         }
 
-        $('#user-info > .flex-parent > .tab-content').append($panel);
         $('#fcl-state-select').change(onStateSelectionChanged);
         loadStateFCInfo();
     }
@@ -2812,13 +2812,13 @@
         $('.loading-indicator').after($('<div class="loading-indicator" style="margin-right:10px" id="fc-loading-indicator">'));
     }
 
-    function initGui() {
+    async function initGui() {
         addLoadingIndicator();
         initLayer();
-        initUserPanel();
+        await initUserPanel();
     }
 
-    function init() {
+    async function init() {
         if (debug && Promise.config) {
             Promise.config({
                 warnings: true,
@@ -2841,7 +2841,7 @@
         userName = u.userName;
 
         loadSettingsFromStorage();
-        initGui();
+        await initGui();
         fetchAllFC();
         log('Initialized.');
     }
