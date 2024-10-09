@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME FC Layer
 // @namespace    https://greasyfork.org/users/45389
-// @version      2024.10.09.000
+// @version      2024.10.09.001
 // @description  Adds a Functional Class layer for states that publish ArcGIS FC data.
 // @author       MapOMatic
 // @match         *://*.waze.com/*editor*
@@ -1909,7 +1909,7 @@
                 }
                 let fc = STATE_SETTINGS.global.getRoadTypeFromFC(feature.attributes.FUNC_CLASS, layer);
                 if ((fc === 'PS' || fc === 'mH') && feature.attributes.NBR_US_RTE != null) {
-                    fc = 'MH';
+                    fc = feature.attributes.NBR_US_RTE.endsWith('BR') ? 'mH' : 'MH';
                 } else if (fc === 'PS' && (feature.attributes.NBR_RTE.startsWith('SR') || feature.attributes.NBR_RTE.startsWith('TN'))) {
                     fc = 'mH';
                 }
@@ -2461,6 +2461,7 @@
         if (stateWhereClause) whereParts.push(stateWhereClause);
         if (whereParts.length > 0) url += `&where=${encodeURIComponent(whereParts.join(' AND '))}`;
         url += '&spatialRel=esriSpatialRelIntersects&geometryType=esriGeometryEnvelope&inSR=102100&outSR=3857&f=json';
+        console.log(url);
         return url;
     }
 
