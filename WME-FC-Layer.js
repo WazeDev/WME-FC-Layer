@@ -70,7 +70,6 @@
     const downloadUrl = 'https://greasyfork.org/scripts/369633-wme-fc-layer/code/WME%20FC%20Layer.user.js';
     const sdk = await bootstrap({ scriptUpdateMonitor: { downloadUrl } });
     const layerName = 'FC Layer';
-    let mapLayer;
     let isAM = false;
     let userName;
     let settings = {};
@@ -2625,13 +2624,18 @@
     function onLayerCheckboxChanged(checked) {
         setEnabled(checked);
     }
+    // SDK: uncomment when ready
+    // function onLayerCheckboxChangedSdk(details) {
+    //     if (details.name === 'FC Layer') {
+    //         setEnabled(details.checked);
+    //     }
+    // }
 
     function checkLayerZIndex() {
-        // SDK: zindex not supported yet
         try {
-            if (mapLayer.getZIndex() !== MAP_LAYER_Z_INDEX) {
+            if (sdk.Map.getLayerZIndex({ layerName }) !== MAP_LAYER_Z_INDEX) {
                 // ("ADJUSTED FC LAYER Z-INDEX " + mapLayerZIndex + ', ' + mapLayer.getZIndex());
-                mapLayer.setZIndex(MAP_LAYER_Z_INDEX);
+                sdk.Map.setLayerZIndex({ layerName, zIndex: MAP_LAYER_Z_INDEX });
             }
         } catch {
             // ignore this hack if it crashes
@@ -2685,25 +2689,23 @@
 
         sdk.Map.setLayerOpacity({ layerName, opacity: 0.5 });
         sdk.Map.setLayerVisibility({ layerName, visibility: settings.layerVisible });
+        MAP_LAYER_Z_INDEX = sdk.Map.getLayerZIndex({ layerName: 'roads' }) - 3;
+        sdk.Map.setLayerZIndex({ layerName, zIndex: MAP_LAYER_Z_INDEX });
 
-        // SDK: This is to make sure the layer visibility is saved. Originally was an event
-        // handler to detect layer visibility changed, but that's not available in the SDK yet.
         window.addEventListener('beforeunload', () => saveSettingsToStorage);
 
-        // SDK: Remove the mapLayer object eventually...
-        [mapLayer] = W.map.getLayersByName(layerName);
-
-        // SDK: zindex not supported yet
-        MAP_LAYER_Z_INDEX = W.map.roadLayer.getZIndex() - 3;
-        mapLayer.setZIndex(MAP_LAYER_Z_INDEX);
-
+        // SDK: Update this with LayerSwitcher once it supports manually setting the checkbox state
         WazeWrap.Interface.AddLayerCheckbox('Display', 'FC Layer', settings.layerVisible, onLayerCheckboxChanged);
+        // sdk.LayerSwitcher.addLayerCheckbox({ name: 'FC Layer' });
+        // sdk.Events.on({ eventName: 'wme-layer-checkbox-toggled', eventHandler: onLayerCheckboxChangedSdk });
 
         // Hack to fix layer zIndex.  Some other code is changing it sometimes but I have not been able to figure out why.
         // It may be that the FC layer is added to the map before some Waze code loads the base layers and forces other layers higher. (?)
         setInterval(checkLayerZIndex, 200);
 
-        sdk.Events.on('wme-map-move', fetchAllFC);
+        // SDK: Need a moveend event.  wme-map-move fires constantly while drag-panning
+        W.map.events.register('moveend', W.map, fetchAllFC);
+        // sdk.Events.on({ eventName: 'wme-map-move', eventHandler: fetchAllFC });
     }
 
     function onHideStreetsClicked() {
