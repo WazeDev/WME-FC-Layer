@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME FC Layer
 // @namespace    https://greasyfork.org/users/45389
-// @version      2024.11.16.000
+// @version      2025.01.08.000
 // @description  Adds a Functional Class layer for states that publish ArcGIS FC data.
 // @author       MapOMatic
 // @match         *://*.waze.com/*editor*
@@ -1123,7 +1123,7 @@
             }
         },
         MO: {
-            baseUrl: 'http://mapping.modot.org/external/rest/services/BaseMap/TmsUtility/MapServer/',
+            baseUrl: 'https://mapping.modot.org/arcgis/rest/services/BaseMap/TmsUtility/MapServer/',
             defaultColors: {
                 Fw: '#ff00c5', Ew: '#4f33df', MH: '#149ece', mH: '#4ce600', PS: '#cfae0e', St: '#eeeeee'
             },
