@@ -1123,7 +1123,7 @@
             }
         },
         MO: {
-            baseUrl: 'http://mapping.modot.org/external/rest/services/BaseMap/TmsUtility/MapServer/',
+            baseUrl: 'https://mapping.modot.org/arcgis/rest/services/BaseMap/TmsUtility/MapServer/',
             defaultColors: {
                 Fw: '#ff00c5', Ew: '#4f33df', MH: '#149ece', mH: '#4ce600', PS: '#cfae0e', St: '#eeeeee'
             },
