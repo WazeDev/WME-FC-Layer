@@ -1543,8 +1543,12 @@
             },
             getFeatureRoadType(feature, layer) {
                 let fc = parseInt(feature.attributes[layer.fcPropName], 10);
-                if (fc > 4 && feature.attributes.SHIELD === 'USHY') {
+                if (fc > 3 && feature.attributes.SHIELD === 'USHY') {
+                    fc = 3;
+                } else if (fc > 4 && feature.attributes.SHIELD === 'STHY') {
                     fc = 4;
+                } else if (fc > 6 && feature.attributes.SHIELD === 'CORD') {
+                    fc = 6;
                 }
                 return STATE_SETTINGS.global.getRoadTypeFromFC(fc, layer);
             }
