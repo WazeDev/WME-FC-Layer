@@ -1516,19 +1516,30 @@
             }
         },
         ND: {
-            baseUrl: 'https://services1.arcgis.com/GOcSXpzwBHyk2nog/ArcGIS/rest/services/NDGISHUB_Roads_NG911/FeatureServer/', //https://gis.dot.nd.gov/arcgis/rest/services/external/transinfo/MapServer/
+            baseUrl: 'https://ndgishub.nd.gov/arcgis/rest/services/Basemap_General/MapServer/',
             defaultColors: {
                 Fw: '#ff00c5', Ew: '#149ece', MH: '#149ece', mH: '#4ce600', PS: '#cfae0e', St: '#eeeeee'
             },
             zoomSettings: { maxOffset: [30, 15, 8, 4, 2, 1, 1, 1, 1, 1], excludeRoadTypes: [['St'], ['St'], ['St'], ['St'], [], [], [], [], [], [], []] },
             fcMapLayers: [
                 {
-                    layerID: 0,
-                    fcPropName: 'FUNC_SYS',
+                    layerID: 193,
+                    fcPropName: 'FUNCTIONAL_CLASS',
                     idPropName: 'OBJECTID',
-                    outFields: ['OBJECTID', 'FUNC_SYS'],
+                    outFields: ['OBJECTID', 'FUNCTIONAL_CLASS'],
                     roadTypeMap: {
-                        Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5, 6], St: [7]
+                        MH: [3], mH: [4], PS: [5, 6], St: [7]
+                    },
+                    maxRecordCount: 1000,
+                    supportsPagination: false
+                },
+                {
+                    layerID: 192,
+                    fcPropName: 'RTE_SIN',
+                    idPropName: 'OBJECTID',
+                    outFields: ['OBJECTID', 'RTE_SIN'],
+                    roadTypeMap: {
+                        Fw: ['I'], MH: ['U'], mH: ['S']
                     },
                     maxRecordCount: 1000,
                     supportsPagination: false
@@ -1542,15 +1553,10 @@
                 return null;
             },
             getFeatureRoadType(feature, layer) {
-                let fc = parseInt(feature.attributes[layer.fcPropName], 10);
-                if (fc > 3 && feature.attributes.SHIELD === 'USHY') {
-                    fc = 3;
-                } else if (fc > 4 && feature.attributes.SHIELD === 'STHY') {
-                    fc = 4;
-                } else if (fc > 6 && feature.attributes.SHIELD === 'CORD') {
-                    fc = 6;
+                if (layer.getFeatureRoadType) {
+                    return layer.getFeatureRoadType(feature);
                 }
-                return STATE_SETTINGS.global.getRoadTypeFromFC(fc, layer);
+                return STATE_SETTINGS.global.getFeatureRoadType(feature, layer);
             }
         },
         OH: {
