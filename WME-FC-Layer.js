@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME FC Layer
 // @namespace    https://greasyfork.org/users/45389
-// @version      2025.01.08.000
+// @version      2025.02.25.000
 // @description  Adds a Functional Class layer for states that publish ArcGIS FC data.
 // @author       MapOMatic
 // @match         *://*.waze.com/*editor*
@@ -1516,49 +1516,31 @@
             }
         },
         ND: {
-            baseUrl: 'https://gis.dot.nd.gov/arcgis/rest/services/external/transinfo/MapServer/',
+            baseUrl: 'https://ndgishub.nd.gov/arcgis/rest/services/Basemap_General/MapServer/',
             defaultColors: {
                 Fw: '#ff00c5', Ew: '#149ece', MH: '#149ece', mH: '#4ce600', PS: '#cfae0e', St: '#eeeeee'
             },
             zoomSettings: { maxOffset: [30, 15, 8, 4, 2, 1, 1, 1, 1, 1], excludeRoadTypes: [['St'], ['St'], ['St'], ['St'], [], [], [], [], [], [], []] },
             fcMapLayers: [
                 {
-                    layerID: 10,
-                    fcPropName: 'FUNCTION_CLASS',
+                    layerID: 193,
+                    fcPropName: 'FUNCTIONAL_CLASS',
                     idPropName: 'OBJECTID',
-                    outFields: ['OBJECTID', 'FUNCTION_CLASS'],
+                    outFields: ['OBJECTID', 'FUNCTIONAL_CLASS'],
                     roadTypeMap: {
-                        Fw: ['Interstate'], MH: ['Principal Arterial'], mH: ['Minor Arterial'], PS: ['Major Collector', 'Collector'], St: ['Local']
+                        MH: [3], mH: [4], PS: [5, 6], St: [7]
                     },
                     maxRecordCount: 1000,
                     supportsPagination: false
                 },
                 {
-                    layerID: 11,
-                    fcPropName: 'FUNCTION_CLASS',
+                    layerID: 192,
+                    fcPropName: 'RTE_SIN',
                     idPropName: 'OBJECTID',
-                    outFields: ['OBJECTID', 'FUNCTION_CLASS'],
+                    outFields: ['OBJECTID', 'RTE_SIN'],
                     roadTypeMap: {
-                        Fw: ['Interstate'], MH: ['Principal Arterial'], mH: ['Minor Arterial'], PS: ['Major Collector', 'Collector'], St: ['Local']
+                        Fw: ['I'], MH: ['U'], mH: ['S']
                     },
-                    maxRecordCount: 1000,
-                    supportsPagination: false
-                },
-                {
-                    layerID: 12,
-                    fcPropName: 'FUNCTION_CLASS',
-                    idPropName: 'OBJECTID',
-                    outFields: ['OBJECTID', 'FUNCTION_CLASS'],
-                    roadTypeMap: { PS: ['Major Collector', 'Collector'] },
-                    maxRecordCount: 1000,
-                    supportsPagination: false
-                },
-                {
-                    layerID: 16,
-                    fcPropName: 'SYSTEM_CD',
-                    idPropName: 'OBJECTID',
-                    outFields: ['OBJECTID', 'SYSTEM_CD', 'SYSTEM_DESC', 'HIGHWAY', 'HWY_SUFFIX'],
-                    roadTypeMap: { Fw: [1, 11], MH: [2, 14], mH: [6, 7, 16, 19] },
                     maxRecordCount: 1000,
                     supportsPagination: false
                 }
@@ -1566,11 +1548,14 @@
             information: { Source: 'NDDOT', Permission: 'Visible to R4+ or R3-AM' },
             getWhereClause(context) {
                 if (context.mapContext.zoom < 16) {
-                    if (context.layer.layerID !== 16) return `${context.layer.fcPropName}<>'Local'`;
+                    return `${context.layer.fcPropName} <> 7`;
                 }
                 return null;
             },
             getFeatureRoadType(feature, layer) {
+                if (layer.getFeatureRoadType) {
+                    return layer.getFeatureRoadType(feature);
+                }
                 return STATE_SETTINGS.global.getFeatureRoadType(feature, layer);
             }
         },
