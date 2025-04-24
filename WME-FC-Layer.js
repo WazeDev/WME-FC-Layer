@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME FC Layer
 // @namespace    https://greasyfork.org/users/45389
-// @version      2024.10.05.000
+// @version      2025.02.25.000
 // @description  Adds a Functional Class layer for states that publish ArcGIS FC data.
 // @author       MapOMatic
 // @match         *://*.waze.com/*editor*
@@ -345,7 +345,7 @@
                     supportsPagination: false
                 }
             ],
-            isPermitted() { return ['mapomatic', 'turbomkt', 'tonestertm', 'ottonomy', 'jemay'].includes(userName.toLowerCase()); },
+            isPermitted() { return ['mapomatic', 'turbomkt', 'tonestertm', 'ottonomy', 'jemay', 'ojlaw'].includes(_uName.toLowerCase()); },
             information: { Source: 'Caltrans', Permission: 'Visible to ?', Description: '' },
             getWhereClause(context) {
                 if (context.mapContext.zoom < 16) {
@@ -1120,7 +1120,7 @@
             }
         },
         MO: {
-            baseUrl: 'http://mapping.modot.org/external/rest/services/BaseMap/TmsUtility/MapServer/',
+            baseUrl: 'https://mapping.modot.org/arcgis/rest/services/BaseMap/TmsUtility/MapServer/',
             defaultColors: {
                 Fw: '#ff00c5', Ew: '#4f33df', MH: '#149ece', mH: '#4ce600', PS: '#cfae0e', St: '#eeeeee'
             },
@@ -1287,7 +1287,7 @@
                     supportsPagination: false
                 }
             ],
-            isPermitted() { return ['mapomatic', 'turbomkt', 'tonestertm', 'geopgeop'].includes(userName.toLowerCase()); },
+            isPermitted() { return ['mapomatic', 'turbomkt', 'tonestertm', 'geopgeop', 'ojlaw'].includes(_uName.toLowerCase()); },
             information: { Source: 'NDOT', Permission: '?' },
             getWhereClause(context) {
                 if (context.mapContext.zoom < 16) {
@@ -1388,7 +1388,7 @@
                     idPropName: 'OBJECTID',
                     outFields: ['OBJECTID', 'FUNC_CLASS', 'SEGMENT_NAME', 'ROUTE_NO'],
                     roadTypeMap: {
-                        Fw: [1, 11], Ew: [2, 12], MH: [4, 14], mH: [6, 16], PS: [7, 8, 17, 18]
+                        Fw: [1, 11], Ew: [2, 12], MH: [4, 14], mH: [6, 16], PS: [7, 8, 17, 18], St: [9, 19]
                     },
                     maxRecordCount: 1000,
                     supportsPagination: false
@@ -1511,49 +1511,31 @@
             }
         },
         ND: {
-            baseUrl: 'https://gis.dot.nd.gov/arcgis/rest/services/external/transinfo/MapServer/',
+            baseUrl: 'https://ndgishub.nd.gov/arcgis/rest/services/Basemap_General/MapServer/',
             defaultColors: {
                 Fw: '#ff00c5', Ew: '#149ece', MH: '#149ece', mH: '#4ce600', PS: '#cfae0e', St: '#eeeeee'
             },
             zoomSettings: { maxOffset: [30, 15, 8, 4, 2, 1, 1, 1, 1, 1], excludeRoadTypes: [['St'], ['St'], ['St'], ['St'], [], [], [], [], [], [], []] },
             fcMapLayers: [
                 {
-                    layerID: 10,
-                    fcPropName: 'FUNCTION_CLASS',
+                    layerID: 193,
+                    fcPropName: 'FUNCTIONAL_CLASS',
                     idPropName: 'OBJECTID',
-                    outFields: ['OBJECTID', 'FUNCTION_CLASS'],
+                    outFields: ['OBJECTID', 'FUNCTIONAL_CLASS'],
                     roadTypeMap: {
-                        Fw: ['Interstate'], MH: ['Principal Arterial'], mH: ['Minor Arterial'], PS: ['Major Collector', 'Collector'], St: ['Local']
+                        MH: [3], mH: [4], PS: [5, 6], St: [7]
                     },
                     maxRecordCount: 1000,
                     supportsPagination: false
                 },
                 {
-                    layerID: 11,
-                    fcPropName: 'FUNCTION_CLASS',
+                    layerID: 192,
+                    fcPropName: 'RTE_SIN',
                     idPropName: 'OBJECTID',
-                    outFields: ['OBJECTID', 'FUNCTION_CLASS'],
+                    outFields: ['OBJECTID', 'RTE_SIN'],
                     roadTypeMap: {
-                        Fw: ['Interstate'], MH: ['Principal Arterial'], mH: ['Minor Arterial'], PS: ['Major Collector', 'Collector'], St: ['Local']
+                        Fw: ['I'], MH: ['U'], mH: ['S']
                     },
-                    maxRecordCount: 1000,
-                    supportsPagination: false
-                },
-                {
-                    layerID: 12,
-                    fcPropName: 'FUNCTION_CLASS',
-                    idPropName: 'OBJECTID',
-                    outFields: ['OBJECTID', 'FUNCTION_CLASS'],
-                    roadTypeMap: { PS: ['Major Collector', 'Collector'] },
-                    maxRecordCount: 1000,
-                    supportsPagination: false
-                },
-                {
-                    layerID: 16,
-                    fcPropName: 'SYSTEM_CD',
-                    idPropName: 'OBJECTID',
-                    outFields: ['OBJECTID', 'SYSTEM_CD', 'SYSTEM_DESC', 'HIGHWAY', 'HWY_SUFFIX'],
-                    roadTypeMap: { Fw: [1, 11], MH: [2, 14], mH: [6, 7, 16, 19] },
                     maxRecordCount: 1000,
                     supportsPagination: false
                 }
@@ -1561,11 +1543,14 @@
             information: { Source: 'NDDOT', Permission: 'Visible to R4+ or R3-AM' },
             getWhereClause(context) {
                 if (context.mapContext.zoom < 16) {
-                    if (context.layer.layerID !== 16) return `${context.layer.fcPropName}<>'Local'`;
+                    return `${context.layer.fcPropName} <> 7`;
                 }
                 return null;
             },
             getFeatureRoadType(feature, layer) {
+                if (layer.getFeatureRoadType) {
+                    return layer.getFeatureRoadType(feature);
+                }
                 return STATE_SETTINGS.global.getFeatureRoadType(feature, layer);
             }
         },
@@ -1852,7 +1837,7 @@
                 if (fc > 6 && !isPaved) {
                     return fc < 9 ? 'PSGr' : 'StGr';
                 }
-                return STATE_SETTINGS.global.getRoadTypeFromFC(fc, layer);
+                return STATE_SETTINGS.global.getRoadTypeFromFC(fc, layer.fcPropName);
             }
         },
         TN: {
@@ -1869,7 +1854,7 @@
                     layerID: 0,
                     fcPropName: 'FUNC_CLASS',
                     idPropName: 'OBJECTID',
-                    outFields: ['OBJECTID', 'FUNC_CLASS'],
+                    outFields: ['OBJECTID', 'FUNC_CLASS', 'NBR_RTE', 'NBR_US_RTE'],
                     getWhereClause(context) {
                         if (context.mapContext.zoom < 16) {
                             return `${context.layer.fcPropName} NOT LIKE '%Local'`;
@@ -1885,49 +1870,7 @@
                         PS2: ['Urban Minor Collector', 'Rural Minor Collector'],
                         St: ['Urban Local', 'Rural Local']
                     }
-                } // ,
-                // {
-                //     layerPath: 'comgis4.memphistn.gov/arcgis/rest/services/AGO_DPD/Memphis_MPO/FeatureServer/',
-                //     maxRecordCount: 1000,
-                //     supportsPagination: false,
-                //     layerID: 4,
-                //     fcPropName: 'Functional_Classification',
-                //     idPropName: 'OBJECTID',
-                //     outFields: ['OBJECTID', 'Functional_Classification'],
-                //     getWhereClause(context) {
-                //         if (context.mapContext.zoom < 16) {
-                //             return `${context.layer.fcPropName} NOT LIKE '%Local'`;
-                //         }
-                //         return null;
-                //     },
-                //     roadTypeMap: {
-                //         Fw: ['(Urban) Interstate', '(Rural) Interstate'],
-                //         Ew: ['(Urban) Other Freeway or Expressway', '(Rural) Other Freeway or Expressway'],
-                //         MH: ['(Urban) Other Principal Arterial', '(Rural) Other Principal Arterial'],
-                //         mH: ['(Urban) Minor Arterial', '(Rural) Minor Arterial'],
-                //         PS: ['(Urban) Major Collector', '(Rural) Major Collector'],
-                //         PS2: ['(Urban) Minor Collector', '(Rural) Minor Collector'],
-                //         St: ['(Urban) Local', '(Rural) Local']
-                //     }
-                // },
-                // {
-                //     layerPath: 'services3.arcgis.com/pXGyp7DHTIE4RXOJ/ArcGIS/rest/services/Functional_Classification/FeatureServer/',
-                //     maxRecordCount: 1000,
-                //     supportsPagination: false,
-                //     layerID: 0,
-                //     fcPropName: 'FC_MPO',
-                //     idPropName: 'FID',
-                //     outFields: ['FID', 'FC_MPO'],
-                //     getWhereClause(context) {
-                //         if (context.mapContext.zoom < 16) {
-                //             return `${context.layer.fcPropName} NOT IN (0,7,9,19)`;
-                //         }
-                //         return `${context.layer.fcPropName} <> 0`;
-                //     },
-                //     roadTypeMap: {
-                //         Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5, 6], St: [7]
-                //     }
-                // }
+                }
             ],
             information: {
                 Source: 'Memphis, Nashville Area MPO',
@@ -1944,7 +1887,13 @@
                 if (layer.getFeatureRoadType) {
                     return layer.getFeatureRoadType(feature);
                 }
-                return STATE_SETTINGS.global.getFeatureRoadType(feature, layer);
+                let fc = STATE_SETTINGS.global.getRoadTypeFromFC(feature.attributes.FUNC_CLASS, layer);
+                if ((fc === 'PS' || fc === 'mH') && feature.attributes.NBR_US_RTE != null) {
+                    fc = feature.attributes.NBR_US_RTE.endsWith('BR') ? 'mH' : 'MH';
+                } else if (fc === 'PS' && (feature.attributes.NBR_RTE.startsWith('SR') || feature.attributes.NBR_RTE.startsWith('TN'))) {
+                    fc = 'mH';
+                }
+                return fc;
             }
         },
         TX: {
@@ -2489,6 +2438,7 @@
         if (stateWhereClause) whereParts.push(stateWhereClause);
         if (whereParts.length > 0) url += `&where=${encodeURIComponent(whereParts.join(' AND '))}`;
         url += '&spatialRel=esriSpatialRelIntersects&geometryType=esriGeometryEnvelope&inSR=102100&outSR=3857&f=json';
+        console.log(url);
         return url;
     }
 
