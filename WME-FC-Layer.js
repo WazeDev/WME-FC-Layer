@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME FC Layer
 // @namespace    https://greasyfork.org/users/45389
-// @version      2025.02.25.000
+// @version      2025.04.24.000
 // @description  Adds a Functional Class layer for states that publish ArcGIS FC data.
 // @author       MapOMatic
 // @match         *://*.waze.com/*editor*
@@ -56,8 +56,6 @@
 // @connect      wyoroad.info
 // ==/UserScript==
 
-/* global W */
-/* global WazeWrap */
 /* global turf */
 /* global bootstrap */
 
@@ -71,7 +69,7 @@
     const sdk = await bootstrap({ scriptUpdateMonitor: { downloadUrl } });
     const layerName = 'FC Layer';
     let isAM = false;
-    let userName;
+    let userNameLC;
     let settings = {};
     let rank;
     let MAP_LAYER_Z_INDEX;
@@ -345,7 +343,7 @@
                     supportsPagination: false
                 }
             ],
-            isPermitted() { return ['mapomatic', 'turbomkt', 'tonestertm', 'ottonomy', 'jemay', 'ojlaw'].includes(_uName.toLowerCase()); },
+            isPermitted() { return ['mapomatic', 'turbomkt', 'tonestertm', 'ottonomy', 'jemay', 'ojlaw'].includes(userNameLC); },
             information: { Source: 'Caltrans', Permission: 'Visible to ?', Description: '' },
             getWhereClause(context) {
                 if (context.mapContext.zoom < 16) {
@@ -1247,7 +1245,7 @@
                     supportsPagination: false
                 }
             ],
-            isPermitted() { /* return _r >= 3; */ return ['mapomatic', 'bobc455'].includes(userName.toLowerCase()); },
+            isPermitted() { /* return _r >= 3; */ return ['mapomatic', 'bobc455'].includes(userNameLC); },
             information: { Source: 'MDT', Permission: 'Visible to R3+' },
             getWhereClause(context) {
                 if (context.mapContext.zoom < 16) {
@@ -1287,7 +1285,7 @@
                     supportsPagination: false
                 }
             ],
-            isPermitted() { return ['mapomatic', 'turbomkt', 'tonestertm', 'geopgeop', 'ojlaw'].includes(_uName.toLowerCase()); },
+            isPermitted() { return ['mapomatic', 'turbomkt', 'tonestertm', 'geopgeop', 'ojlaw'].includes(userNameLC); },
             information: { Source: 'NDOT', Permission: '?' },
             getWhereClause(context) {
                 if (context.mapContext.zoom < 16) {
@@ -2571,15 +2569,9 @@
         }
     }
 
-    function onLayerCheckboxChanged(checked) {
-        setEnabled(checked);
+    function onLayerCheckboxChanged(args) {
+        setEnabled(args.checked);
     }
-    // SDK: uncomment when ready
-    // function onLayerCheckboxChangedSdk(details) {
-    //     if (details.name === 'FC Layer') {
-    //         setEnabled(details.checked);
-    //     }
-    // }
 
     function checkLayerZIndex() {
         try {
@@ -2624,8 +2616,6 @@
                     }
                 }));
 
-        // SDK: zIndexing doesn't do anything because the layers don't support it yet. FR submitted.
-        // May end up needed to create separate layers for each zIndex.
         STATE_SETTINGS.global.roadTypes.forEach((roadType, index) => {
             styleRules.push({
                 predicate: props => props.roadType === roadType,
@@ -2634,7 +2624,8 @@
         });
         sdk.Map.addLayer({
             layerName,
-            styleRules
+            styleRules,
+            zIndexing: true
         });
 
         sdk.Map.setLayerOpacity({ layerName, opacity: 0.5 });
@@ -2644,18 +2635,15 @@
 
         window.addEventListener('beforeunload', () => saveSettingsToStorage);
 
-        // SDK: Update this with LayerSwitcher once it supports manually setting the checkbox state
-        WazeWrap.Interface.AddLayerCheckbox('Display', 'FC Layer', settings.layerVisible, onLayerCheckboxChanged);
-        // sdk.LayerSwitcher.addLayerCheckbox({ name: 'FC Layer' });
-        // sdk.Events.on({ eventName: 'wme-layer-checkbox-toggled', eventHandler: onLayerCheckboxChangedSdk });
+        sdk.LayerSwitcher.addLayerCheckbox({ name: 'FC Layer' });
+        sdk.LayerSwitcher.setLayerCheckboxChecked({ name: 'FC Layer', isChecked: settings.layerVisible });
+        sdk.Events.on({ eventName: 'wme-layer-checkbox-toggled', eventHandler: onLayerCheckboxChanged });
 
         // Hack to fix layer zIndex.  Some other code is changing it sometimes but I have not been able to figure out why.
         // It may be that the FC layer is added to the map before some Waze code loads the base layers and forces other layers higher. (?)
-        setInterval(checkLayerZIndex, 200);
+        setInterval(checkLayerZIndex, 1000);
 
-        // SDK: Need a moveend event.  wme-map-move fires constantly while drag-panning
-        W.map.events.register('moveend', W.map, fetchAllFC);
-        // sdk.Events.on({ eventName: 'wme-map-move', eventHandler: fetchAllFC });
+        sdk.Events.on({ eventName: 'wme-map-move-end', eventHandler: fetchAllFC });
     }
 
     function onHideStreetsClicked() {
@@ -2680,7 +2668,7 @@
         const color = value ? '#00bd00' : '#ccc';
         $('span#fc-layer-power-btn').css({ color });
         if (value) fetchAllFC();
-        $('#layer-switcher-item_fc_layer').prop('checked', value);
+        sdk.LayerSwitcher.setLayerCheckboxChecked({ name: 'FC Layer', isChecked: value });
     }
 
     async function initUserPanel() {
@@ -2790,7 +2778,7 @@
         const u = sdk.State.getUserInfo();
         rank = u.rank + 1;
         isAM = u.isAreaManager;
-        userName = u.userName;
+        userNameLC = u.userName.toLowerCase();
 
         loadSettingsFromStorage();
         await initGui();
