@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME FC Layer
 // @namespace    https://greasyfork.org/users/45389
-// @version      2025.06.17.000
+// @version      2025.04.24.000
 // @description  Adds a Functional Class layer for states that publish ArcGIS FC data.
 // @author       MapOMatic
 // @match         *://*.waze.com/*editor*
@@ -933,7 +933,7 @@
             zoomSettings: { maxOffset: [30, 15, 8, 4, 2, 1, 1, 1, 1, 1], excludeRoadTypes: [['St'], ['St'], ['St'], ['St'], [], [], [], [], [], [], []] },
             fcMapLayers: [
                 {
-                    layerID: 6,
+                    layerID: 1024,
                     fcPropName: 'fedfunccls',
                     idPropName: 'objectid',
                     outFields: ['objectid', 'fedfunccls'],
@@ -1022,7 +1022,7 @@
                     layerID: 0,
                     fcPropName: 'F_F_Class',
                     idPropName: 'OBJECTID',
-                    outFields: ['OBJECTID', 'F_F_Class', 'route_id'],
+                    outFields: ['OBJECTID', 'F_F_Class', 'Route_ID'],
                     roadTypeMap: {
                         Fw: [1], Ew: [2], MH: [3], mH: [4], PS: [5, 6], St: [7]
                     },
@@ -1034,14 +1034,14 @@
             isPermitted() { return rank >= 2; },
             getWhereClause(context) {
                 if (context.mapContext.zoom < 16) {
-                    return `${context.layer.fcPropName}<>7`;
+                    return `${context.layer.fcPropName}<>'7'`;
                 }
                 return null;
             },
             getFeatureRoadType(feature, layer) {
                 const attr = feature.attributes;
                 let fc = parseInt(attr[layer.fcPropName], 10);
-                const route = attr.route_id;
+                const route = attr.Route_ID;
                 const isUS = /^US\d/.test(route);
                 const isState = /^SR\d/.test(route);
                 if (fc > 3 && isUS) fc = 3;
@@ -2335,30 +2335,14 @@
         }
     };
 
-    function log(message, object) {
-      if (object !== undefined) {
-        console.log('FC Layer:', message, object);
-      } else {
-        console.log('FC Layer:', message);
-      }
+    function log(message) {
+        console.log('FC Layer: ', message);
     }
-
-    function debugLog(message, object) {
-      if (debug) {
-        if (object !== undefined) {
-          console.debug('FC Layer:', message, object);
-        } else {
-          console.debug('FC Layer:', message);
-        }
-      }
+    function debugLog(message) {
+        console.debug('FC Layer: ', message);
     }
-
-    function errorLog(message, object) {
-      if (object !== undefined) {
-        console.error('FC Layer:', message, object);
-      } else {
-        console.error('FC Layer:', message);
-      }
+    function errorLog(message) {
+        console.error('FC Layer: ', message);
     }
 
     function loadSettingsFromStorage() {
@@ -2393,29 +2377,24 @@
     }
 
     function getAsync(url, context) {
-    return new Promise((resolve, reject) => {
-        GM_xmlhttpRequest({
-            context,
-            method: 'GET',
-            url,
-            onload(res) {
-                if (res.status.toString() === '200') {
-                    const parsedResponse = JSON.parse(res.responseText);
-                    if (parsedResponse.error) {
-                        reject(new Error(`API Error: ${parsedResponse.error.message}`));
-                    } else {
+        return new Promise((resolve, reject) => {
+            GM_xmlhttpRequest({
+                context,
+                method: 'GET',
+                url,
+                onload(res) {
+                    if (res.status.toString() === '200') {
                         resolve({ responseText: res.responseText, context });
+                    } else {
+                        reject(new Error({ responseText: res.responseText, context }));
                     }
-                } else {
-                    reject(new Error(`HTTP ${res.status}: ${res.responseText}`));
+                },
+                onerror() {
+                    reject(Error('Network Error'));
                 }
-            },
-            onerror() {
-                reject(new Error('Network Error'));
-            }
+            });
         });
-    });
-}
+    }
 
     function getUrl(context, queryType, queryParams) {
         const { extent } = context.mapContext;
@@ -2424,14 +2403,16 @@
         const { state } = context;
 
         const whereParts = [];
-
+        const mercatorExtentLeftBottom = turf.toMercator([extent[0], extent[1]]);
+        const mercatorExtentRightTop = turf.toMercator([extent[2], extent[3]]);
         const geometry = {
-            xmin: extent[0],
-            ymin: extent[1],
-            xmax: extent[2],
-            ymax: extent[3],
+            xmin: mercatorExtentLeftBottom[0],
+            ymin: mercatorExtentLeftBottom[1],
+            xmax: mercatorExtentRightTop[0],
+            ymax: mercatorExtentRightTop[1],
             spatialReference: {
-                wkid: 4326
+                wkid: 102100,
+                latestWkid: 3857
             }
         };
         const geometryStr = JSON.stringify(geometry);
@@ -2446,7 +2427,7 @@
         } else if (queryType === 'paged') {
             // TODO
         } else {
-            url += `&returnGeometry=true&maxAllowableOffset=${state.zoomSettings.maxOffset[zoom - 12] / 111000}`; // Convert to degrees (4326) from the old Meters (3857)
+            url += `&returnGeometry=true&maxAllowableOffset=${state.zoomSettings.maxOffset[zoom - 12]}`;
             url += `&outFields=${encodeURIComponent(layer.outFields.join(','))}`;
             if (queryType === 'idRange') {
                 whereParts.push(`(${queryParams.idFieldName}>=${queryParams.range[0]} AND ${queryParams.idFieldName}<=${queryParams.range[1]})`);
@@ -2454,14 +2435,15 @@
         }
         if (stateWhereClause) whereParts.push(stateWhereClause);
         if (whereParts.length > 0) url += `&where=${encodeURIComponent(whereParts.join(' AND '))}`;
-        url += '&spatialRel=esriSpatialRelIntersects&geometryType=esriGeometryEnvelope&inSR=4326&outSR=4326&f=json'; //&geometryPrecision=7  Not needed as it scales with maxAllowableOffset
-        debugLog(`URL Fetch Type = ${queryType}`, url );
+        url += '&spatialRel=esriSpatialRelIntersects&geometryType=esriGeometryEnvelope&inSR=102100&outSR=3857&f=json';
+        console.log(url);
         return url;
     }
 
     function convertFcToRoadTypeLineStrings(feature, context) {
         const { state, stateAbbr, layer } = context;
         const roadType = state.getFeatureRoadType(feature, layer);
+        // debugLog(feature);
         const attr = {
             state: stateAbbr,
             layerID: layer.layerID,
@@ -2470,7 +2452,7 @@
         };
 
         const lineStrings = feature.geometry.paths.map(path => {
-            const line = turf.lineString(path, attr);
+            const line = turf.toWgs84(turf.lineString(path, attr));
             line.id = 0;
             return line;
         });
@@ -2479,165 +2461,112 @@
     }
 
     function fetchLayerFC(context) {
-      const url = getUrl(context, 'idsOnly');
-      context.idsOnlyURL = url;
-      if (!context.parentContext.cancel) {
-        return getAsync(url, context)
-          .bind(context)
-          .then((res) => {
-            try {
-              const ids = JSON.parse(res.responseText);
-              if (!ids.objectIds) ids.objectIds = [];
-              if (ids.objectIds.length === 0) {
-                debugLog(`objectIds array is empty or undefined for State "${context.stateAbbr}" Layer "${context.layer.layerID}" with context:`, context);
-              }
-              sortArray(ids.objectIds);
-              //debugLog(``,ids);
-              return ids;
-            } catch (err) {
-              errorLog(`Error parsing URL response JSON for State "${context.stateAbbr}" Layer "${context.layer.layerID}" with context:` , context);
-              throw err;
-            }
-          })
-          .then((res) => {
-            const idRanges = [];
-            if (res.objectIds) {
-              const len = res.objectIds ? res.objectIds.length : 0;
-              let currentIndex = 0;
-              const offset = Math.min(context.layer.maxRecordCount, 1000);
-              while (currentIndex < len) {
-                let nextIndex = currentIndex + offset;
-                if (nextIndex >= len) nextIndex = len - 1;
-                idRanges.push({ 
-                    range: [res.objectIds[currentIndex], res.objectIds[nextIndex]],
-                    idFieldName: res.objectIdFieldName });
-                currentIndex = nextIndex + 1;
-              }
-            }
-            return idRanges;
-          })
-          .map((idRange) => {
-            if (!context.parentContext.cancel) {
-              const newUrl = getUrl(context, 'idRange', idRange);
-              return getAsync(newUrl, context)
-              .then((res) => {
-                if (!context.parentContext.cancel) {
-                  let { features } = JSON.parse(res.responseText);
-                  context.parentContext.callCount++;
-                  features = features || [];
-                  return features
-                    .map((feature) => convertFcToRoadTypeLineStrings(feature, context))
-                    .filter((feature) => !(feature[0].properties.roadType === 'St' && settings.hideStreet));
+        const url = getUrl(context, 'idsOnly');
+        debugLog(url);
+        if (!context.parentContext.cancel) {
+            return getAsync(url, context).bind(context).then(res => {
+                const ids = $.parseJSON(res.responseText);
+                if (!ids.objectIds) ids.objectIds = [];
+                sortArray(ids.objectIds);
+                // debugLog(ids);
+                return ids;
+            }).then(res => {
+                const idRanges = [];
+                if (res.objectIds) {
+                    const len = res.objectIds ? res.objectIds.length : 0;
+                    let currentIndex = 0;
+                    const offset = Math.min(context.layer.maxRecordCount, 1000);
+                    while (currentIndex < len) {
+                        let nextIndex = currentIndex + offset;
+                        if (nextIndex >= len) nextIndex = len - 1;
+                        idRanges.push({ range: [res.objectIds[currentIndex], res.objectIds[nextIndex]], idFieldName: res.objectIdFieldName });
+                        currentIndex = nextIndex + 1;
+                    }
+                    // debugLog(context.layer.layerID);
+                    // debugLog(idRanges);
                 }
+                return idRanges;
+            }).map(idRange => {
+                if (!context.parentContext.cancel) {
+                    const newUrl = getUrl(context, 'idRange', idRange);
+                    debugLog(url);
+                    return getAsync(newUrl, context).then(res => {
+                        if (!context.parentContext.cancel) {
+                            let { features } = $.parseJSON(res.responseText);
+                            context.parentContext.callCount++;
+                            // debugLog('Feature Count=' + (features ? features.length : 0));
+                            features = features || [];
+                            return features.map(feature => convertFcToRoadTypeLineStrings(feature, context))
+                                .filter(feature => !(feature[0].properties.roadType === 'St' && settings.hideStreet));
+                        }
+                        return null;
+                    });
+                }
+                // debugLog('Async call cancelled');
                 return null;
-              });
-            }
-            // debugLog('Async call cancelled');
-            return null;
-          });
-      }
-      return null;
+            });
+        }
+        return null;
     }
 
     function fetchStateFC(context) {
-      const state = STATE_SETTINGS[context.stateAbbr];
-      const contexts = state.fcMapLayers.map((layer) => ({
-        parentContext: context.parentContext,
-        layer,
-        state,
-        stateAbbr: context.stateAbbr,
-        mapContext: context.mapContext,
-      }));
+        const state = STATE_SETTINGS[context.stateAbbr];
+        const contexts = state.fcMapLayers.map(layer => ({
+            parentContext: context.parentContext, layer, state, stateAbbr: context.stateAbbr, mapContext: context.mapContext
+        }));
 
-      return Promise.map(contexts, (ctx) =>
-        fetchLayerFC(ctx).catch((err) => {
-          const errorMessage = `
-        | Failed to fetch layer:
-        | State: ${ctx.stateAbbr}
-        | layerID: ${ctx.layer.layerID}
-        | Base URL: ${ctx.state.baseUrl}.
-        | ${err.message}.
-      `;
-          return Promise.reject(new Error(errorMessage.trim()));
-        })
-      );
+        return Promise.map(contexts, ctx => fetchLayerFC(ctx));
     }
 
     let _lastPromise = null;
     let _lastContext = null;
     let _fcCallCount = 0;
-
-    function getArrayDepth(arr) {
-      if (Array.isArray(arr)) {
-        return 1 + Math.max(0, ...arr.map(getArrayDepth));
-      } else {
-        return 0;
-      }
-    }
-
     function fetchAllFC() {
-      if (!sdk.Map.isLayerVisible({ layerName })) return;
+        if (!sdk.Map.isLayerVisible({ layerName })) return;
 
-      if (_lastPromise) {
-        _lastPromise.cancel();
-      }
-      $('#fc-loading-indicator').css('color', 'green').html('<span>Loading FC Layers ...</span>');
+        if (_lastPromise) { _lastPromise.cancel(); }
+        $('#fc-loading-indicator').text('Loading FC...');
 
-      const mapContext = { zoom: sdk.Map.getZoomLevel(), extent: sdk.Map.getMapExtent() };
-      if (mapContext.zoom > MIN_ZOOM_LEVEL) {
-        const parentContext = { callCount: 0, startTime: Date.now() };
+        const mapContext = { zoom: sdk.Map.getZoomLevel(), extent: sdk.Map.getMapExtent() };
+        if (mapContext.zoom > MIN_ZOOM_LEVEL) {
+            const parentContext = { callCount: 0, startTime: Date.now() };
 
-        if (_lastContext) _lastContext.cancel = true;
-        _lastContext = parentContext;
+            if (_lastContext) _lastContext.cancel = true;
+            _lastContext = parentContext;
+            const contexts = getVisibleStateAbbreviations().map(stateAbbr => ({ parentContext, stateAbbr, mapContext }));
+            const map = Promise.map(contexts, ctx => fetchStateFC(ctx)).then(statesLineStringArrays => {
+                if (!parentContext.cancel) {
+                    sdk.Map.removeAllFeaturesFromLayer({ layerName });
+                    // TODO: Handle all the arrays better...
+                    statesLineStringArrays.forEach(stateLineStringsArray => {
+                        stateLineStringsArray.forEach(lineStringsArray1 => {
+                            lineStringsArray1.forEach(lineStringsArray2 => {
+                                lineStringsArray2.forEach(lineStringsArray3 => {
+                                    lineStringsArray3.forEach(feature => {
+                                        sdk.Map.addFeatureToLayer({ layerName, feature });
+                                    });
+                                });
+                            });
+                        });
+                    });
+                }
+                return statesLineStringArrays;
+            }).catch(e => {
+                $('#fc-loading-indicator').text('FC Error! (check console for details)');
+                errorLog(e);
+            }).finally(() => {
+                _fcCallCount -= 1;
+                if (_fcCallCount === 0) {
+                    $('#fc-loading-indicator').text('');
+                }
+            });
 
-        const contexts = getVisibleStateAbbreviations().map((stateAbbr) => ({ parentContext, stateAbbr, mapContext }));
-        let errorOccurred = false;  // Flag to track error state
-        let featureCount = 0;
-
-        const map = Promise.map(contexts, (ctx) => fetchStateFC(ctx))
-          .then((statesLineStringArrays) => {
-            if (!parentContext.cancel) {
-              sdk.Map.removeAllFeaturesFromLayer({ layerName });
-
-              // Determine the depth of the nested array structure
-              const depth = getArrayDepth(statesLineStringArrays);
-              debugLog(`Detected array depth: ${depth}`);
-
-              // Flatten the array based on the detected depth
-              const flattenedFeatures = statesLineStringArrays.flat(depth);
-              featureCount = flattenedFeatures.length; 
-
-              // Add all features to the layer at once
-              sdk.Map.dangerouslyAddFeaturesToLayerWithoutValidation({
-                layerName: layerName,
-                features: flattenedFeatures,
-              });
-            }
-            return statesLineStringArrays;
-          })
-          .catch((e) => {
-            const formattedMessage = e.message.replace(/\|/g, '<br>');
-            $('#fc-loading-indicator').css('color', 'red').html(`${formattedMessage}`);
-            errorOccurred = true;
-            errorLog(e.message);
-          })
-          .finally(() => {
-            _fcCallCount -= 1;
-            if (_fcCallCount === 0 && !errorOccurred) {
-              $('#fc-loading-indicator').html(`<span></span>`);
-            }
-
-            const endTime = Date.now();
-            const durationSeconds = (endTime - parentContext.startTime) / 1000;
-            debugLog(`Loaded ${featureCount} features in ${durationSeconds.toFixed(2)} seconds`); 
-          });
-
-        _fcCallCount += 1;
-        _lastPromise = map;
-      } else {
-        // if zoomed out too far, clear the layer
-        sdk.Map.removeAllFeaturesFromLayer({ layerName });
-      }
+            _fcCallCount += 1;
+            _lastPromise = map;
+        } else {
+            // if zoomed out too far, clear the layer
+            sdk.Map.removeAllFeaturesFromLayer({ layerName });
+        }
     }
 
     function onLayerCheckboxChanged(args) {
@@ -2744,23 +2673,7 @@
 
     async function initUserPanel() {
         const $panel = $('<div>');
-        // Updated to play better with DarkMode
-      const $stateSelect = $('<select>', {
-        id: 'fcl-state-select',
-        class: 'form-control disabled',
-        style: `
-        border-radius: 4px;
-        padding: 6px 12px;
-        background-color: var(--background_default); /* Use dark mode background */
-        color: var(--content_default); /* Use dark mode content color */
-        border: 1px solid var(--separator_default); /* Dark mode border color */
-        transition: background-color 0.3s, color 0.3s, border-color 0.3s;
-        outline: none;
-        cursor: pointer;
-        font-weight: bold;
-    `,
-      }).append($('<option>', { value: 'ALL' }).text('All'));
-
+        const $stateSelect = $('<select>', { id: 'fcl-state-select', class: 'form-control disabled', style: 'disabled' }).append($('<option>', { value: 'ALL' }).text('All'));
 
         Object.keys(STATE_SETTINGS).forEach(stateAbbr => {
             if (stateAbbr !== 'global') {
@@ -2768,12 +2681,11 @@
             }
         });
 
-        $stateSelect.val(settings.activeStateAbbr ? settings.activeStateAbbr : 'ALL');
-
         const $hideStreet = $('<div>', { id: 'fcl-hide-street-container', class: 'controls-container' })
             .append($('<input>', { type: 'checkbox', name: 'fcl-hide-street', id: 'fcl-hide-street' }).prop('checked', settings.hideStreet).click(onHideStreetsClicked))
             .append($('<label>', { for: 'fcl-hide-street' }).text('Hide local street highlights'));
 
+        $stateSelect.val(settings.activeStateAbbr ? settings.activeStateAbbr : 'ALL');
 
         $panel.append(
             $('<div>', { class: 'form-group' }).append(
@@ -2786,15 +2698,6 @@
             $hideStreet,
             $('<div>', { id: 'fcl-table-container' })
         );
-
-        $panel.append(
-        $('<div>', {
-          class: 'loading-indicator',
-          id: 'fc-loading-indicator',
-          style: 'margin-top:10px; margin-right:10px; font-weight:bold; color:green; font-size:0.9em;',
-        }).html('<span></span>')
-      );
-
 
         $panel.append($('<div>', { id: 'fcl-state-info' }));
 
@@ -2845,7 +2748,12 @@
         }
     }
 
+    function addLoadingIndicator() {
+        $('.loading-indicator').after($('<div class="loading-indicator" style="margin-right:10px" id="fc-loading-indicator">'));
+    }
+
     async function initGui() {
+        addLoadingIndicator();
         initLayer();
         await initUserPanel();
     }
