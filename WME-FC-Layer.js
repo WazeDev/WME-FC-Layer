@@ -4,8 +4,9 @@
 // @version      2025.06.18.000
 // @description  Adds a Functional Class layer for states that publish ArcGIS FC data.
 // @author       MapOMatic
-// @match         *://*.waze.com/*editor*
-// @exclude       *://*.waze.com/user/editor*
+// @match        *://*.waze.com/*editor*
+// @exclude      *://*.waze.com/user/editor*
+// @exclude      *://*.waze.com/editor/sdk/*
 // @license      GNU GPLv3
 // @contributionURL https://github.com/WazeDev/Thank-The-Authors
 // @require      https://greasyfork.org/scripts/39002-bluebird/code/Bluebird.js?version=255146
@@ -64,7 +65,7 @@
   'use strict';
 
   const settingsStoreName = 'wme_fc_layer';
-  const debug = true;
+  const debug = false;
   const scriptVersion = GM_info.script.version;
   const downloadUrl = 'https://greasyfork.org/scripts/369633-wme-fc-layer/code/WME%20FC%20Layer.user.js';
   const sdk = await bootstrap({ scriptUpdateMonitor: { downloadUrl } });
