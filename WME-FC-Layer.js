@@ -1870,7 +1870,7 @@
       fcMapLayers: [
         {
           layerID: 1,
-          layerName: 'Geocortex/FC/MapServer/',
+          layerPath: 'Geocortex/FC/MapServer/',
           fcPropName: 'FUNC_CLASS',
           idPropName: 'OBJECTID',
           outFields: ['OBJECTID', 'FUNC_CLASS', 'SEGMENT_NAME', 'ROUTE_NO'],
