@@ -71,7 +71,7 @@
   const SCRIPT_VERSION = GM_info.script.version;
   const DOWNLOAD_URL = 'https://greasyfork.org/scripts/369633-wme-fc-layer/code/WME%20FC%20Layer.user.js';
   let _mapLayer = null;
-  let _isAM = false;
+  let isAM = false;
   let _uid;
   let _uName;
   let _settings = {};
@@ -3670,7 +3670,7 @@
     const u = W.loginManager.user;
     _uid = u.getID();
     rank = u.getRank() + 1;
-    _isAM = u.attributes.isAreaManager;
+    isAM = u.attributes.isAreaManager;
     _uName = u.getUsername();
 
     loadSettingsFromStorage();
