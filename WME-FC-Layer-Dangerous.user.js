@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME FC Layer (Dangerous)
 // @namespace    https://greasyfork.org/users/45389
-// @version      2025.06.19.000
+// @version      2025.06.23.000
 // @description  Adds a Functional Class layer for states that publish ArcGIS FC data.
 // @author       MapOMatic
 // @match        *://*.waze.com/*editor*
@@ -1062,9 +1062,9 @@
             ],
             information: { Source: 'Iowa DOT', Permission: 'Visible to R4+ or R3-AM', Description: 'Additional colors denote unpaved PS and LS segements.' },
             getWhereClause(context) {
-                let theWhereClause = "FACILITY_TYPE<>'7'"; // Removed proposed roads
+                let theWhereClause = 'FACILITY_TYPE<>7'; // Removed proposed roads
                 if (context.mapContext.zoom < 16) {
-                    theWhereClause += ` AND ${context.layer.fcPropName}<>'7'`;
+                    theWhereClause += ` AND ${context.layer.fcPropName}<7`;
                 }
                 return theWhereClause;
             },
