@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME FC Layer (nonDangerous)
 // @namespace    https://greasyfork.org/users/45389
-// @version      2025.06.23.000
+// @version      2025.06.29.000
 // @description  Adds a Functional Class layer for states that publish ArcGIS FC data.
 // @author       MapOMatic
 // @match        *://*.waze.com/*editor*
@@ -260,7 +260,7 @@
       },
     },
     AZ: {
-      baseUrl: 'https://services1.arcgis.com/XAiBIVuto7zeZj1B/arcgis/rest/services/ATIS_prod_gdb_1/FeatureServer/',
+      baseUrl: 'https://services1.arcgis.com/XAiBIVuto7zeZj1B/arcgis/rest/services/ATIS_prod_gdb/FeatureServer/',
       defaultColors: {
         Fw: '#ff00c5',
         Ew: '#ff00c5',
