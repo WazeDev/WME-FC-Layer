@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME FC Layer
 // @namespace    https://greasyfork.org/users/45389
-// @version      2025.06.29.000
+// @version      2025.07.6.000
 // @description  Adds a Functional Class layer for states that publish ArcGIS FC data.
 // @author       MapOMatic
 // @match        *://*.waze.com/*editor*
@@ -2898,6 +2898,81 @@
                     return layer.getFeatureRoadType(feature);
                 }
                 return STATE_SETTINGS.global.getFeatureRoadType(feature, layer);
+            }
+        },
+        WI: {
+            baseUrl: 'https://services5.arcgis.com/0pgGLzT0Nh7FVjon/ArcGIS/rest/services/',
+            defaultColors: {
+                Fw: '#ff00c5',
+                Ew: '#4f33df',
+                MH: '#149ece',
+                mH: '#4ce600',
+                PS: '#cfae0e',
+                St: '#eeeeee'
+            },
+            zoomSettings: { maxOffset: [30, 15, 8, 4, 2, 1, 1, 1, 1, 1], excludeRoadTypes: [['St'], ['St'], ['St'], ['St'], [], [], [], [], [], [], []] },
+            fcMapLayers: [
+                {
+                    layerID: 1,
+                    layerPath: 'WI_Local_Roads_Flood_Damage_Assessment_Snapshot/FeatureServer/',
+                    fcPropName: 'Functional_Class_Descr',
+                    idPropName: 'OBJECTID',
+                    outFields: ['OBJECTID', 'Functional_Class_Descr', 'ST_PRMY_SYMB_TY'],
+                    roadTypeMap: {
+                        Fw: ['09', '14', '15', '24', '25', '34', '49', '50', '51', '52', '53', '54', '55'],
+                        Ew: [],
+                        MH: ['10', '60', '61', '62'],
+                        mH: ['20', '70', '71', '72', '73', '74', '75', '76', '77', '78', '80', '81', '82', '83'],
+                        PS: ['30', '31', '32', '33', '40', '41', '90', '91', '92', '93', '94', '95'],
+                        St: ['45', '97']
+                    },
+                    maxRecordCount: 1000,
+                    supportsPagination: false
+                },
+                {
+                    layerID: 0,
+                    layerPath: 'FFCL_gdb/FeatureServer/',
+                    fcPropName: 'FFCL_CD',
+                    idPropName: 'OBJECTID',
+                    outFields: ['OBJECTID', 'FFCL_CD'],
+                    roadTypeMap: {
+                        Fw: ['09', '14', '15', '24', '25', '34', '49', '50', '51', '52', '53', '54', '55'],
+                        Ew: [],
+                        MH: ['10', '60', '61', '62'],
+                        mH: ['20', '70', '71', '72', '73', '74', '75', '76', '77', '78', '80', '81', '82', '83'],
+                        PS: ['30', '31', '32', '33', '40', '41', '90', '91', '92', '93', '94', '95'],
+                        St: ['45', '97']
+                    },
+                    maxRecordCount: 1000,
+                    supportsPagination: false
+                },
+            ],
+            information: { Source: 'WisDOT', Permission: 'Visible to R4+ or R3-AM', Description: 'Federal and State highways set to a minimum of mH. Some US-XX routes might highlight as mH (green), but they should be mapped MH (blue).' },
+             isPermitted() {
+                return rank >= 3 || (rank >= 2 && isAM);
+            },
+            getWhereClause(context) {
+                return null;
+            },
+            getFeatureRoadType(feature, layer) {
+                let roadType = STATE_SETTINGS.global.getFeatureRoadType(feature, layer);
+
+                if(layer.layerPath === 'WI_Local_Roads_Flood_Damage_Assessment_Snapshot/FeatureServer/') {
+                 // ST_PRMY_SYMB_TY:
+                 // IH=Interstate
+                 // USH=US Highway
+                 // STH=State Highway PR=Park Road
+                    const SymType = feature.attributes.ST_PRMY_SYMB_TY;
+                    if (SymType === 'IH' &&  roadType != 'Fw') {
+                       roadType = 'Fw';
+                    } else if (SymType === 'USH' && roadType != 'Fw') {
+                        roadType = 'MH';
+                    } else if (SymType === 'STH' && (roadType != 'Fw' || roadType != 'MH') ) {
+                        roadType = 'Mh';
+                    }
+                    return roadType;
+                }
+                return roadType;
             }
         },
         WV: {
