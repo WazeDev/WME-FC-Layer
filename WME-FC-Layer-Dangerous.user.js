@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME FC Layer (Dangerous)
 // @namespace    https://greasyfork.org/users/45389
-// @version      2025.06.29.000
+// @version      2025.07.11.000
 // @description  Adds a Functional Class layer for states that publish ArcGIS FC data.
 // @author       MapOMatic
 // @match        *://*.waze.com/*editor*
@@ -76,6 +76,7 @@
     let rank;
     let MAP_LAYER_Z_INDEX;
     const MIN_ZOOM_LEVEL = 11;
+    let CURRENT_ZOOM = null;
     const STATES_HASH = {
         Alabama: 'AL',
         Alaska: 'AK',
@@ -3365,6 +3366,7 @@
         $('#fc-loading-indicator').css('color', 'green').html('<span>Loading FC Layers ...</span>');
 
         const mapContext = { zoom: sdk.Map.getZoomLevel(), extent: sdk.Map.getMapExtent() };
+        CURRENT_ZOOM = mapContext.zoom;  // store globally so it can be used in map styling predicate
         if (mapContext.zoom > MIN_ZOOM_LEVEL) {
             const parentContext = { callCount: 0, startTime: Date.now() };
 
@@ -3450,7 +3452,7 @@
         for (let zoom = 12; zoom < 22; zoom++) {
             styleRules.push({
                 // eslint-disable-next-line no-loop-func
-                predicate: () => sdk.Map.getZoomLevel() === zoom,
+                predicate: () => CURRENT_ZOOM === zoom,
                 style: {
                     strokeWidth: 12 * 1.15 ** (zoom - 13)
                 }
