@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME FC Layer
 // @namespace    https://greasyfork.org/users/45389
-// @version      2025.07.11.000
+// @version      2025.09.03.000
 // @description  Adds a Functional Class layer for states that publish ArcGIS FC data.
 // @author       MapOMatic
 // @match        *://*.waze.com/*editor*
@@ -1476,7 +1476,7 @@
             }
         },
         MN: {
-            baseUrl: 'https://dotapp9.dot.state.mn.us/lrs/rest/services/emma/emma_op/MapServer/',
+            baseUrl: 'https://webgis.dot.state.mn.us/lrsfed1/rest/services/emma/emma_op/MapServer/',
             defaultColors: {
                 Fw: '#ff00c5',
                 Ew: '#149ece',
