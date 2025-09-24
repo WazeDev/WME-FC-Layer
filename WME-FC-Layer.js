@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME FC Layer
 // @namespace    https://greasyfork.org/users/45389
-// @version      2025.09.23.000
+// @version      2025.09.24.000
 // @description  Adds a Functional Class layer for states that publish ArcGIS FC data.
 // @author       MapOMatic / JS55CT
 // @match        *://*.waze.com/*editor*
@@ -1849,7 +1849,7 @@
           layerID: 1, // 0
           fcPropName: 'FUNCT_SYSTEM',
           idPropName: 'OBJECTID',
-          outFields: ['OBJECTID', 'FUNCT_SYSTEM', 'STREET_ALIASES', 'TIER', 'SRI_TYPE'],
+          outFields: ['OBJECTID', 'FUNCT_SYSTEM', 'STREET', 'STREET_ALIASES', 'TIER', 'SRI_TYPE'],
           roadTypeMap: {
             Fw: [1],
             Ew: [2],
@@ -1880,10 +1880,14 @@
         }
         const route = feature.attributes.STREET_ALIASES;
         const isRamp = feature.attributes.SRI_TYPE === 'Ramp';
+        const isCircHwy = /^Circumferential H/i.test(feature.attributes.STREET.trim());
         const isUS = /US /.test(route);
         const isState = /NH /.test(route);
+        // Ramp and CircHwy overrides first
         if (isRamp) {
           fc = 9;
+        } else if (isCircHwy) {
+          fc = 1;
         } else if (fc === 2) {
           fc = feature.attributes.TIER === 1 ? 1 : 3;
         } else if (fc > 3 && isUS) {
