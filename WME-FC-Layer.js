@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME FC Layer
 // @namespace    https://greasyfork.org/users/45389
-// @version      2025.09.24.000
+// @version      2025.11.21.000
 // @description  Adds a Functional Class layer for states that publish ArcGIS FC data.
 // @author       MapOMatic / JS55CT
 // @match        *://*.waze.com/*editor*
@@ -60,6 +60,7 @@
 
 /* global turf */
 /* global bootstrap */
+/* global $ */
 
 (async function main() {
   'use strict';
@@ -2176,7 +2177,7 @@
       },
     },
     OH: {
-      baseUrl: 'https://gis.dot.state.oh.us/arcgis/rest/services/TIMS/Roadway_Information/MapServer/',
+      baseUrl: 'https://tims.dot.state.oh.us/ags/rest/services/Roadway_Information/Functional_Class/MapServer/',
       defaultColors: {
         Fw: '#ff00c5',
         Ew: '#4f33df',
@@ -2189,10 +2190,10 @@
 
       fcMapLayers: [
         {
-          layerID: 8,
+          layerID: 0,
           fcPropName: 'FUNCTION_CLASS_CD',
-          idPropName: 'ObjectID',
-          outFields: ['FUNCTION_CLASS_CD', 'ROUTE_TYPE', 'ROUTE_NBR', 'ObjectID'],
+          idPropName: 'OBJECTID',
+          outFields: ['FUNCTION_CLASS_CD', 'ROUTE_TYPE', 'ROUTE_NBR', 'OBJECTID'],
           maxRecordCount: 1000,
           supportsPagination: false,
           roadTypeMap: {
