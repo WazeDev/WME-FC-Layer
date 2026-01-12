@@ -809,7 +809,7 @@
       supportsPagination: false,
       defaultColors: {
         Fw: '#ff00c5',
-        Ew: '#149ece',
+        Ew: '#4f33df',
         MH: '#149ece',
         mH: '#4ce600',
         PS: '#cfae0e',
@@ -850,7 +850,7 @@
       supportsPagination: true,
       defaultColors: {
         Fw: '#ff00c5',
-        Ew: '#149ece',
+        Ew: '#4f33df',
         MH: '#149ece',
         mH: '#4ce600',
         PS: '#cfae0e',
