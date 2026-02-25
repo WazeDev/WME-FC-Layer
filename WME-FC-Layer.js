@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME FC Layer
 // @namespace    https://greasyfork.org/users/45389
-// @version      2025.11.21.000
+// @version      2026.02.25.000
 // @description  Adds a Functional Class layer for states that publish ArcGIS FC data.
 // @author       MapOMatic / JS55CT
 // @match        *://*.waze.com/*editor*
@@ -3609,7 +3609,7 @@
     if (_lastPromise) {
       _lastPromise.cancel();
     }
-    $('#fc-loading-indicator').css('color', 'green').html('<span>Loading FC Layers ...</span>');
+    $('#fc-loading-indicator').removeClass('fcl-loading-error').addClass('fcl-loading-active').html('<span class="fcl-spin fas fa-circle-notch"></span> Loading FC data&hellip;');
 
     const mapContext = { zoom: sdk.Map.getZoomLevel(), extent: sdk.Map.getMapExtent() };
     CURRENT_ZOOM = mapContext.zoom; // store globally so it can be used in map styling predicate
@@ -3646,14 +3646,14 @@
         })
         .catch((e) => {
           const formattedMessage = e.message.replace(/\|/g, '<br>');
-          $('#fc-loading-indicator').css('color', 'red').html(`${formattedMessage}`);
+          $('#fc-loading-indicator').removeClass('fcl-loading-active').addClass('fcl-loading-error').html(`<span class="fas fa-exclamation-triangle"></span> ${formattedMessage}`);
           errorOccurred = true;
           errorLog(e.message);
         })
         .finally(() => {
           _fcCallCount -= 1;
           if (_fcCallCount === 0 && !errorOccurred) {
-            $('#fc-loading-indicator').html('<span></span>');
+            $('#fc-loading-indicator').removeClass('fcl-loading-active fcl-loading-error').html('');
           }
 
           const endTime = Date.now();
@@ -3793,26 +3793,328 @@
   }
 
   /**
+   * Injects modern CSS styles for the FC Layer sidebar panel.
+   */
+  function initModernStyles() {
+    const style = document.createElement('style');
+    style.textContent = `
+      /* === WME FC Layer Modern UI ===
+         Uses WME CSS variables so light/dark mode is handled automatically.
+         See :root and [wz-theme="dark"] in WME for variable definitions. */
+
+      .wme-fcl-panel .fcl-container {
+        font-family: inherit; /* inherits Rubik from WME html/body */
+        color: var(--content_default);
+        line-height: 1.5;
+        padding: 0 var(--space-xs) var(--space-s) var(--space-xxs);
+        box-sizing: border-box;
+      }
+
+      /* Header — uses WME primary color; --on_primary adapts contrast per theme */
+      .wme-fcl-panel .fcl-header {
+        background: linear-gradient(135deg, var(--primary_variant) 0%, var(--primary) 100%);
+        padding: var(--space-xs) var(--space-s);
+        border-radius: 8px;
+        margin-bottom: var(--space-xs);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .wme-fcl-panel .fcl-header::before {
+        content: '';
+        position: absolute;
+        top: -40%;
+        right: -15%;
+        width: 110px;
+        height: 110px;
+        background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%);
+        pointer-events: none;
+      }
+
+      .wme-fcl-panel .fcl-header-content {
+        position: relative;
+        z-index: 1;
+      }
+
+      .wme-fcl-panel .fcl-header-title {
+        display: flex;
+        align-items: center;
+        gap: var(--space-xs);
+        margin-bottom: var(--space-xxs);
+      }
+
+      .wme-fcl-panel .fcl-header-icon {
+        width: 24px;
+        height: 24px;
+        background: rgba(255,255,255,0.2);
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--on_primary);
+        font-size: 12px;
+        flex-shrink: 0;
+      }
+
+      .wme-fcl-panel .fcl-header h1 {
+        color: var(--on_primary);
+        font-size: 14px;
+        font-weight: 600;
+        letter-spacing: -0.1px;
+        margin: 0;
+      }
+
+      .wme-fcl-panel .fcl-header-subtitle {
+        color: var(--on_primary);
+        opacity: 0.75;
+        font-size: 10px;
+        margin-left: 32px; /* 24px icon + 8px gap */
+      }
+
+      /* Cards */
+      .wme-fcl-panel .fcl-card {
+        background: var(--surface_default);
+        border-radius: 10px;
+        margin-bottom: var(--space-xs);
+        box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+        border: 1px solid var(--separator_default);
+        overflow: hidden;
+      }
+
+      .wme-fcl-panel .fcl-card-header {
+        padding: var(--space-xs) var(--space-s);
+        display: flex;
+        align-items: center;
+        gap: var(--space-xs);
+        background: var(--surface_variant);
+        border-bottom: 1px solid var(--separator_default);
+      }
+
+      .wme-fcl-panel .fcl-card-icon {
+        width: 22px;
+        height: 22px;
+        border-radius: 5px;
+        background: linear-gradient(135deg, var(--primary_variant) 0%, var(--primary) 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--on_primary);
+        font-size: 10px;
+        flex-shrink: 0;
+      }
+
+      .wme-fcl-panel .fcl-card-title {
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--content_p1);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .wme-fcl-panel .fcl-card-body {
+        padding: var(--space-s) var(--space-m);
+      }
+
+      /* State Select */
+      .wme-fcl-panel .fcl-select {
+        width: 100%;
+        height: var(--wz-select-height);
+        padding: 0 28px 0 var(--space-xs);
+        border-radius: 6px;
+        background-color: var(--background_default);
+        color: var(--content_default);
+        border: 1px solid var(--hairline);
+        font-family: inherit;
+        font-size: 13px;
+        font-weight: 500;
+        cursor: pointer;
+        outline: none;
+        transition: border-color 0.2s;
+        appearance: none;
+        -webkit-appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2390959c' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right var(--space-xs) center;
+        background-size: 12px;
+      }
+
+      .wme-fcl-panel .fcl-select:focus {
+        border-color: var(--primary);
+      }
+
+      /* Toggle Row */
+      .wme-fcl-panel .fcl-toggle-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--space-xs);
+      }
+
+      .wme-fcl-panel .fcl-toggle-label {
+        font-size: 13px;
+        color: var(--content_default);
+        flex: 1;
+        cursor: pointer;
+        user-select: none;
+      }
+
+      .wme-fcl-panel .fcl-toggle {
+        position: relative;
+        width: 40px;
+        height: 22px;
+        flex-shrink: 0;
+      }
+
+      .wme-fcl-panel .fcl-toggle input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+        position: absolute;
+      }
+
+      .wme-fcl-panel .fcl-toggle-slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: var(--hairline_strong);
+        border-radius: 11px;
+        transition: background 0.25s;
+      }
+
+      .wme-fcl-panel .fcl-toggle-slider::after {
+        content: '';
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        width: 18px;
+        height: 18px;
+        background: var(--ink_elevation);
+        border-radius: 9px;
+        transition: transform 0.25s;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+      }
+
+      .wme-fcl-panel .fcl-toggle input:checked + .fcl-toggle-slider {
+        background: var(--primary);
+      }
+
+      .wme-fcl-panel .fcl-toggle input:checked + .fcl-toggle-slider::after {
+        transform: translateX(18px);
+      }
+
+      /* Status / loading indicator */
+      .wme-fcl-panel .fcl-status {
+        display: none;
+        align-items: center;
+        gap: var(--space-xs);
+        padding: var(--space-xs) var(--space-s);
+        border-radius: 8px;
+        margin-bottom: var(--space-xs);
+        font-size: 12px;
+        font-weight: 500;
+      }
+
+      .wme-fcl-panel .fcl-status.fcl-loading-active {
+        display: flex;
+        background: var(--surface_alt);
+        border: 1px solid var(--primary);
+        color: var(--primary);
+      }
+
+      .wme-fcl-panel .fcl-status.fcl-loading-error {
+        display: flex;
+        background: var(--surface_variant_red);
+        border: 1px solid var(--alarming);
+        color: var(--alarming_variant);
+      }
+
+      @keyframes fcl-spin {
+        to { transform: rotate(360deg); }
+      }
+
+      .wme-fcl-panel .fcl-status .fcl-spin {
+        display: inline-block;
+        animation: fcl-spin 0.8s linear infinite;
+        flex-shrink: 0;
+      }
+
+      /* State Info rows */
+      .wme-fcl-panel .fcl-info-row {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-xxs);
+        padding: var(--space-xs) var(--space-s);
+        background: var(--surface_default);
+        border-radius: 6px;
+        border-left: 3px solid var(--primary);
+        margin-bottom: var(--space-xxs);
+      }
+
+      .wme-fcl-panel .fcl-info-label {
+        font-size: 10px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--content_p2);
+      }
+
+      .wme-fcl-panel .fcl-info-value {
+        font-size: 13px;
+        color: var(--content_default);
+      }
+
+      /* Footer */
+      .wme-fcl-panel .fcl-footer {
+        margin-top: var(--space-s);
+        padding-top: var(--space-xs);
+        border-top: 1px solid var(--separator_default);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: var(--space-xxs);
+      }
+
+      .wme-fcl-panel .fcl-version {
+        font-size: 10px;
+        color: var(--content_p3);
+      }
+
+      .wme-fcl-panel .fcl-footer a {
+        font-size: 10px;
+        color: var(--primary);
+        text-decoration: none;
+      }
+
+      .wme-fcl-panel .fcl-footer a:hover {
+        text-decoration: underline;
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  /**
    * Initializes user panel and sidebar tab, creates controls.
    */
   async function initUserPanel() {
-    const $panel = $('<div>');
-    // Updated to play better with DarkMode
-    const $stateSelect = $('<select>', {
-      id: 'fcl-state-select',
-      class: 'form-control disabled',
-      style: `
-        border-radius: 4px;
-        padding: 6px 12px;
-        background-color: var(--background_default); /* Use dark mode background */
-        color: var(--content_default); /* Use dark mode content color */
-        border: 1px solid var(--separator_default); /* Dark mode border color */
-        transition: background-color 0.3s, color 0.3s, border-color 0.3s;
-        outline: none;
-        cursor: pointer;
-        font-weight: bold;
-    `,
-    }).append($('<option>', { value: 'ALL' }).text('All'));
+    const $panel = $('<div>', { class: 'fcl-container' });
+
+    // Header
+    $panel.append(`
+      <div class="fcl-header">
+        <div class="fcl-header-content">
+          <div class="fcl-header-title">
+            <div class="fcl-header-icon"><i class="fas fa-road"></i></div>
+            <h1>FC Layer</h1>
+          </div>
+          <div class="fcl-header-subtitle">Functional Classification overlay</div>
+        </div>
+      </div>
+    `);
+
+    // State selection card
+    const $stateSelect = $('<select>', { id: 'fcl-state-select', class: 'fcl-select' })
+      .append($('<option>', { value: 'ALL' }).text('All States'));
 
     Object.keys(STATE_SETTINGS).forEach((stateAbbr) => {
       if (stateAbbr !== 'global') {
@@ -3822,46 +4124,61 @@
 
     $stateSelect.val(settings.activeStateAbbr ? settings.activeStateAbbr : 'ALL');
 
-    const $hideStreet = $('<div>', { id: 'fcl-hide-street-container', class: 'controls-container' })
-      .append($('<input>', { type: 'checkbox', name: 'fcl-hide-street', id: 'fcl-hide-street' }).prop('checked', settings.hideStreet).click(onHideStreetsClicked))
-      .append($('<label>', { for: 'fcl-hide-street' }).text('Hide local street highlights'));
-
     $panel.append(
-      $('<div>', { class: 'form-group' })
-        .append($('<label>', { class: 'control-label' }).text('Select a state'))
-        .append($('<div>', { class: 'controls', id: 'fcl-state-select-container' }).append($('<div>').append($stateSelect))),
-      $hideStreet,
-      $('<div>', { id: 'fcl-table-container' })
+      $('<div>', { class: 'fcl-card' }).append(
+        $('<div>', { class: 'fcl-card-header' }).append(
+          $('<div>', { class: 'fcl-card-icon' }).html('<i class="fas fa-map"></i>'),
+          $('<span>', { class: 'fcl-card-title' }).text('State')
+        ),
+        $('<div>', { class: 'fcl-card-body' }).append($stateSelect)
+      )
     );
 
+    // Settings card
     $panel.append(
-      $('<div>', {
-        class: 'loading-indicator',
-        id: 'fc-loading-indicator',
-        style: 'margin-top:10px; margin-right:10px; font-weight:bold; color:green; font-size:0.9em;',
-      }).html('<span></span>')
+      $('<div>', { class: 'fcl-card' }).append(
+        $('<div>', { class: 'fcl-card-header' }).append(
+          $('<div>', { class: 'fcl-card-icon' }).html('<i class="fas fa-sliders-h"></i>'),
+          $('<span>', { class: 'fcl-card-title' }).text('Settings')
+        ),
+        $('<div>', { class: 'fcl-card-body' }).append(
+          $('<div>', { class: 'fcl-toggle-row' }).append(
+            $('<label>', { class: 'fcl-toggle-label', for: 'fcl-hide-street' }).text('Hide local street highlights'),
+            $('<label>', { class: 'fcl-toggle' }).append(
+              $('<input>', { type: 'checkbox', id: 'fcl-hide-street' }).prop('checked', settings.hideStreet).click(onHideStreetsClicked),
+              $('<span>', { class: 'fcl-toggle-slider' })
+            )
+          )
+        )
+      )
     );
 
+    // Status / loading indicator
+    $panel.append($('<div>', { id: 'fc-loading-indicator', class: 'fcl-status' }));
+
+    // State info section
     $panel.append($('<div>', { id: 'fcl-state-info' }));
 
+    // Footer
     $panel.append(
-      $('<div>', { style: 'margin-top:10px;font-size:10px;color:#999999;' })
-        .append($('<div>').text(`version ${scriptVersion}`))
-        .append($('<div>').append($('<a>', { href: '#' /* , target:'__blank' */ }).text('Discussion Forum (currently n/a)')))
+      $('<div>', { class: 'fcl-footer' }).append(
+        $('<span>', { class: 'fcl-version' }).text(`v${scriptVersion}`),
+        $('<a>', { href: '#' }).text('Discussion Forum (n/a)')
+      )
     );
 
     const { tabLabel, tabPane } = await sdk.Sidebar.registerScriptTab();
     $(tabLabel).text('FC');
-    $(tabPane).append($panel);
+    $(tabPane).addClass('wme-fcl-panel').append($panel);
 
-    // append the power button
+    // Power button
     if (!$('#fc-layer-power-btn').length) {
       const color = settings.layerVisible ? '#00bd00' : '#ccc';
       $(tabLabel).prepend(
         $('<span>', {
           class: 'fa fa-power-off',
           id: 'fc-layer-power-btn',
-          style: `margin-right: 5px;cursor: pointer;color: ${color};font-size: 13px;`,
+          style: `margin-right:5px;cursor:pointer;color:${color};font-size:13px;`,
           title: 'Toggle FC Layer',
         }).click((evt) => {
           evt.stopPropagation();
@@ -3875,17 +4192,30 @@
   }
 
   /**
-   * Loads information about the currently active state into info panel.
+   * Loads information about the currently active state into the info panel.
    */
   function loadStateFCInfo() {
-    $('#fcl-state-info').empty();
+    const $info = $('#fcl-state-info').empty();
     if (STATE_SETTINGS[settings.activeStateAbbr]) {
       const stateInfo = STATE_SETTINGS[settings.activeStateAbbr].information;
-      const $panelStateInfo = $('<dl>');
+      const $body = $('<div>', { class: 'fcl-card-body' });
       Object.keys(stateInfo).forEach((propertyName) => {
-        $panelStateInfo.append($('<dt>', { style: 'margin-top:1em;color:#777777' }).text(propertyName)).append($('<dd>').text(stateInfo[propertyName]));
+        $body.append(
+          $('<div>', { class: 'fcl-info-row' }).append(
+            $('<div>', { class: 'fcl-info-label' }).text(propertyName),
+            $('<div>', { class: 'fcl-info-value' }).text(stateInfo[propertyName])
+          )
+        );
       });
-      $('#fcl-state-info').append($panelStateInfo);
+      $info.append(
+        $('<div>', { class: 'fcl-card' }).append(
+          $('<div>', { class: 'fcl-card-header' }).append(
+            $('<div>', { class: 'fcl-card-icon' }).html('<i class="fas fa-info"></i>'),
+            $('<span>', { class: 'fcl-card-title' }).text('State Info')
+          ),
+          $body
+        )
+      );
     }
   }
 
@@ -3894,6 +4224,7 @@
    */
   async function initGui() {
     initLayer();
+    initModernStyles();
     await initUserPanel();
   }
 
