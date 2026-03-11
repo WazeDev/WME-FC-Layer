@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME FC Layer
 // @namespace    https://greasyfork.org/users/45389
-// @version      2026.02.25.000
+// @version      2026.03.11.000
 // @description  Adds a Functional Class layer for states that publish ArcGIS FC data.
 // @author       MapOMatic / JS55CT
 // @match        *://*.waze.com/*editor*
@@ -9,7 +9,6 @@
 // @exclude      *://*.waze.com/editor/sdk/*
 // @license      GNU GPLv3
 // @contributionURL https://github.com/WazeDev/Thank-The-Authors
-// @require      https://greasyfork.org/scripts/39002-bluebird/code/Bluebird.js?version=255146
 // @require      https://greasyfork.org/scripts/24851-wazewrap/code/WazeWrap.js
 // @require      https://cdn.jsdelivr.net/npm/@turf/turf@7/turf.min.js
 // @require      https://update.greasyfork.org/scripts/509664/WME%20Utils%20-%20Bootstrap.js
@@ -111,6 +110,9 @@
   /** @type {string} Userscript update URL */
   const downloadUrl = 'https://greasyfork.org/scripts/369633-wme-fc-layer/code/WME%20FC%20Layer.user.js';
 
+  /** @type {string} Message displayed to user when a new script version is detected */
+  const updateMessage = 'Removed Bluebird.js dependency, fixing a Firefox console error.';
+
   /** @type {string} Layer name registered with SDK and displayed in layer controls */
   const layerName = 'FC Layer';
 
@@ -153,7 +155,7 @@
   /**
    * @type {Object} Reference to WME Utils Bootstrap SDK, asynchronously loaded.
    */
-  const sdk = await bootstrap({ scriptUpdateMonitor: { downloadUrl } });
+  const sdk = await bootstrap({ scriptUpdateMonitor: { downloadUrl, updateMessage } });
 
   /**
    * Mapping of State full names to abbreviations.
@@ -3499,7 +3501,6 @@
     context.idsOnlyURL = url;
     if (!context.parentContext.cancel) {
       return getAsync(url, context)
-        .bind(context)
         .then((res) => {
           try {
             const ids = JSON.parse(res.responseText);
@@ -3533,7 +3534,7 @@
           }
           return idRanges;
         })
-        .map((idRange) => {
+        .then((idRanges) => Promise.all(idRanges.map((idRange) => {
           if (!context.parentContext.cancel) {
             const newUrl = getUrl(context, 'idRange', idRange);
             context.idRangeURL = newUrl;
@@ -3549,7 +3550,7 @@
           }
           // debugLog('Async call cancelled');
           return null;
-        });
+        })));
     }
     return null;
   }
@@ -3569,7 +3570,7 @@
       mapContext: context.mapContext,
     }));
 
-    return Promise.map(contexts, (ctx) =>
+    return Promise.all(contexts.map((ctx) =>
       fetchLayerFC(ctx).catch((err) => {
         const errorMessage = `
         | Failed to fetch layer:
@@ -3580,10 +3581,9 @@
       `;
         return Promise.reject(new Error(errorMessage.trim()));
       })
-    );
+    ));
   }
 
-  let _lastPromise = null;
   let _lastContext = null;
   let _fcCallCount = 0;
 
@@ -3606,10 +3606,7 @@
   function fetchAllFC() {
     if (!sdk.Map.isLayerVisible({ layerName })) return;
 
-    if (_lastPromise) {
-      _lastPromise.cancel();
-    }
-    $('#fc-loading-indicator').removeClass('fcl-loading-error').addClass('fcl-loading-active').html('<span class="fcl-spin fas fa-circle-notch"></span> Loading FC data&hellip;');
+    $('#fc-loading-indicator').removeClass('fcl-loading-error').addClass('fcl-loading-active').html('<span class="fcl-spin fa fa-circle-notch"></span> Loading FC data&hellip;');
 
     const mapContext = { zoom: sdk.Map.getZoomLevel(), extent: sdk.Map.getMapExtent() };
     CURRENT_ZOOM = mapContext.zoom; // store globally so it can be used in map styling predicate
@@ -3623,7 +3620,7 @@
       let errorOccurred = false; // Flag to track error state
       let featureCount = 0;
 
-      const map = Promise.map(contexts, (ctx) => fetchStateFC(ctx))
+      const map = Promise.all(contexts.map((ctx) => fetchStateFC(ctx)))
         .then((statesLineStringArrays) => {
           if (!parentContext.cancel) {
             sdk.Map.removeAllFeaturesFromLayer({ layerName });
@@ -3646,7 +3643,7 @@
         })
         .catch((e) => {
           const formattedMessage = e.message.replace(/\|/g, '<br>');
-          $('#fc-loading-indicator').removeClass('fcl-loading-active').addClass('fcl-loading-error').html(`<span class="fas fa-exclamation-triangle"></span> ${formattedMessage}`);
+          $('#fc-loading-indicator').removeClass('fcl-loading-active').addClass('fcl-loading-error').html(`<span class="fa fa-exclamation-triangle"></span> ${formattedMessage}`);
           errorOccurred = true;
           errorLog(e.message);
         })
@@ -3662,7 +3659,6 @@
         });
 
       _fcCallCount += 1;
-      _lastPromise = map;
     } else {
       // if zoomed out too far, clear the layer
       sdk.Map.removeAllFeaturesFromLayer({ layerName });
@@ -3813,7 +3809,7 @@
       /* Header — uses WME primary color; --on_primary adapts contrast per theme */
       .wme-fcl-panel .fcl-header {
         background: linear-gradient(135deg, var(--primary_variant) 0%, var(--primary) 100%);
-        padding: var(--space-xs) var(--space-s);
+        padding: 6px var(--space-s);
         border-radius: 8px;
         margin-bottom: var(--space-xs);
         position: relative;
@@ -3840,35 +3836,28 @@
         display: flex;
         align-items: center;
         gap: var(--space-xs);
-        margin-bottom: var(--space-xxs);
+        margin-bottom: 0;
       }
 
       .wme-fcl-panel .fcl-header-icon {
-        width: 24px;
-        height: 24px;
+        width: 18px;
+        height: 18px;
         background: rgba(255,255,255,0.2);
-        border-radius: 6px;
+        border-radius: 4px;
         display: flex;
         align-items: center;
         justify-content: center;
         color: var(--on_primary);
-        font-size: 12px;
+        font-size: 10px;
         flex-shrink: 0;
       }
 
       .wme-fcl-panel .fcl-header h1 {
         color: var(--on_primary);
-        font-size: 14px;
+        font-size: 13px;
         font-weight: 600;
         letter-spacing: -0.1px;
         margin: 0;
-      }
-
-      .wme-fcl-panel .fcl-header-subtitle {
-        color: var(--on_primary);
-        opacity: 0.75;
-        font-size: 10px;
-        margin-left: 32px; /* 24px icon + 8px gap */
       }
 
       /* Cards */
@@ -4063,31 +4052,11 @@
         color: var(--content_default);
       }
 
-      /* Footer */
-      .wme-fcl-panel .fcl-footer {
-        margin-top: var(--space-s);
-        padding-top: var(--space-xs);
-        border-top: 1px solid var(--separator_default);
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        flex-wrap: wrap;
-        gap: var(--space-xxs);
-      }
-
-      .wme-fcl-panel .fcl-version {
+      .wme-fcl-panel .fcl-header-version {
+        margin-left: auto;
         font-size: 10px;
-        color: var(--content_p3);
-      }
-
-      .wme-fcl-panel .fcl-footer a {
-        font-size: 10px;
-        color: var(--primary);
-        text-decoration: none;
-      }
-
-      .wme-fcl-panel .fcl-footer a:hover {
-        text-decoration: underline;
+        color: var(--on_primary);
+        opacity: 0.7;
       }
     `;
     document.head.appendChild(style);
@@ -4104,10 +4073,10 @@
       <div class="fcl-header">
         <div class="fcl-header-content">
           <div class="fcl-header-title">
-            <div class="fcl-header-icon"><i class="fas fa-road"></i></div>
+            <div class="fcl-header-icon"><i class="fa fa-road"></i></div>
             <h1>FC Layer</h1>
+            <span class="fcl-header-version">v${scriptVersion}</span>
           </div>
-          <div class="fcl-header-subtitle">Functional Classification overlay</div>
         </div>
       </div>
     `);
@@ -4127,7 +4096,7 @@
     $panel.append(
       $('<div>', { class: 'fcl-card' }).append(
         $('<div>', { class: 'fcl-card-header' }).append(
-          $('<div>', { class: 'fcl-card-icon' }).html('<i class="fas fa-map"></i>'),
+          $('<div>', { class: 'fcl-card-icon' }).html('<i class="fa fa-map"></i>'),
           $('<span>', { class: 'fcl-card-title' }).text('State')
         ),
         $('<div>', { class: 'fcl-card-body' }).append($stateSelect)
@@ -4138,7 +4107,7 @@
     $panel.append(
       $('<div>', { class: 'fcl-card' }).append(
         $('<div>', { class: 'fcl-card-header' }).append(
-          $('<div>', { class: 'fcl-card-icon' }).html('<i class="fas fa-sliders-h"></i>'),
+          $('<div>', { class: 'fcl-card-icon' }).html('<i class="fa fa-sliders"></i>'),
           $('<span>', { class: 'fcl-card-title' }).text('Settings')
         ),
         $('<div>', { class: 'fcl-card-body' }).append(
@@ -4158,14 +4127,6 @@
 
     // State info section
     $panel.append($('<div>', { id: 'fcl-state-info' }));
-
-    // Footer
-    $panel.append(
-      $('<div>', { class: 'fcl-footer' }).append(
-        $('<span>', { class: 'fcl-version' }).text(`v${scriptVersion}`),
-        $('<a>', { href: '#' }).text('Discussion Forum (n/a)')
-      )
-    );
 
     const { tabLabel, tabPane } = await sdk.Sidebar.registerScriptTab();
     $(tabLabel).text('FC');
@@ -4210,7 +4171,7 @@
       $info.append(
         $('<div>', { class: 'fcl-card' }).append(
           $('<div>', { class: 'fcl-card-header' }).append(
-            $('<div>', { class: 'fcl-card-icon' }).html('<i class="fas fa-info"></i>'),
+            $('<div>', { class: 'fcl-card-icon' }).html('<i class="fa fa-info"></i>'),
             $('<span>', { class: 'fcl-card-title' }).text('State Info')
           ),
           $body
@@ -4232,22 +4193,6 @@
    * Main startup routine; loads user/area info, settings, and initializes GUI.
    */
   async function init() {
-    if (debug && Promise.config) {
-      Promise.config({
-        warnings: true,
-        longStackTraces: true,
-        cancellation: true,
-        monitoring: false,
-      });
-    } else {
-      Promise.config({
-        warnings: false,
-        longStackTraces: false,
-        cancellation: true,
-        monitoring: false,
-      });
-    }
-
     const u = sdk.State.getUserInfo();
     rank = u.rank + 1;
     isAM = u.isAreaManager;
