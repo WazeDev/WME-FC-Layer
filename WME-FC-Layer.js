@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME FC Layer
 // @namespace    https://greasyfork.org/users/45389
-// @version      2026.03.11.000
+// @version      2026.04.01.00
 // @description  Adds a Functional Class layer for states that publish ArcGIS FC data.
 // @author       MapOMatic / JS55CT
 // @match        *://*.waze.com/*editor*
@@ -111,7 +111,7 @@
   const downloadUrl = 'https://greasyfork.org/scripts/369633-wme-fc-layer/code/WME%20FC%20Layer.user.js';
 
   /** @type {string} Message displayed to user when a new script version is detected */
-  const updateMessage = 'Removed Bluebird.js dependency, fixing a Firefox console error.';
+  const updateMessage = 'Fix NH: for metadata name changes';
 
   /** @type {string} Layer name registered with SDK and displayed in layer controls */
   const layerName = 'FC Layer';
@@ -1844,7 +1844,7 @@
         mH: '#4ce600',
         PS: '#cfae0e',
         St: '#eeeeee',
-        Rmp: '#999999',
+        Rmp: '#272727',
       },
       zoomSettings: { maxOffset: [30, 15, 8, 4, 2, 1, 1, 1, 1, 1], excludeRoadTypes: [[], [], [], [], [], [], [], [], [], [], []] },
       fcMapLayers: [
@@ -1852,7 +1852,7 @@
           layerID: 1, // 0
           fcPropName: 'FUNCT_SYSTEM',
           idPropName: 'OBJECTID',
-          outFields: ['OBJECTID', 'FUNCT_SYSTEM', 'STREET', 'STREET_ALIASES', 'TIER', 'SRI_TYPE'],
+          outFields: ['OBJECTID', 'FUNCT_SYSTEM', 'STREET', 'HIORDER_ROUTE_NAME', 'TIER', 'HPMS_FACILITY_TYPE'],
           roadTypeMap: {
             Fw: [1],
             Ew: [2],
@@ -1881,8 +1881,8 @@
         if (!(fc > 0)) {
           fc = 7;
         }
-        const route = feature.attributes.STREET_ALIASES;
-        const isRamp = feature.attributes.SRI_TYPE === 'Ramp';
+        const route = feature.attributes.HIORDER_ROUTE_NAME;
+        const isRamp = feature.attributes.HPMS_FACILITY_TYPE === 4;
         const isCircHwy = /^Circumferential H/i.test(feature.attributes.STREET.trim());
         const isUS = /US /.test(route);
         const isState = /NH /.test(route);
