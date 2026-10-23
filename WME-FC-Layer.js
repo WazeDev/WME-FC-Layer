@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME FC Layer
 // @namespace    https://greasyfork.org/users/45389
-// @version      2026.06.24.00
+// @version      2026.10.23.00
 // @description  Adds a Functional Class layer for states that publish ArcGIS FC data.
 // @author       MapOMatic / JS55CT
 // @match        *://*.waze.com/*editor*
@@ -55,6 +55,8 @@
 // @connect      wa.gov
 // @connect      wv.gov
 // @connect      wyoroad.info
+// @connect      gis.massdot.state.ma.us
+// @connect      kanplan.ksdot.gov
 // ==/UserScript==
 
 /* global turf */
@@ -111,7 +113,7 @@
   const downloadUrl = 'https://greasyfork.org/scripts/369633-wme-fc-layer/code/WME%20FC%20Layer.user.js';
 
   /** @type {string} Message displayed to user when a new script version is detected */
-  const updateMessage = 'Fix WI: for metadata name changes';
+  const updateMessage = 'Updated to WME SDK async mode. Only queries states that overlap the map view, and logs clearer errors for failed requests.';
 
   /** @type {string} Layer name registered with SDK and displayed in layer controls */
   const layerName = 'FC Layer';
@@ -155,7 +157,7 @@
   /**
    * @type {Object} Reference to WME Utils Bootstrap SDK, asynchronously loaded.
    */
-  const sdk = await bootstrap({ scriptUpdateMonitor: { downloadUrl, updateMessage } });
+  const sdk = await bootstrap({ scriptUpdateMonitor: { downloadUrl, updateMessage }, mode: 'async' });
 
   /**
    * Mapping of State full names to abbreviations.
@@ -230,6 +232,62 @@
     }
     throw new Error(`FC Layer: reverseStatesHash function did not return a value for ${stateAbbr}.`);
   }
+
+  /**
+   * WGS84 bounding box [minLon, minLat, maxLon, maxLat] per state, used to skip states outside the map extent.
+   * Generated from wmeGisLBBOX USA_BBOX_ESPG4326.json.
+   * @type {Object.<string, number[]>}
+   */
+  const STATE_BBOXES = {
+    AK: [-179.231, 51.175, 179.86, 71.44],
+    AL: [-88.473, 30.144, -84.888, 35.008],
+    AR: [-94.618, 33.004, -89.641, 36.5],
+    AZ: [-114.816, 31.332, -109.045, 37.004],
+    CA: [-124.482, 32.53, -114.131, 42.01],
+    CO: [-109.06, 36.992, -102.042, 41.003],
+    CT: [-73.728, 40.951, -71.787, 42.051],
+    DC: [-77.12, 38.792, -76.909, 38.996],
+    DE: [-75.789, 38.451, -74.984, 39.84],
+    FL: [-87.635, 24.396, -79.974, 31.001],
+    GA: [-85.605, 30.356, -80.783, 35.001],
+    HI: [-178.444, 18.865, -154.756, 28.517],
+    IA: [-96.639, 40.375, -90.14, 43.501],
+    ID: [-117.243, 41.988, -111.043, 49.001],
+    IL: [-91.513, 36.97, -87.02, 42.508],
+    IN: [-88.098, 37.772, -84.785, 41.761],
+    KS: [-102.052, 36.993, -94.588, 40.003],
+    KY: [-89.571, 36.497, -81.965, 39.148],
+    LA: [-94.043, 28.855, -88.758, 33.02],
+    MA: [-73.508, 41.187, -69.859, 42.887],
+    MD: [-79.488, 37.887, -74.986, 39.723],
+    ME: [-71.084, 42.917, -66.885, 47.46],
+    MI: [-90.418, 41.696, -82.123, 48.306],
+    MN: [-97.239, 43.499, -89.483, 49.384],
+    MO: [-95.775, 35.996, -89.099, 40.614],
+    MT: [-116.049, 44.358, -104.04, 49.001],
+    NC: [-84.322, 33.753, -75.4, 36.588],
+    ND: [-104.049, 45.935, -96.554, 49.001],
+    NH: [-72.557, 42.697, -70.575, 45.306],
+    NM: [-109.05, 31.332, -103.002, 37],
+    NV: [-120.006, 35.002, -114.039, 42.002],
+    NY: [-79.763, 40.477, -71.777, 45.016],
+    OH: [-84.82, 38.403, -80.519, 42.327],
+    OK: [-103.002, 33.616, -94.431, 37.002],
+    OR: [-124.704, 41.992, -116.463, 46.299],
+    PA: [-80.52, 39.72, -74.69, 42.516],
+    RI: [-71.907, 41.096, -71.089, 42.019],
+    SC: [-83.354, 31.996, -78.499, 35.215],
+    SD: [-104.058, 42.48, -96.436, 45.945],
+    TN: [-90.31, 34.983, -81.647, 36.678],
+    TX: [-106.646, 25.837, -93.508, 36.501],
+    UT: [-114.053, 36.998, -109.042, 42.002],
+    VA: [-83.675, 36.541, -75.166, 39.466],
+    VT: [-73.438, 42.727, -71.465, 45.017],
+    WA: [-124.849, 45.544, -116.916, 49.002],
+    WI: [-92.889, 42.492, -86.25, 47.31],
+    WV: [-82.645, 37.202, -77.72, 40.639],
+    WY: [-111.055, 40.995, -104.052, 45.006],
+  };
 
   /**
    * STATE_SETTINGS maps state abbreviations to layer configuration and FC business logic for each supported state.
@@ -1174,7 +1232,7 @@
       },
     },
     KS: {
-      baseUrl: 'http://wfs.ksdot.org/arcgis_web_adaptor/rest/services/Transportation/',
+      baseUrl: 'https://kanplan.ksdot.gov/arcgis_web_adaptor/rest/services/Transportation/',
       defaultColors: {
         Fw: '#ff00c5',
         Ew: '#4f33df',
@@ -1541,7 +1599,7 @@
             MH: [3],
             mH: [4],
             PS: [5, 6],
-            St: [7],
+            St: [0, 7],
           },
           maxRecordCount: 1000,
           supportsPagination: false,
@@ -1675,7 +1733,7 @@
             fc = 6;
             break;
           default:
-            fc = 8; // not a typo
+            fc = 7; // LOCAL and other non-collector classes map to St (7), so they get a road type and color
         }
         const usHwys = ['24', '36', '40', '50', '54', '56', '59', '60', '61', '62', '63', '65', '67', '69', '71', '136', '159', '160', '166', '169', '275', '400', '412'];
         const isUS = ['US', 'LP'].includes(rtType); // is US or interstate biz
@@ -3352,10 +3410,19 @@
   /**
    * Saves current settings to browser storage.
    */
-  function saveSettingsToStorage() {
+  async function saveSettingsToStorage() {
     if (localStorage) {
       // In case the layer is turned off some other way...
-      settings.layerVisible = sdk.Map.isLayerVisible({ layerName });
+      settings.layerVisible = await sdk.Map.isLayerVisible({ layerName });
+      persistSettingsToStorage();
+    }
+  }
+
+  /**
+   * Writes current settings to browser storage. Synchronous, so it is safe to call from `beforeunload`.
+   */
+  function persistSettingsToStorage() {
+    if (localStorage) {
       localStorage.setItem(settingsStoreName, JSON.stringify(settings));
     }
   }
@@ -3373,14 +3440,27 @@
   }
 
   /**
-   * Returns abbreviations for states visible to the user based on permissions/settings.
-   * @returns {string[]} Array of visible state abbreviations.
+   * Returns true if two WGS84 boxes ([minLon, minLat, maxLon, maxLat]) overlap.
+   * @param {number[]} a - First box.
+   * @param {number[]} b - Second box.
+   * @returns {boolean} True if the boxes overlap.
    */
-  function getVisibleStateAbbreviations() {
+  function bboxIntersects(a, b) {
+    return a[0] <= b[2] && a[2] >= b[0] && a[1] <= b[3] && a[3] >= b[1];
+  }
+
+  /**
+   * Returns abbreviations for states visible to the user based on permissions/settings and the current map extent.
+   * States whose bounding box does not overlap the extent are skipped, so no requests go to them.
+   * @param {number[]} extent - Map extent as [minLon, minLat, maxLon, maxLat] in WGS84.
+   * @returns {Promise<string[]>} Array of visible state abbreviations.
+   */
+  async function getVisibleStateAbbreviations(extent) {
     const { activeStateAbbr } = settings;
-    return sdk.DataModel.States.getAll()
+    return (await sdk.DataModel.States.getAll())
       .map((state) => STATES_HASH[state.name])
-      .filter((stateAbbr) => STATE_SETTINGS[stateAbbr] && STATE_SETTINGS.global.isPermitted(stateAbbr) && (!activeStateAbbr || activeStateAbbr === 'ALL' || activeStateAbbr === stateAbbr));
+      .filter((stateAbbr) => STATE_SETTINGS[stateAbbr] && STATE_SETTINGS.global.isPermitted(stateAbbr) && (!activeStateAbbr || activeStateAbbr === 'ALL' || activeStateAbbr === stateAbbr))
+      .filter((stateAbbr) => !STATE_BBOXES[stateAbbr] || bboxIntersects(STATE_BBOXES[stateAbbr], extent));
   }
 
   /**
@@ -3390,6 +3470,7 @@
    * @returns {Promise<Object>} Resolves with `{responseText, context}`.
    */
   function getAsync(url, context) {
+    debugLog(`Request ${context.stateAbbr} layer ${context.layer.layerID}: ${url}`);
     debugLog(
       `Fetching data for ${context.stateAbbr} from ${context.state.baseUrl}
         ${context.layer.layerPath ? context.layer.layerPath : ''}${context.layer.layerID ? context.layer.layerID : ''}`,
@@ -3413,8 +3494,14 @@
             reject(new Error(`HTTP ${res.status}: ${res.responseText}`));
           }
         },
-        onerror() {
-          reject(new Error('Network Error'));
+        onerror(res) {
+          // Log the raw Tampermonkey error so the cause (TLS, CORS, blocked host, etc.) is visible.
+          console.error('FC Layer: GM_xmlhttpRequest onerror', { url, error: res?.error, details: res?.details, res });
+          reject(new Error(`Network Error${res?.error ? `: ${res.error}` : ''}`));
+        },
+        ontimeout(res) {
+          console.error('FC Layer: GM_xmlhttpRequest timeout', { url, res });
+          reject(new Error('Request timed out'));
         },
       });
     });
@@ -3480,6 +3567,9 @@
   function convertFcToRoadTypeLineStrings(feature, context) {
     const { state, stateAbbr, layer } = context;
     const roadType = state.getFeatureRoadType(feature, layer);
+    if (!state.defaultColors[roadType]) {
+      debugLog(`Unmatched road type ${stateAbbr} layer ${layer.layerID}: value=${feature.attributes[layer.fcPropName]} roadType=${roadType}`, feature.attributes);
+    }
     const attr = {
       state: stateAbbr,
       layerID: layer.layerID,
@@ -3608,12 +3698,12 @@
    * Main routine to fetch all FC features for every visible state and add to the map layer.
    * Uses current zoom and extent.
    */
-  function fetchAllFC() {
-    if (!sdk.Map.isLayerVisible({ layerName })) return;
+  async function fetchAllFC() {
+    if (!(await sdk.Map.isLayerVisible({ layerName }))) return;
 
     $('#fc-loading-indicator').removeClass('fcl-loading-error').addClass('fcl-loading-active').html('<span class="fcl-spin fa fa-circle-notch"></span> Loading FC data&hellip;');
 
-    const mapContext = { zoom: sdk.Map.getZoomLevel(), extent: sdk.Map.getMapExtent() };
+    const mapContext = { zoom: await sdk.Map.getZoomLevel(), extent: await sdk.Map.getMapExtent() };
     CURRENT_ZOOM = mapContext.zoom; // store globally so it can be used in map styling predicate
     if (mapContext.zoom > MIN_ZOOM_LEVEL) {
       const parentContext = { callCount: 0, startTime: Date.now() };
@@ -3621,14 +3711,14 @@
       if (_lastContext) _lastContext.cancel = true;
       _lastContext = parentContext;
 
-      const contexts = getVisibleStateAbbreviations().map((stateAbbr) => ({ parentContext, stateAbbr, mapContext }));
+      const contexts = (await getVisibleStateAbbreviations(mapContext.extent)).map((stateAbbr) => ({ parentContext, stateAbbr, mapContext }));
       let errorOccurred = false; // Flag to track error state
       let featureCount = 0;
 
       const map = Promise.all(contexts.map((ctx) => fetchStateFC(ctx)))
-        .then((statesLineStringArrays) => {
+        .then(async (statesLineStringArrays) => {
           if (!parentContext.cancel) {
-            sdk.Map.removeAllFeaturesFromLayer({ layerName });
+            await sdk.Map.removeAllFeaturesFromLayer({ layerName });
 
             // Determine the depth of the nested array structure
             const depth = getArrayDepth(statesLineStringArrays);
@@ -3639,7 +3729,7 @@
             featureCount = flattenedFeatures.length;
 
             // Add all features to the layer at once
-            sdk.Map.dangerouslyAddFeaturesToLayerWithoutValidation({
+            await sdk.Map.dangerouslyAddFeaturesToLayerWithoutValidation({
               layerName,
               features: flattenedFeatures,
             });
@@ -3666,7 +3756,7 @@
       _fcCallCount += 1;
     } else {
       // if zoomed out too far, clear the layer
-      sdk.Map.removeAllFeaturesFromLayer({ layerName });
+      await sdk.Map.removeAllFeaturesFromLayer({ layerName });
     }
   }
 
@@ -3681,11 +3771,11 @@
   /**
    * Ensures the layer z-index stays below roads (hack/workaround).
    */
-  function checkLayerZIndex() {
+  async function checkLayerZIndex() {
     try {
-      if (sdk.Map.getLayerZIndex({ layerName }) !== MAP_LAYER_Z_INDEX) {
+      if ((await sdk.Map.getLayerZIndex({ layerName })) !== MAP_LAYER_Z_INDEX) {
         // ("ADJUSTED FC LAYER Z-INDEX " + mapLayerZIndex + ', ' + mapLayer.getZIndex());
-        sdk.Map.setLayerZIndex({ layerName, zIndex: MAP_LAYER_Z_INDEX });
+        await sdk.Map.setLayerZIndex({ layerName, zIndex: MAP_LAYER_Z_INDEX });
       }
     } catch {
       // ignore this hack if it crashes
@@ -3695,9 +3785,11 @@
   /**
    * Initializes the FC Layer, creates style rules, adds layer to map.
    */
-  function initLayer() {
+  async function initLayer() {
     const styleRules = [
       {
+        // Only uncolored features get the black base stroke, so colored road types are not overridden.
+        predicate: (props) => !props.color,
         style: {
           strokeColor: 'black',
           strokeDashstyle: 'solid',
@@ -3734,21 +3826,23 @@
         style: { graphicZIndex: index * 100 },
       });
     });
-    sdk.Map.addLayer({
+    await sdk.Map.addLayer({
       layerName,
       styleRules,
       zIndexing: true,
     });
 
-    sdk.Map.setLayerOpacity({ layerName, opacity: 0.5 });
-    sdk.Map.setLayerVisibility({ layerName, visibility: settings.layerVisible });
-    MAP_LAYER_Z_INDEX = sdk.Map.getLayerZIndex({ layerName: 'roads' }) - 3;
-    sdk.Map.setLayerZIndex({ layerName, zIndex: MAP_LAYER_Z_INDEX });
+    await sdk.Map.setLayerOpacity({ layerName, opacity: 0.5 });
+    await sdk.Map.setLayerVisibility({ layerName, visibility: settings.layerVisible });
+    MAP_LAYER_Z_INDEX = (await sdk.Map.getLayerZIndex({ layerName: 'roads' })) - 3;
+    await sdk.Map.setLayerZIndex({ layerName, zIndex: MAP_LAYER_Z_INDEX });
 
-    window.addEventListener('beforeunload', () => saveSettingsToStorage);
+    // The original passed `() => saveSettingsToStorage`, which returns the function without calling it,
+    // so settings were never saved on unload. The async saver can't finish during unload, so use the sync one.
+    window.addEventListener('beforeunload', persistSettingsToStorage);
 
-    sdk.LayerSwitcher.addLayerCheckbox({ name: 'FC Layer' });
-    sdk.LayerSwitcher.setLayerCheckboxChecked({ name: 'FC Layer', isChecked: settings.layerVisible });
+    await sdk.LayerSwitcher.addLayerCheckbox({ name: 'FC Layer' });
+    await sdk.LayerSwitcher.setLayerCheckboxChecked({ name: 'FC Layer', isChecked: settings.layerVisible });
     sdk.Events.on({ eventName: 'wme-layer-checkbox-toggled', eventHandler: onLayerCheckboxChanged });
 
     // Hack to fix layer zIndex.  Some other code is changing it sometimes but I have not been able to figure out why.
@@ -3761,17 +3855,17 @@
   /**
    * Click handler for street hiding control. Updates settings, refreshes features.
    */
-  function onHideStreetsClicked() {
+  async function onHideStreetsClicked() {
     settings.hideStreet = $(this).is(':checked');
     saveSettingsToStorage();
-    sdk.Map.removeAllFeaturesFromLayer({ layerName });
+    await sdk.Map.removeAllFeaturesFromLayer({ layerName });
     fetchAllFC();
   }
 
   /**
    * Handles dropdown change for state selection. Updates GUI and reloads.
    */
-  function onStateSelectionChanged() {
+  async function onStateSelectionChanged() {
     settings.activeStateAbbr = this.value;
     saveSettingsToStorage();
     loadStateFCInfo();
@@ -3782,15 +3876,15 @@
    * Enables/disables the FC Layer, updates checkbox and settings, may reload.
    * @param {boolean} value - True to enable, false to disable.
    */
-  function setEnabled(value) {
-    sdk.Map.setLayerVisibility({ layerName, visibility: value });
+  async function setEnabled(value) {
+    await sdk.Map.setLayerVisibility({ layerName, visibility: value });
     settings.layerVisible = value;
     saveSettingsToStorage();
 
     const color = value ? '#00bd00' : '#ccc';
     $('span#fc-layer-power-btn').css({ color });
     if (value) fetchAllFC();
-    sdk.LayerSwitcher.setLayerCheckboxChecked({ name: 'FC Layer', isChecked: value });
+    await sdk.LayerSwitcher.setLayerCheckboxChecked({ name: 'FC Layer', isChecked: value });
   }
 
   /**
@@ -4189,7 +4283,7 @@
    * Initializes GUI: layer, controls, sidebar tab.
    */
   async function initGui() {
-    initLayer();
+    await initLayer();
     initModernStyles();
     await initUserPanel();
   }
@@ -4198,7 +4292,7 @@
    * Main startup routine; loads user/area info, settings, and initializes GUI.
    */
   async function init() {
-    const u = sdk.State.getUserInfo();
+    const u = await sdk.State.getUserInfo();
     rank = u.rank + 1;
     isAM = u.isAreaManager;
     userNameLC = u.userName.toLowerCase();
