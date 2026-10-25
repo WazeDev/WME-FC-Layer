@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME FC Layer
 // @namespace    https://greasyfork.org/users/45389
-// @version      2026.10.23.00
+// @version      2026.10.25.00
 // @description  Adds a Functional Class layer for states that publish ArcGIS FC data.
 // @author       MapOMatic / JS55CT
 // @match        *://*.waze.com/*editor*
@@ -113,7 +113,7 @@
   const downloadUrl = 'https://greasyfork.org/scripts/369633-wme-fc-layer/code/WME%20FC%20Layer.user.js';
 
   /** @type {string} Message displayed to user when a new script version is detected */
-  const updateMessage = 'Updated to WME SDK async mode. Only queries states that overlap the map view, and logs clearer errors for failed requests.';
+  const updateMessage = 'Updated Utah to use FC 2025 with Proposed FC';
 
   /** @type {string} Layer name registered with SDK and displayed in layer controls */
   const layerName = 'FC Layer';
@@ -2758,7 +2758,7 @@
       },
     },
     UT: {
-      baseUrl: 'https://roads.udot.utah.gov/server/rest/services/Public/Functional_Class/MapServer/0',
+      baseUrl: 'https://central.udot.utah.gov/server/rest/services/Hosted/2025_Functional_Class_Updates/FeatureServer/',
       defaultColors: {
         Fw: '#ff00c5',
         Ew: '#4f33df',
@@ -2771,9 +2771,9 @@
       fcMapLayers: [
         {
           layerID: 0,
-          fcPropName: 'FUNCTIONAL_CLASS',
-          idPropName: 'OBJECTID',
-          outFields: ['OBJECTID', 'FUNCTIONAL_CLASS', 'route_id'],
+          fcPropName: 'fc_2025',
+          idPropName: 'objectid',
+          outFields: ['objectid', 'fc_2025', 'route_id'],
           roadTypeMap: {
             Fw: [1],
             Ew: [2],
@@ -2786,43 +2786,62 @@
           supportsPagination: false,
         },
       ],
-      information: { Source: 'UDOT', Permission: 'Visible to R4+ or R3-AM', Description: 'Federal and State highways set to a minimum of mH.' },
+      information: { Source: 'UDOT', Permission: 'Visible to R4+ or R3-AM', Description: 'Federal and State highways set to a minimum of mH. Includes proposed FCs (mapped to their base class).' },
+      //getWhereClause(context) {
+      //  return `${context.layer.fcPropName} NOT LIKE 'Proposed%'`;
+      //},
       getWhereClause(context) {
-        return `${context.layer.fcPropName} NOT LIKE 'Proposed%'`;
+        // fc_2025 is a string field, so filter by value rather than comparing with <
+        if (context.mapContext.zoom < 16) {
+          return `${context.layer.fcPropName} IN ('Interstate','Other Freeways and Expressways','Other Principal Arterial','Minor Arterial','Major Collector','Minor Collector','Proposed Interstate','Proposed Other Freeways and Expressways','Proposed Other Principal Arterial','Proposed Minor Arterial','Proposed Major Collector','Proposed Minor Collector')`;
+        }
+        return null;
       },
       getFeatureRoadType(feature, layer) {
         const attr = feature.attributes;
         let fc = attr[layer.fcPropName];
-        const routeID = attr.route_id;
-        const roadNum = parseInt(routeID.substring(0, 4), 10);
+        const routeNum = /^\d+/.exec(String(attr.route_id ?? '').trim());
+        const roadNum = routeNum ? parseInt(routeNum[0], 10) : NaN;
+        // fc_2025 includes "Proposed ..." values (2025 proposals not yet adopted). They map to the
+        // same FC as their base class, so proposed roads are drawn with their future class color.
         switch (fc) {
           case 'Interstate':
+          case 'Proposed Interstate':
             fc = 1;
             break;
           case 'Other Freeways and Expressways':
+          case 'Proposed Other Freeways and Expressways':
             fc = 2;
             break;
           case 'Other Principal Arterial':
+          case 'Proposed Other Principal Arterial':
             fc = 3;
             break;
           case 'Minor Arterial':
+          case 'Proposed Minor Arterial':
             fc = 4;
             break;
           case 'Major Collector':
+          case 'Proposed Major Collector':
             fc = 5;
             break;
           case 'Minor Collector':
+          case 'Proposed Minor Collector':
             fc = 6;
             break;
+          case 'Local':
+          case 'Local Road':
+          case 'Unclassified':
           default:
             fc = 7;
         }
+        // Route number comes only from leading digits of route_id; no digits = no override
         const re = /^(6|40|50|89|91|163|189|191|491)$/;
         if (re.test(roadNum) && fc > 3) {
-          // US highway
+          // US highway: FC 3 regardless of source FC (Interstate/Freeway kept as-is)
           fc = 3;
-        } else if (roadNum <= 491 && fc > 4) {
-          // State highway
+        } else if (fc < 7 && roadNum <= 491 && fc > 4) {
+          // State highway (skip Local/Unclassified, which are coded 7)
           fc = 4;
         }
         return STATE_SETTINGS.global.getRoadTypeFromFC(fc, layer);
